@@ -1,0 +1,1 @@
+<view class="code-container"><view data-event-opts="{{[['tap',[['getForm',['$event']]]]]}}" class="vCode-btn" bindtap="__e">{{''+(runTime?time+'后重新获取 ':'获取验证码')+''}}</view></view>
