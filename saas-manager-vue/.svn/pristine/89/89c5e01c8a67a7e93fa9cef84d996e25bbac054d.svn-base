@@ -1,0 +1,371 @@
+import Vue from 'vue'
+import Router from 'vue-router'
+import Layout from '@/layout'
+
+Vue.use(Router)
+
+export const constantRoutes = [{
+    path: '/redirect',
+    component: Layout,
+    hidden: true,
+    children: [{
+      path: '/redirect/:path*',
+      component: () => import('@/views/redirect/index'),
+    }]
+  },
+  {
+    path: '/login',
+    component: () => import('@/views/login/index'),
+    hidden: true
+  },
+  {
+    path: '/register',
+    component: () => import('../views/register'),
+    hidden: true
+  },
+
+]
+
+export const asyncRoutes = [{
+    path: '/',
+    component: Layout,
+    redirect: '/dashboard',
+    name: 'DashboardAdmin',
+    meta: {
+      roles: ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'VIEWER', 'BUSINESS'],
+      keepAlive: true,
+    },
+
+    children: [{
+      path: 'dashboard',
+      component: () => import('@/views/dashboard'),
+      name: '首页',
+      meta: {
+        title: '首页',
+        icon: 'dashboard',
+        affix: true,
+        roles: ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'VIEWER', 'BUSINESS']
+      }
+    }]
+  },
+  {
+    path: '/traffic',
+    component: Layout,
+    name: '流量管理',
+    meta: {
+      title: '流量管理',
+      icon: 'traffic',
+      roles: ['SUPER_ADMIN', 'ADMIN', 'OPERATOR'],
+      keepAlive: false,
+    },
+    children: [{
+        path: 'app',
+        component: () => import('@/views/traffic/app'),
+        name: '应用管理',
+        meta: {
+          title: '应用管理',
+          icon: 'app',
+          affix: true,
+          roles: ['SUPER_ADMIN', 'ADMIN', 'OPERATOR']
+        }
+      },
+      {
+        path: 'adplace',
+        component: () => import('@/views/traffic/adplace'),
+        name: '广告位管理',
+        meta: {
+          title: '广告位管理',
+          icon: 'adplace',
+          affix: true,
+          roles: ['SUPER_ADMIN', 'ADMIN', 'OPERATOR']
+        }
+      }
+    ]
+  },
+
+  {
+    path: '/aggregate',
+    component: Layout,
+    meta: {
+      title: '聚合管理',
+      icon: 'aggregate',
+      affix: true,
+      roles: ['SUPER_ADMIN', 'ADMIN', 'OPERATOR'],
+      keepAlive: false,
+    },
+    children: [{
+      path: '/traffic/aggregate',
+      component: () => import('@/views/traffic/aggregate'),
+      name: '聚合管理',
+      meta: {
+        title: '聚合管理',
+        icon: 'aggregate',
+        affix: true,
+        roles: ['SUPER_ADMIN', 'ADMIN', 'OPERATOR']
+      }
+    }]
+  },
+
+  {
+    path: '/platform',
+    component: Layout,
+    meta: {
+      title: '广告源',
+      icon: 'documentation',
+      affix: true,
+      roles: ['SUPER_ADMIN', 'ADMIN', 'OPERATOR'],
+      keepAlive: false,
+      // super_admin,admin  operator   viewer
+    },
+    children: [{
+      path: '/platform/index',
+      component: () => import('@/views/platform/index'),
+      name: '广告源',
+      meta: {
+        title: '广告源',
+        icon: 'platform',
+        affix: true,
+        roles: ['SUPER_ADMIN', 'ADMIN', 'OPERATOR']
+      }
+    }, ]
+  },
+
+
+
+  {
+    path: '/reportData',
+    component: Layout,
+    name: '数据报表',
+    meta: {
+      title: '数据报表',
+      icon: 'reportData',
+      roles: ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'VIEWER', 'BUSINESS', "MEDIA"],
+      keepAlive: true
+    },
+
+    // 综合报表
+    children: [{
+        path: 'synthReport',
+        component: () => import('@/views/report/synthReport'),
+        name: '综合报表',
+        meta: {
+          title: '综合报表',
+          icon: 'synthReport',
+          affix: true,
+          roles: ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'VIEWER', 'BUSINESS', ],
+          keepAlive: true
+        }
+      },
+      {
+        path: 'userActionReport',
+        component: () => import('@/views/report/userAction'),
+        name: '用户行为报表',
+        meta: {
+          title: '用户行为报表',
+          icon: 'userAction',
+          affix: true,
+          roles: ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'VIEWER', 'BUSINESS'],
+          keepAlive: true
+        }
+      },
+      {
+        path: 'hoursReport',
+        component: () => import('@/views/report/hourReport'),
+        name: '分小时报表',
+        meta: {
+          title: '分小时报表',
+          icon: 'hoursReport',
+          affix: true,
+          roles: ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'VIEWER', 'BUSINESS']
+        }
+      },
+      {
+        path: 'third-party-data',
+        component: () => import('@/views/report/third-party-data'),
+        name: '上传三方数据',
+        meta: {
+          title: '上传三方数据',
+          icon: 'third-party-data',
+          affix: true,
+          roles: ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'VIEWER', 'BUSINESS']
+        }
+      },
+      {
+        path: 'mediaReport',
+        component: () => import('@/views/report/mediaReport/index'),
+        name: '媒体报表',
+        meta: {
+          title: '媒体报表',
+          icon: 'mediaReport',
+          affix: true,
+          roles: ['SUPER_ADMIN', "MEDIA"],
+          keepAlive: true
+        }
+      },
+    ]
+  },
+
+  // 素材
+  {
+    path: '/material',
+    component: Layout,
+    name: '素材管理',
+    meta: {
+      title: '素材管理',
+      icon: 'meaterial',
+      roles: ['SUPER_ADMIN', 'AUDITOR'],
+      keepAlive: true
+    },
+
+    // 素材审核
+    children: [{
+        path: 'audit',
+        component: () => import('@/views/Material/Audit'),
+        name: '素材审核',
+        meta: {
+          title: '素材审核',
+          icon: 'materialAudit',
+          affix: true,
+          roles: ['SUPER_ADMIN', 'AUDITOR'],
+          keepAlive: true
+        }
+      },
+
+      {
+        path: 'report',
+        component: () => import('@/views/Material/Report'),
+        name: '审核报表',
+        meta: {
+          title: '审核报表',
+          icon: 'materialReport',
+          affix: true,
+          roles: ['SUPER_ADMIN', 'AUDITOR'],
+          keepAlive: true
+        }
+      },
+    ]
+  },
+  {
+    path: '/Medpro',
+    component: Layout,
+    name: '接入中心',
+    hidden: true,
+
+    alwaysShow: true,
+    meta: {
+      title: '接入中心',
+      icon: 'table',
+      roles: ['ADMIN', 'SUPER_ADMIN'],
+      keepAlive: false,
+    },
+    children: [{
+        path: 'MedproVersionAdmin',
+        component: () => import('../views/MedproAccess/MedproVersionAdmin'),
+        name: 'Medpro版本',
+        hidden: true,
+
+        meta: {
+          title: 'Medpro版本',
+          icon: 'Version',
+          affix: true,
+          roles: ['SUPER_ADMIN']
+        }
+      },
+      {
+        path: 'advertVersionAdmin',
+        component: () => import('../views/MedproAccess/advertVersionAdmin'),
+        name: '广告源版本',
+        hidden: true,
+
+        meta: {
+          title: '广告源版本',
+          icon: 'Version',
+          affix: true,
+          roles: ['SUPER_ADMIN']
+        }
+      },
+      {
+        path: 'SDKupload',
+        component: () => import('../views/MedproAccess/medproSDKupload'),
+        name: 'SDK下载',
+        hidden: true,
+
+        meta: {
+          title: 'SDK下载',
+          icon: 'SDKupload',
+          affix: true,
+          roles: ['SUPER_ADMIN', 'ADMIN', 'OPERATOR']
+        }
+      },
+      {
+        path: 'updateLog',
+        component: () => import('../views/MedproAccess/lookLog'),
+        name: '更新日志',
+        hidden: true,
+        meta: {
+          title: '更新日志',
+          icon: 'documentation',
+          affix: true,
+          roles: ['SUPER_ADMIN', 'ADMIN', 'OPERATOR']
+        }
+      },
+
+    ]
+  },
+  {
+    path: '/advanced',
+    component: Layout,
+    name: '用户管理',
+    hidden: true,
+    meta: {
+      title: '用户管理',
+      icon: 'advanced',
+      // roles: ['ADMIN','SUPER_ADMIN','BUSINESS'],
+      keepAlive: false,
+    },
+    children: [{
+        path: 'sonAccount',
+        component: () => import('../views/userAdmin/advanced/sonAccount.vue'),
+        name: '账户管理',
+        hidden: true,
+        meta: {
+          title: '账户管理',
+          icon: 'sonAccount',
+          affix: true,
+          roles: ['ADMIN', 'SUPER_ADMIN']
+        }
+      },
+      {
+        path: 'loginMsg',
+        component: () => import('../views/userAdmin/loginMsg'),
+        name: '登录用户信息',
+        hidden: true,
+        meta: {
+          title: '登录用户信息',
+          icon: 'loginMsg',
+          affix: true,
+          roles: ['ADMIN', 'SUPER_ADMIN', 'OPERATOR', 'VIEWER', 'AUDITOR', 'BUSINESS', "MEDIA"]
+        }
+      }
+    ]
+  },
+]
+
+
+
+const createRouter = () => new Router({
+  // mode: 'history', // require service support
+  scrollBehavior: () => ({
+    y: 0
+  }),
+  routes: constantRoutes
+})
+
+const router = createRouter()
+
+export function resetRouter() {
+  const newRouter = createRouter()
+  router.matcher = newRouter.matcher // reset router
+}
+
+export default router

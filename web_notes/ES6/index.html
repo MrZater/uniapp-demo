@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="demo"></div>
+    <script src="./ajax.js"></script>
+    <script src="./index.js"></script>
+    <script>
+        Promise.resolve(1)
+            .then(2)//传入的参数不是函数，相当于没有该代码
+            .then(Promise.resolve(3))//传入的参数不是函数，相当于没有该代码
+            .then(console.log);//将window.console.log函数传入，1作为该函数的参数传入，即打印1
+
+    </script>
+</body>
+
+</html>

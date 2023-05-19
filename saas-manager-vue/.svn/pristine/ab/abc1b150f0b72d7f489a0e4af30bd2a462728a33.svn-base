@@ -1,0 +1,360 @@
+<template>
+  <div class="app-main-wrapper">
+    <el-card class="search_card">
+      <el-row :gutter="0">
+        <el-col :span="5"
+          ><CustSelectOne
+            @handleSelect="selectListhandlePlat"
+            :model="uploadParams.platId"
+            :word="'广告源'"
+            :width="235"
+            :allData="platformList"
+        /></el-col>
+        <el-col :span="5">
+          <!-- 状态 -->
+          <el-select
+            v-model="uploadParams.status"
+            class="statusSelect"
+            placeholder="状态"
+            clearable
+            @clear="clearStatus"
+          >
+            <el-option
+              v-for="item in statusList"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            /> </el-select
+        ></el-col>
+        <el-col :span="5">
+          <el-button
+            type="primary"
+            size="small"
+            icon="el-icon-search"
+            @click="searchBtn"
+            >搜索</el-button
+          ></el-col
+        >
+      </el-row>
+    </el-card>
+    <el-card>
+      <el-button
+        style="margin-bottom: 20px"
+        type="primary"
+        size="small"
+        icon="el-icon-plus"
+        @click="uploadDialog = true"
+        >上传</el-button
+      >
+      <!-- 表格 -->
+
+      <div v-loading="loadingTable" class="tableList_box">
+        <el-table
+          v-if="!isEmpty"
+          class="uploadTable"
+          :data="uploadData"
+          style="width: 100%"
+          :header-cell-style="{ background: '#f7f8fa' ,color:'#000'}"
+        >
+          <el-table-column prop="platform" label="广告源" align="center" />
+          <el-table-column prop="name" label="账号信息" align="center" />
+          <el-table-column label="数据开始时间" align="center">
+            <template slot-scope="{ row }">
+              <div v-if="row.status === 3">{{ row.beginDate }}</div>
+              <div v-else>-</div>
+            </template>
+          </el-table-column>
+          <el-table-column label="数据结束时间" align="center">
+            <template slot-scope="{ row }">
+              <div v-if="row.status === 3">{{ row.endDate }}</div>
+              <div v-else>-</div>
+            </template>
+          </el-table-column>
+          <el-table-column label="上传时间" align="center">
+            <template slot-scope="{ row }">
+              <div>{{ row.createTime | toDate("YYYY-MM-DD hh:mm:ss") }}</div>
+            </template>
+          </el-table-column>
+          <el-table-column label="完成时间" align="center">
+            <template slot-scope="{ row }">
+              <div>{{ row.updateTime | toDate("YYYY-MM-DD hh:mm:ss") }}</div>
+            </template>
+          </el-table-column>
+          <el-table-column label="状态" align="center">
+            <template slot-scope="{ row }">
+              <div>
+                <el-tag v-if="row.status === 3" type="success">处理成功</el-tag>
+                <el-tag v-else-if="row.status === 1" type="danger"
+                  >上传失败</el-tag
+                >
+                <el-tag v-if="row.status === 2" type="warning">处理中</el-tag>
+                <el-tag v-if="row.status === 4" type="danger">处理失败</el-tag>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+        <Empty v-else />
+      </div>
+      <el-pagination
+        :current-page="QueryParams.page"
+        :page-sizes="[10, 20, 30, 40]"
+        :page-size="QueryParams.limit"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </el-card>
+    <el-dialog
+      ref="uploadDialog"
+      class="uploadDialog"
+      title="上传三方数据"
+      :visible.sync="uploadDialog"
+      width="30%"
+      @close="closeUploadDialog"
+    >
+      <el-alert
+        :closable="false"
+        class="el-alert"
+        title="一次最多上传31天数据"
+        show-icon
+        type="warning"
+      />
+      <el-form
+        ref="uploadForm"
+        class="uploadForm"
+        :rules="uploadFormRules"
+        :model="uploadForm"
+        label-width="80px"
+      >
+        <el-form-item label="广告源" label-width="100px" prop="platId">
+          <el-select
+            v-model="uploadForm.platId"
+            style="width: 100%"
+            placeholder="广告源"
+          >
+            <el-option
+              v-for="item in platformList"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="上传报表" label-width="100px">
+          <el-upload
+            ref="fileRef"
+            action="#"
+            :on-remove="removeFile"
+            :limit="1"
+            :auto-upload="false"
+            :on-change="handleChange"
+          >
+            <el-button size="small" type="primary">点击上传</el-button>
+          </el-upload>
+        </el-form-item>
+        <p class="soUpload" v-if="isMedPro">
+          <a
+            target="_blank"
+            href="https://creative.medproad.com/medpro/html/rule.html"
+            >如何在三方后台下载数据？</a
+          >
+        </p>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="uploadDialog = false">取 消</el-button>
+        <el-button type="primary" @click="addUpload">确 定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+<script>
+import { advertPlatform, importReport, ReportList } from "@/api/synthReport";
+import Empty from "@/components/empty";
+import CustSelectOne from "@/components/CustSelectOne";
+
+export default {
+  components: { Empty, CustSelectOne },
+  data() {
+    return {
+      platformList: [],
+      uploadDialog: false,
+      isEmpty: false,
+      total: 0,
+      loadingTable: false,
+      // 列表参数
+      uploadParams: {
+        page: 1,
+        limit: 5,
+        platId: "",
+        status: "",
+      },
+      QueryParams: {
+        page: 1,
+        limit: 5,
+        platId: "",
+        status: "",
+      },
+      // 弹框参数
+      uploadForm: {
+        platId: "",
+        file: "",
+      },
+      uploadData: [],
+      statusItem: "",
+      statusList: [
+        {
+          label: "上传失败",
+          value: 1,
+        },
+        {
+          label: "处理中",
+          value: 2,
+        },
+        {
+          label: "处理成功",
+          value: 3,
+        },
+        {
+          label: "处理失败",
+          value: 4,
+        },
+      ],
+      uploadFormRules: {
+        platId: [{ required: true, message: "请选择广告源", trigger: "blur" }],
+      },
+    };
+  },
+  computed: {
+    isMedPro() {
+      return this.$store.getters.isMedPro;
+    }
+  },
+  async created() {
+    await this.getReportList();
+    await this.getAdvertPlatform();
+  },
+  methods: {
+    async getAdvertPlatform() {
+      const res = await advertPlatform();
+      if (res.code != 200) return this.$message.error(res.msg);
+      res.data.unshift({ name: "全部", id: "全部" });
+      res.data.forEach((item) => {
+        item.id = "" + item.id;
+      });
+      this.platformList = res.data;
+    },
+    async getReportList() {
+     let query = JSON.parse(JSON.stringify(this.uploadParams));
+      if (query.platId == "全部") {
+        query.platId = "";
+      }
+      this.loadingTable = true;
+      const res = await ReportList(query);
+      if (res.code != 200) return this.$message.error(res.msg);
+      setTimeout(() => {
+        this.loadingTable = false;
+      }, 400);
+      if (res.data.items.length === 0) {
+        this.isEmpty = true;
+      } else {
+        this.isEmpty = false;
+      }
+
+      this.uploadData = res.data.items;
+      this.total = res.data.total;
+    },
+    async searchBtn() {
+      this.QueryParams = Object.assign({}, this.uploadParams);
+      await this.getReportList();
+    },
+    handleSizeChange(val) {
+      this.QueryParams.limit = val;
+      this.getReportList();
+    },
+    handleCurrentChange(val) {
+      this.QueryParams.page = val;
+      this.getReportList();
+    },
+    handleChange(file) {
+      // var testmsg = file.name.substring(file.name.lastIndexOf(".") + 1);
+      // const extension = testmsg === "xlsx";
+      // if (!extension) {
+      //   this.uploadForm.file = "";
+      //   this.$refs.fileRef.clearFiles();
+      //   this.$message({
+      //     message: "上传文件只能xlsx格式!",
+      //     type: "warning",
+      //   });
+      //   return;
+      // }
+      this.uploadForm.file = file.raw;
+    },
+    selectListhandlePlat(val) {
+      this.uploadParams.platId = val;
+    },
+
+    clearStatus() {
+      this.QueryParams.status = "";
+      this.getReportList();
+    },
+    closeUploadDialog() {
+      this.uploadForm.platId = "";
+      this.uploadForm.file = "";
+      this.$refs.fileRef.clearFiles();
+      this.$refs.uploadForm.resetFields();
+    },
+    removeFile() {
+      this.uploadForm.file = "";
+    },
+    addUpload() {
+      this.$refs.uploadForm.validate(async (val) => {
+        if (!val) return;
+        if (!this.uploadForm.file) return this.$message.warning("请上传报表!");
+        const file = new FormData();
+        file.append("platId", this.uploadForm.platId);
+        file.append("file", this.uploadForm.file);
+        const res = await importReport(file);
+        if (res.code != 200) return this.$message.error(res.msg);
+        this.getReportList();
+        this.uploadDialog = false;
+        this.$message.success("添加成功");
+      });
+    },
+  },
+};
+</script>
+<style lang="scss" scoped>
+.app-main {
+  background-color: #f7f8fa;
+
+  .search_card {
+    margin: 10px 0 15px 0;
+  }
+  .statusSelect {
+    margin: 0 20px;
+  }
+  ::v-deep .el-table--border th {
+    border-right: none;
+  }
+  ::v-deep .el-table--border td {
+    border-right: none;
+  }
+
+  ::v-deep .el-dialog {
+    min-width: 600px;
+    .el-alert {
+      margin-bottom: 20px;
+    }
+  }
+  .tableList_box {
+    min-height: 200px;
+  }
+  .el-pagination {
+    margin-top: 20px;
+  }
+  .soUpload {
+    margin: 30px 0 0 30px;
+  }
+}
+</style>

@@ -1,0 +1,515 @@
+export let adminEchartsOption = {
+        tooltip: {
+            trigger: "axis",
+            formatter: (params) => {
+                let str = "";
+                params.forEach((item, index) => {
+                    let temp = {};
+                    if (
+                        item.seriesName == "收益" ||
+                        item.seriesName == "eCPM" ||
+                        item.seriesName == "预估收益" ||
+                        item.seriesName == "人均收益"
+                    ) {
+                        temp.value = "￥" + item.value;
+                    } else {
+                        temp.value = item.value;
+                    }
+                    str += item.marker + item.seriesName + ": " + temp.value + "<br>";
+                });
+                return params[0].axisValue + "<br>" + str;
+            },
+        },
+        legend: {
+            data: [],
+        },
+        grid: {
+            left: "4%",
+            right: "4%",
+            bottom: "3%",
+            containLabel: true,
+        },
+        xAxis: {
+            type: "category",
+            boundaryGap: false,
+            data: [],
+            axisLine: {
+                lineStyle: {
+                    color: "#000",
+                    width: 0.5,
+                },
+            },
+        },
+        yAxis: [
+            // 0
+            {
+                type: "value",
+                axisLabel: {
+                    formatter: "￥{value}",
+                },
+                position: "",
+                axisLine: {
+                    lineStyle: {
+                        color: "#000",
+                        width: 0.5,
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                splitLine: {
+                    show: false,
+                },
+
+                axisLabel: {
+                    show: false,
+                },
+            },
+            // 1
+            {
+                type: "value",
+                position: "",
+                axisLine: {
+                    lineStyle: {
+                        color: "#000",
+                        width: 0.5,
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                splitLine: {
+                    show: false,
+                },
+
+                axisLabel: {
+                    show: false,
+                },
+            },
+            // 2
+            {
+                type: "value",
+                position: "",
+                axisLine: {
+                    lineStyle: {
+                        color: "#000",
+                        width: 0.5,
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                splitLine: {
+                    show: false,
+                },
+                axisLabel: {
+                    show: false,
+                },
+            },
+            // 3
+            {
+                type: "value",
+                position: "",
+                axisLine: {
+                    lineStyle: {
+                        color: "#000",
+                        width: 0.5,
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                splitLine: {
+                    show: false,
+                },
+                axisLabel: {
+                    show: false,
+                },
+            },
+            // 4
+            {
+                type: "value",
+                position: "",
+                axisLine: {
+                    lineStyle: {
+                        color: "#000",
+                        width: 0.5,
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                splitLine: {
+                    show: false,
+                },
+                axisLabel: {
+                    show: false,
+                },
+            },
+            // 5
+            {
+                type: "value",
+                position: "",
+                axisLine: {
+                    lineStyle: {
+                        color: "#000",
+                        width: 0.5,
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                splitLine: {
+                    show: false,
+                },
+                axisLabel: {
+                    show: false,
+                },
+            },
+            // 6
+            {
+                type: "value",
+                position: "",
+                axisLine: {
+                    lineStyle: {
+                        color: "#000",
+                        width: 0.5,
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                splitLine: {
+                    show: false,
+                },
+                axisLabel: {
+                    show: false,
+                },
+            },
+            // 7
+            {
+                type: "value",
+                position: "",
+                axisLine: {
+                    lineStyle: {
+                        color: "#000",
+                        width: 0.5,
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                splitLine: {
+                    show: false,
+                },
+                axisLabel: {
+                    show: false,
+                },
+            },
+            // 8
+            {
+                type: "value",
+                position: "",
+                axisLine: {
+                    lineStyle: {
+                        color: "#000",
+                        width: 0.5,
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                splitLine: {
+                    show: false,
+                },
+                axisLabel: {
+                    show: false,
+                },
+            },
+            // 9
+            {
+                type: "value",
+                position: "",
+                axisLine: {
+                    lineStyle: {
+                        color: "#000",
+                        width: 0.5,
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                splitLine: {
+                    show: false,
+                },
+                axisLabel: {
+                    show: false,
+                },
+            },
+            // 10
+            {
+                type: "value",
+                position: "",
+                axisLine: {
+                    lineStyle: {
+                        color: "#000",
+                        width: 0.5,
+                    },
+                },
+                axisTick: {
+                    show: false,
+                },
+                splitLine: {
+                    show: false,
+                },
+                axisLabel: {
+                    show: false,
+                },
+            },
+        ],
+        series: [
+            // 展示
+            {
+                name: "",
+                type: "line",
+                smooth: true,
+                yAxisIndex: 0,
+                data: [],
+                symbol: "circle", // 设定为实心点
+                symbolSize: 6, // 设定实心点的大小
+                itemStyle: {
+                    normal: {
+                        color: "#0055ff",
+                        lineStyle: {
+                            color: "#0055ff",
+                            width: 2,
+                        },
+                    },
+                },
+            },
+            // DAU
+            {
+                name: "",
+                type: "line",
+                smooth: true,
+                yAxisIndex: 1,
+                data: [],
+                symbol: "circle", // 设定为实心点
+                symbolSize: 6, // 设定实心点的大小
+                itemStyle: {
+                    normal: {
+                        color: "#ffab31",
+                        lineStyle: {
+                            color: "#ffab31",
+                            width: 2,
+                        },
+                    },
+                },
+            },
+            // 预估收益
+            {
+                name: "",
+                type: "line",
+                smooth: true,
+                yAxisIndex: 2,
+                data: [],
+                symbol: "circle", // 设定为实心点
+                symbolSize: 6, // 设定实心点的大小
+                itemStyle: {
+                    normal: {
+                        color: "#39da61",
+                        lineStyle: {
+                            color: "#39da61",
+                            width: 2,
+                        },
+                    },
+                },
+            },
+            // 预估eCPM
+            {
+                name: "",
+                type: "line",
+                smooth: true,
+                yAxisIndex: 3,
+                data: [],
+                symbol: "circle", // 设定为实心点
+                symbolSize: 6, // 设定实心点的大小
+                itemStyle: {
+                    normal: {
+                        color: "#ff6688",
+                        lineStyle: {
+                            color: "#ff6688",
+                            width: 2,
+                        },
+                    },
+                },
+            },
+            // 展示/DAU
+            {
+                name: "",
+                type: "line",
+                smooth: true,
+                yAxisIndex: 4,
+                data: [],
+                symbol: "circle", // 设定为实心点
+                symbolSize: 6, // 设定实心点的大小
+                itemStyle: {
+                    normal: {
+                        color: "#a8a8ff",
+                        lineStyle: {
+                            color: "#a8a8ff",
+                            width: 2,
+                        },
+                    },
+                },
+            },
+            // 收益
+            {
+                name: "",
+                type: "line",
+                smooth: true,
+                yAxisIndex: 5,
+                data: [],
+                symbol: "circle", // 设定为实心点
+                symbolSize: 6, // 设定实心点的大小
+                itemStyle: {
+                    normal: {
+                        color: "#de7af9",
+                        lineStyle: {
+                            color: "#de7af9",
+                            width: 2,
+                        },
+                    },
+                },
+            },
+            // ecpm
+            {
+                name: "",
+                type: "line",
+                smooth: true,
+                yAxisIndex: 6,
+                data: [],
+                symbol: "circle", // 设定为实心点
+                symbolSize: 7, // 设定实心点的大小
+                itemStyle: {
+                    normal: {
+                        color: "rgb(0, 118, 143)",
+                        lineStyle: {
+                            color: "rgb(0, 118, 143)",
+                            width: 2,
+                        },
+                    },
+                },
+            },
+            // DEU
+            {
+                name: "",
+                type: "line",
+                smooth: true,
+                yAxisIndex: 7,
+                data: [],
+                symbol: "circle", // 设定为实心点
+                symbolSize: 7, // 设定实心点的大小
+                itemStyle: {
+                    normal: {
+                        color: "rgb(76, 180, 231)",
+                        lineStyle: {
+                            color: "rgb(76, 180, 231)",
+                            width: 2,
+                        },
+                    },
+                },
+            },
+            // 渗透率
+            {
+                name: "",
+                type: "line",
+                smooth: true,
+                yAxisIndex: 8,
+                data: [],
+                symbol: "circle", // 设定为实心点
+                symbolSize: 7, // 设定实心点的大小
+                itemStyle: {
+                    normal: {
+                        color: "rgb(255, 192, 159)",
+                        lineStyle: {
+                            color: "rgb(255, 192, 159)",
+                            width: 2,
+                        },
+                    },
+                },
+            },
+            // 流量请求
+            {
+                name: "",
+                type: "line",
+                smooth: true,
+                yAxisIndex: 9,
+                data: [],
+                symbol: "circle", // 设定为实心点
+                symbolSize: 7, // 设定实心点的大小
+                itemStyle: {
+                    normal: {
+                        color: "rgb(145, 78, 0)",
+                        lineStyle: {
+                            color: "rgb(145, 78, 0)",
+                            width: 2,
+                        },
+                    },
+                },
+            },
+            // 人均收益
+            {
+                name: "",
+                type: "line",
+                smooth: true,
+                yAxisIndex: 10,
+                data: [],
+                symbol: "circle", // 设定为实心点
+                symbolSize: 6, // 设定实心点的大小
+                itemStyle: {
+                    normal: {
+                        color: "#ff746c",
+                        lineStyle: {
+                            color: "#ff746c",
+                            width: 2,
+                        },
+                    },
+                },
+            },
+        ],
+    }
+    export let adminDateOotion ={
+        disabledDate(time) {
+          return time.getTime() > Date.now();
+        },
+        shortcuts: [
+          {
+            text: "最近一周",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+              picker.$emit("pick", [start, end]);
+            },
+          },
+          {
+            text: "最近14天",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 14);
+              picker.$emit("pick", [start, end]);
+            },
+          },
+          {
+            text: "最近一个月",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+              picker.$emit("pick", [start, end]);
+            },
+          },
+        ],
+      }

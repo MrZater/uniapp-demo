@@ -1,0 +1,141 @@
+<template>
+  <div class="point-arrow-container">
+    <div class="point_arrow">
+      <div
+        :class="{
+          point_line: true,
+          point_line_ontop: isTop,
+          point_line_onbottom: !isTop,
+          point_line_nojump: !isJump,
+          point_line_isjump: isJump,
+        }"
+      >
+        <div
+          :class="{
+            arrow_point: true,
+            arrow_point_ontop: isTop,
+            arrow_point_onbottom: !isTop,
+          }"
+        ></div>
+      </div>
+      <div
+        :class="{
+          top_line: true,
+          top_line_ontop: isTop,
+          top_line_onbottom: !isTop,
+          top_line_nojump: !isJump,
+          top_line_isjump: isJump,
+        }"
+      >
+        <div
+          :class="{
+            top_title: true,
+            top_title_ontop: isTop,
+            top_title_onbottom: !isTop,
+            top_title_nojump: !isJump,
+            top_title_isjump: isJump,
+          }"
+        >
+          <span class="title">{{ title }}</span>
+          <span class="test">{{ value }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "pointarrow",
+  props: {
+    title: { type: String, default: "" },
+    value: { type: String, default: "" },
+    isJump: { type: Boolean, default: false },
+    isTop: { type: Boolean, default: false },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.point_arrow {
+  .point_line {
+    position: absolute;
+    left: 50%;
+    height: 50px;
+    border: 1.8px solid #1890ff;
+    &.point_line_ontop {
+      top: -52px;
+      border-bottom: 0px;
+    }
+    &.point_line_onbottom {
+      top: 55px;
+      border-top: 0px;
+    }
+    &.point_line_nojump {
+      width: calc(100% + 52px);
+    }
+    &.point_line_isjump {
+      width: calc(200% + 104px);
+    }
+
+    .arrow_point {
+      border: 2px solid;
+      width: 10px;
+      height: 10px;
+      position: absolute;
+      right: -6px;
+      &.arrow_point_ontop {
+        border-left: 5px solid #fff;
+        border-right: 5px solid #fff;
+        border-top: 10px solid #1890ff;
+        border-bottom: 0px;
+        bottom: 0px;
+      }
+      &.arrow_point_onbottom {
+        border-left: 5px solid #fff;
+        border-right: 5px solid #fff;
+        border-bottom: 10px solid #1890ff;
+        border-top: 0px;
+        top: 0px;
+      }
+    }
+  }
+  .top_line {
+    position: absolute;
+    height: 40px;
+    border-left: 2px solid #1890ff;
+    left: calc(100% + 30px);
+    &.top_line_ontop {
+      top: -92px;
+    }
+    &.top_line_onbottom {
+      top: 105px;
+    }
+    &.top_line_nojump{
+        left: calc(100% + 30px);
+    }
+    &.top_line_isjump{
+        left: calc(125% + 60px);
+    }
+    .top_title {
+      width: 150px;
+      height: 35px;
+      border: 1px solid #1890ff;
+      position: absolute;
+      left: -75px;
+      line-height: 35px;
+      padding: 0 10px 0 10px;
+      display: flex;
+      justify-content: space-between;
+      border-radius: 5px;
+      &.top_title_ontop {
+        top: -35px;
+      }
+      &.top_title_onbottom {
+        top: 40px;
+        
+      }
+    }
+  }
+}
+</style>

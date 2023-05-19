@@ -1,0 +1,358 @@
+<template>
+  <div class="app-container">
+    <div class="filter-container">
+      <el-select
+        v-model="query.plat"
+        class="filter-item"
+        placeholder="广告源"
+        filterable
+        multiple
+        clearable
+      >
+        <el-option
+          v-for="item in platOptions"
+          :key="item.id"
+          :label="item.name"
+          :value="item.id"
+        />
+      </el-select>
+      <el-select
+        v-model="query.openApiStatus"
+        class="filter-item"
+        placeholder="报表API"
+        clearable
+      >
+        <el-option :value="0" label="未开通" />
+        <el-option :value="1" label="已开通" />
+      </el-select>
+      <el-button
+        v-waves
+        class="filter-item"
+        type="primary"
+        icon="el-icon-search"
+        @click="handleGetPager"
+        >查询</el-button
+      >
+    </div>
+    <div class="body-container">
+      <div class="filter-container">
+        <el-button
+          v-waves
+          type="primary"
+          icon="el-icon-plus"
+          class="filter-item"
+          @click="handleAdd"
+          >广告源</el-button
+        >
+      </div>
+      <el-table
+        :key="tableKey"
+        v-loading="listLoading"
+        :data="list"
+        border
+        fit
+        highlight-current-row
+      >
+        <el-table-column label="广告源" align="center" prop="platName">
+          <template slot-scope="{ row }">
+            <span>{{ row.platName }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="账户名称" align="center" prop="name">
+          <template slot-scope="{ row }">
+            <span>{{ row.name }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="报表API" align="center">
+          <template slot-scope="{ row }">
+            <el-tag v-if="row.openApiStatus === 0" type="danger">未开通</el-tag>
+            <el-tag v-else type="success">已开通</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="状态" align="center">
+          <template slot-scope="{ row }">
+            <el-tag v-if="row.sts === 'A'">启用</el-tag>
+            <el-tag v-else-if="row.sts === 'D'" type="info">暂停</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="接入方式" align="center">
+          <template slot-scope="{ row }">
+            <el-tag v-if="row.accessType === '0'">SDK</el-tag>
+            <el-tag v-else-if="row.accessType === '1'" type="success"
+              >API</el-tag
+            >
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" align="center">
+          <template slot-scope="{ row }">
+            <el-button type="primary" size="mini" @click="handleUpdate(row)">
+              编辑
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <Pagination
+        v-show="total > 0"
+        :total="total"
+        :page.sync="query.page"
+        :limit.sync="query.limit"
+        @pagination="handleGetPager"
+      />
+    </div>
+    <el-dialog
+      ref="dialog"
+      :title="dialogType === 0 ? '新增广告源' : '编辑广告源'"
+      :visible.sync="dialogVisible"
+    >
+      <el-form
+        ref="form"
+        :model="temp"
+        :rules="rules"
+        label-width="130px"
+        label-position="left"
+      >
+        <el-form-item label="广告源" prop="platId" :required="dialogType === 0">
+          <el-select
+            v-if="dialogType === 0"
+            v-model="temp.platId"
+            placeholder="请选择广告源"
+          >
+            <el-option
+              v-for="item in platOptions"
+              :key="item.id"
+              :value="item.id"
+              :label="item.name"
+            />
+          </el-select>
+          <span v-else>{{ temp.platName }}</span>
+        </el-form-item>
+        <el-form-item label="账户名称" prop="name">
+          <el-input
+            v-model="temp.name"
+            placeholder="输入名称以区分不同账号"
+            maxlength="30"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="报表API">
+          <el-radio-group
+            v-model="temp.openApiStatus"
+            :value="temp.openApiStatus ? temp.openApiStatus : 0"
+            size="small"
+          >
+            <el-radio :label="1" border>已开通</el-radio>
+            <el-radio :label="0" border>未开通</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item
+          v-if="
+            temp.openApiStatus === 1 &&
+            (temp.platId == '1' || temp.platId == '2')
+          "
+          label="账户ID"
+          prop="accountId"
+        >
+          <el-input
+            v-model="temp.accountId"
+            placeholder="请输入账户ID"
+            maxlength="30"
+            show-word-limit
+          />
+        </el-form-item>
+        <!-- 广点通 -->
+        <!-- <el-form-item
+          v-if="temp.openApiStatus === 1 && temp.platId == '2'"
+          label=""
+          prop="accessKey"
+        >
+          <el-input v-model="temp.accessKey" placeholder="请输入access_key" />
+        </el-form-item> -->
+        <!-- 穿山甲 -->
+        <el-form-item
+          v-if="temp.openApiStatus === 1 && temp.platId == '1'"
+          label="RoleId"
+          prop="accessKey"
+        >
+          <el-input v-model="temp.accessKey" placeholder="请输入access_key" />
+        </el-form-item>
+
+        <!-- 快手 -->
+        <el-form-item
+          v-if="temp.openApiStatus === 1 && temp.platId == '3'"
+          label="Access-Key"
+          prop="accessKey"
+        >
+          <el-input v-model="temp.accessKey" placeholder="请输入access_key" />
+        </el-form-item>
+
+        <!-- sigmob -->
+        <el-form-item
+          v-if="temp.openApiStatus === 1 && temp.platId == '7'"
+          label="Public-Key"
+          prop="accessKey"
+        >
+          <el-input v-model="temp.accessKey" placeholder="请输入access_key" />
+        </el-form-item>
+
+        <!-- 百度 -->
+        <el-form-item
+          v-if="temp.openApiStatus === 1 && temp.platId == '6'"
+          label="Access-Key"
+          prop="accessKey"
+        >
+          <el-input v-model="temp.accessKey" placeholder="请输入access_key" />
+        </el-form-item>
+
+        <el-form-item
+          v-if="temp.openApiStatus === 1"
+          label="Security-Key"
+          prop="secretKey"
+        >
+          <el-input v-model="temp.secretKey" placeholder="请输入secret_key" />
+        </el-form-item>
+        <el-form-item v-if="dialogType === 1" label="状态" prop="sts">
+          <el-select v-model="temp.sts">
+            <el-option value="A" label="启动" />
+            <el-option value="D" label="暂停" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handlePlatForm">确定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import waves from "@/directive/waves";
+import Pagination from "@/components/Pagination";
+import { Message } from "element-ui";
+import {
+  addPlatform,
+  getPlatOptions,
+  getPlatPager,
+  updatePlatform,
+} from "@/api/plat";
+export default {
+  name: "Platform",
+  components: { Pagination },
+  directives: { waves },
+  data() {
+    const checkSts = (rule, value, callback) => {
+      if (value && value === "D") {
+        return callback(
+          new Error(
+            "暂停后，该广告源下所有代码位状态都关闭，再次启用时需要开发者把对应的代码位状态手动打开。因此请谨慎操作！"
+          )
+        );
+      } else {
+        callback();
+      }
+    };
+    const secretKeyValidator = (rule, value, callback) => {
+      if (!value || value === "") {
+        return callback(new Error("请输入secret_key"));
+      } else {
+        callback();
+      }
+    };
+    const accessKeyValidator = (rule, value, callback) => {
+      if (!value || value === "") {
+        return callback(new Error("请输入access_key"));
+      } else {
+        callback();
+      }
+    };
+    return {
+      query: {
+        plat: null,
+        openApiStatus: null,
+        page: 0,
+        limit: 20,
+      },
+      platOptions: [],
+      tableKey: 0,
+      listLoading: false,
+      list: [],
+      total: 0,
+      temp: { openApiStatus: 1 },
+      dialogType: 0,
+      dialogVisible: false,
+      rules: {
+        platId: [
+          { required: true, message: "请选择广告源", trigger: "change" },
+        ],
+        name: [{ required: true, message: "请输入账户名称", trigger: "blur" }],
+        sts: [{ required: true, validator: checkSts, trigger: "change" }],
+        secretKey: [
+          { required: true, validator: secretKeyValidator, trigger: "blur" },
+        ],
+        accessKey: [
+          { required: true, validator: accessKeyValidator, trigger: "blur" },
+        ],
+        accountId: [
+          { required: true, message: "请输入用户ID", trigger: "blur" },
+        ],
+      },
+    };
+  },
+  created() {
+    this.initPlatOptions();
+    this.handleGetPager();
+  },
+  methods: {
+    initPlatOptions() {
+      getPlatOptions().then((res) => {
+        this.platOptions = res.data;
+      });
+    },
+    handleGetPager() {
+      getPlatPager(this.query).then((res) => {
+        this.total = res.data.total;
+        this.list = res.data.items;
+      });
+    },
+    handleAdd() {
+      this.dialogType = 0;
+      this.temp = { openApiStatus: 1 };
+      this.dialogVisible = true;
+    },
+    handleUpdate(row) {
+      this.dialogType = 1;
+      this.temp = JSON.parse(JSON.stringify(row));
+      this.dialogVisible = true;
+    },
+    handlePlatForm() {
+      let _this = this;
+      this.$refs.form.validate(async (valid) => {
+        if (valid) {
+          if (_this.dialogType === 0) {
+            await addPlatform(_this.temp).then((res) => {
+              Message({
+                message: res.msg,
+                type: "success",
+                duration: 5 * 1000,
+              });
+            });
+          } else if (_this.dialogType === 1) {
+            await updatePlatform(_this.temp).then((res) => {
+              Message({
+                message: res.msg,
+                type: "success",
+                duration: 5 * 1000,
+              });
+            });
+          }
+          _this.dialogVisible = false;
+          _this.handleGetPager();
+        }
+      });
+    },
+  },
+};
+</script>
+
+<style scoped>
+</style>

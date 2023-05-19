@@ -1,0 +1,768 @@
+<template>
+  <div>
+    <el-card>
+      <el-row class="box" :gutter="10">
+        <el-col :span="5">
+          <div class="grid-content bg-purple">
+            <el-input
+              v-model="subAccount.name"
+              clearable
+              placeholder="请输入账号名称或登录邮箱"
+              @clear="clear"
+              @keyup.native="trimName('subAccount', 'name')"
+            />
+          </div>
+        </el-col>
+
+        <el-col :span="4" v-if="$store.state.user.roles[0] !== 'SUPER_ADMIN'">
+          <div class="grid-content bg-purple">
+            <el-select
+              v-model="subAccount.role"
+              placeholder="选择权限"
+              clearable
+              @clear="clear"
+            >
+              <template v-for="(item, i) in options">
+                <el-option :key="i" :label="item.label" :value="item.value" />
+              </template>
+            </el-select>
+          </div>
+        </el-col>
+        <el-col :span="4">
+          <div class="grid-content bg-purple">
+            <el-select
+              v-model="subAccount.sts"
+              placeholder="状态"
+              clearable
+              @clear="clear"
+            >
+              <el-option
+                v-for="(item, i) in options1"
+                :key="i"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+          </div>
+        </el-col>
+        <el-col :span="4">
+          <div class="grid-content bg-purple">
+            <el-button type="primary" plain @click="searchAccount"
+              >搜索</el-button
+            >
+          </div>
+        </el-col>
+      </el-row>
+    </el-card>
+    <el-card>
+      <el-button type="primary" class="addAccount" @click="addAccount"
+        >新增账号</el-button
+      >
+
+      <el-table :data="AccountTable" border style="width: 100%">
+        <el-table-column
+          align="center"
+          prop="name"
+          label="账号名称"
+          min-width="150px"
+        />
+        <el-table-column
+          align="center"
+          prop="loginId"
+          label="登陆邮箱"
+          width="180"
+        />
+        <el-table-column align="center" prop="role" label="角色">
+          <template slot-scope="{ row }">
+            <div>
+              <span v-if="row.role === 2">管理员</span>
+              <span v-if="row.role === 3">运营</span>
+              <span v-if="row.role === 4">报表</span>
+              <span v-if="row.role === 5">审核</span>
+              <span v-if="row.role === 6">商务</span>
+              <span v-if="row.role === 7">媒体</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column
+          v-if="$store.state.user.roles[0] !== 'ADMIN'"
+          align="center"
+          prop="company"
+          label="公司名称"
+          min-width="150px"
+        >
+          <template slot-scope="{ row }">
+            {{ row.company ? row.company : "-" }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          v-if="$store.state.user.roles[0] !== 'ADMIN'"
+          align="center"
+          prop="contact"
+          label="联系人"
+        >
+          <template slot-scope="{ row }">
+            {{ row.contact ? row.contact : "-" }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          v-if="$store.state.user.roles[0] !== 'ADMIN'"
+          align="center"
+          prop="mobile"
+          label="手机号"
+          width="120px"
+        >
+          <template slot-scope="{ row }">
+            {{ row.mobile ? row.mobile : "-" }}
+          </template> </el-table-column
+        ><el-table-column
+          v-if="$store.state.user.roles[0] !== 'ADMIN'"
+          align="center"
+          prop="appNum"
+          width="60px"
+          label="应用"
+        >
+          <template slot-scope="{ row }">
+            {{ row.appNum + "个" }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          v-if="$store.state.user.roles[0] !== 'ADMIN'"
+          align="center"
+          prop="businessName"
+          label="负责商务"
+        >
+          <template slot-scope="{ row }">
+            {{ row.businessName ? row.businessName : "-" }}
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="sts" label="状态" align="center">
+          <template slot-scope="{ row }">
+            <div>
+              <el-tag v-if="row.sts === 'A'">启用</el-tag>
+              <el-tag v-if="row.sts === 'S'" type="danger">停用</el-tag>
+            </div>
+            <template />
+          </template>
+        </el-table-column>
+        <el-table-column prop="sts" label="操作" align="center" width="150px">
+          <template slot-scope="{ row }">
+            <div class="tabledo">
+              <el-tooltip content="编辑" placement="top" effect="light">
+                <div class="doicon" @click="editAccount(row)">
+                  <svg-icon
+                    style="color: #3685df"
+                    class="svgicon"
+                    icon-class="edit"
+                  ></svg-icon>
+                </div>
+              </el-tooltip>
+              <el-tooltip content="设置权限" placement="top" effect="light">
+                <div
+                  v-if="row.role === 2"
+                  class="filter-item doicon"
+                  @click="setPermissions(row)"
+                >
+                  <svg-icon
+                    style="color: rgb(0, 47, 167)"
+                    class="svgicon power"
+                    icon-class="power"
+                  ></svg-icon>
+                </div>
+              </el-tooltip>
+              <el-tooltip content="删除" placement="top" effect="light">
+                <div class="filter-item doicon" @click="delAccount(row)">
+                  <svg-icon
+                    style="color: #ff0000"
+                    class="svgicon"
+                    icon-class="delete"
+                  ></svg-icon>
+                </div>
+              </el-tooltip>
+            </div>
+            <!-- <div>
+              <el-button size="mini" type="primary" @click="editAccount(row)"
+                >编辑</el-button
+              >
+              <el-button size="mini" type="danger" @click="delAccount(row)"
+                >删除</el-button
+              >
+              <el-button
+                size="mini"
+                type="warning"
+                @click="setPermissions(row)"
+                v-if="row.role === 2"
+                >设置权限</el-button
+              >
+            </div> -->
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        style="margin: 30px 0 0 0"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="subAccount.page"
+        :page-sizes="[5, 10, 20]"
+        :page-size="subAccount.limit"
+        layout="total,sizes,prev,pager,next,jumper"
+        :total="total"
+      />
+    </el-card>
+    <!-- 添加 -->
+    <el-dialog
+      :title="isAdd ? '添加账号' : '编辑账号'"
+      :visible.sync="accountDialogVisible"
+      width="50%"
+      @close="closeDialog"
+    >
+      <el-form
+        ref="ruleForm"
+        :rules="rules"
+        :model="accountForm"
+        label-width="130px"
+      >
+        <el-form-item label="账号名称" prop="name">
+          <el-input
+            v-model="accountForm.name"
+            maxlength="30"
+            placeholder="请输入账号名称"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="登录邮箱" prop="loginId">
+          <el-input
+            v-model="accountForm.loginId"
+            :disabled="!isAdd"
+            placeholder="请输入登录邮箱"
+          />
+        </el-form-item>
+        <el-form-item v-if="isAdd" label="密码" prop="password">
+          <el-input
+            v-model="accountForm.password"
+            placeholder="密码"
+            type="password"
+            show-password
+          />
+        </el-form-item>
+        <el-form-item label="应用范围" prop="">
+          <el-select
+            v-model="department"
+            placeholder="选择应用"
+            multiple
+            collapse-tags
+            @change="getSelectDep"
+          >
+            <div style="padding-left: 10px">
+              <el-checkbox
+                v-model="checkedThing"
+                :style="selfstyle"
+                @change="selectAllThing"
+                >全选</el-checkbox
+              >
+            </div>
+            <el-option
+              v-for="(item, index) in departments"
+              :key="index"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="角色" prop="role">
+          <el-radio-group v-model="accountForm.role">
+            <el-radio
+              v-if="$store.getters.roles[0] !== 'ADMIN'"
+              :disabled="disabled"
+              :label="2"
+              >管理员</el-radio
+            >
+            <el-radio v-if="isShow" :label="3">运营</el-radio>
+            <el-radio v-if="isShow" :label="4">报表</el-radio>
+            <el-radio v-if="isShow && $store.getters.creative === 1" :label="5"
+              >审核</el-radio
+            >
+            <el-radio
+              v-if="$store.getters.roles[0] !== 'ADMIN'"
+              :disabled="disabled"
+              :label="6"
+              >商务</el-radio
+            >
+            <el-radio
+              v-if="
+                $store.getters.roles[0] == 'SUPER_ADMIN' ||
+                ($store.getters.roles[0] == 'ADMIN' &&
+                  $store.state.user.mediaAccess == 1)
+              "
+              :disabled="disabled"
+              :label="7"
+              >媒体</el-radio
+            >
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item
+          v-if="accountForm.role == 2"
+          label="商务"
+          prop="businessId"
+        >
+          <el-select v-model="accountForm.businessId" placeholder="请选择">
+            <el-option
+              v-for="(item, i) in businessIdOptions"
+              :key="i"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item v-if="!isAdd" label="状态" prop="sts">
+          <el-select v-model="accountForm.sts" placeholder="请选择">
+            <el-option
+              v-for="(item, i) in options1"
+              :key="i"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="accountDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="handelAddAccount">确 定</el-button>
+      </span>
+    </el-dialog>
+
+    <!-- 设置权限-->
+    <el-dialog
+      title="设置权限"
+      :visible.sync="permissionsDialogVisible"
+      width="50%"
+      @close="closePermissionsDialog"
+    >
+      <el-form label-width="130px">
+        <el-form-item label="素材审核权限">
+          <el-switch
+            v-model="permissionsForm.creative"
+            :active-value="1"
+            :inactive-value="0"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+          />
+        </el-form-item>
+        <el-form-item label="跳过按钮统一">
+          <el-switch
+            v-model="permissionsForm.skip"
+            :active-value="1"
+            :inactive-value="0"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+          />
+        </el-form-item>
+        <el-form-item label="媒体权限">
+          <el-switch
+            v-model="permissionsForm.mediaAccess"
+            :active-value="1"
+            :inactive-value="0"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+          />
+        </el-form-item>
+
+        <el-form-item label="广告源">
+          <div>
+            <el-checkbox-group v-model="platNames" size="small">
+              <el-checkbox
+                border
+                v-for="(item, i) in platOptions"
+                :key="i"
+                :label="item.name"
+              ></el-checkbox>
+            </el-checkbox-group>
+          </div>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="permissionsDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="handlePermissions">确 定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+<script>
+import {
+  accountList,
+  addAccount,
+  delSonAccount,
+  updateAccount,
+  handlePermissions,
+  getBusinessIdOptions,
+} from "@/api/advanced";
+import { getAppList } from "@/api/app";
+import { getPlatOptions } from "@/api/plat";
+// import { mapGetters} from 'vuex'
+export default {
+  computed: {
+    // ...mapGetters(['roles'])
+  },
+  data() {
+    // 是否包含一位数字
+    const regNumber = /(?=.*[\d])/;
+    // 是否包含一位小写字母
+    const regLetter = /(?=.*[a-z])/;
+    // 是否包含一位大写字母
+    const regLetters = /(?=.*[A-Z])/;
+    // 是否包含一位特殊字符
+    const regCharacter =
+      /(?=.*[`~!@#$%^&*()_\-+=<>?:"{}|,.\/;'\\[\]·~！@#￥%……&*（）——\-+={}|《》？：“”【】、；‘’，。、])/;
+    // 校验新密码
+    const validatePass = (rule, value, callback) => {
+      if (value === "") {
+        callback(new Error("新密码不能为空！请重新输入"));
+      } else {
+        if (value.length > 16) {
+          callback(new Error("密码长度不超过16个字符。"));
+        } else if (value.length < 8) {
+          callback(new Error("密码不低于8位，包含大小字母、数字、特殊符号"));
+        } else {
+          if (!/^[a-zA-Z\d]{1}/.test(value)) {
+            callback(new Error("密码必须以英文大小写字母或数字开头！"));
+          } else {
+            if (!regNumber.test(value)) {
+              callback(
+                new Error("密码不低于8位，包含大小字母、数字、特殊符号!")
+              );
+              // callback(new Error("密码必须包含一位数字!"));
+            } else if (!regLetter.test(value)) {
+              callback(
+                new Error("密码不低于8位，包含大小字母、数字、特殊符号!")
+              );
+              // callback(new Error("密码必须包含一位小写字母!"));
+            } else if (!regLetters.test(value)) {
+              callback(
+                new Error("密码不低于8位，包含大小字母、数字、特殊符号!")
+              );
+              // callback(new Error("密码必须包含一位大写字母!"));
+            } else if (!regCharacter.test(value)) {
+              callback(
+                new Error("密码不低于8位，包含大小字母、数字、特殊符号!")
+              );
+              // callback(new Error("密码必须包含一位特殊字符!"));
+            } else {
+              callback();
+            }
+          }
+        }
+      }
+    };
+    return {
+      subAccount: {
+        name: "",
+        loginId: "",
+        role: "",
+        sts: "",
+        businessId: null,
+        page: 1,
+        limit: 10,
+      },
+      total: 0,
+      accountDialogVisible: false,
+      permissionsDialogVisible: false,
+      AccountTable: [],
+      platOptions: [],
+      businessIdOptions: [],
+      platNames: [],
+      isAdd: true,
+      isShow: true,
+      disabled: false,
+
+      options: [
+        {
+          value: "3",
+          label: "运营",
+        },
+        {
+          value: "4",
+          label: "报表",
+        },
+      ],
+      accountForm: {
+        name: "",
+        loginId: "",
+        password: "",
+        appList: [],
+        role: "",
+        sts: "",
+        businessId: null,
+      },
+      permissionsForm: {
+        userId: null,
+        platIds: [],
+        skip: 0,
+        creative: 0,
+        mediaAccess: 0,
+      },
+      checkedThing: false,
+      department: [],
+      selfstyle: {
+        textAlign: "right",
+        paddingRight: "10px",
+      },
+      options1: [
+        {
+          value: "A",
+          label: "启用",
+        },
+        {
+          value: "S",
+          label: "暂停",
+        },
+      ],
+      tableData: [],
+      departments: [],
+      rules: {
+        name: [{ required: true, message: "请输入账号名称", trigger: "blur" }],
+        loginId: [
+          {
+            required: true,
+            message: "请填写邮箱,作为登录账号名",
+            trigger: "blur",
+          },
+          {
+            message: "邮箱无效",
+            trigger: "blur",
+            pattern: /^\w+@[a-z0-9]+\.[a-z]{2,4}$/,
+          },
+        ],
+        role: [{ required: true, message: "请选择权限", trigger: "blur" }],
+        sts: [{ required: true, message: "请选择状态", trigger: "blur" }],
+        password: [
+          { required: true, trigger: "blur", validator: validatePass },
+        ],
+      },
+    };
+  },
+
+  mounted() {
+    // if (this.$store.getters.roles[0] !== "SUPER_ADMIN") {
+    this.subAccount.loginId = this.$store.state.user.loginId;
+    // console.log(this.$store.state.user.loginId)
+    // }
+    if (this.$store.getters.roles[0] === "SUPER_ADMIN") {
+      this.options.unshift({ value: 2, label: "管理员" });
+      this.options.unshift({ value: 7, label: "媒体" });
+      this.subAccount.role = 2;
+    }
+    if (
+      this.$store.getters.roles[0] === "ADMIN" &&
+      this.$store.state.user.mediaAccess == 1
+    ) {
+      this.options.unshift({ value: 7, label: "媒体" });
+    }
+    if (
+      this.$store.getters.roles[0] === "ADMIN" &&
+      this.$store.state.user.creative == 1
+    ) {
+      this.options.unshift({ value: 5, label: "审核" });
+    }
+
+    this.getAccountList();
+    this.getAppList();
+    this.initPlatOptions();
+    this.initBusinessIdOptions();
+  },
+  methods: {
+    clear() {
+      // this.getAccountList();
+    },
+    // 去中间空格
+    trimName(val, value) {
+      this[val][value] = this[val][value].replace(/\s+/g, "");
+    },
+    getAccountList() {
+      accountList(this.subAccount).then((res) => {
+        if (res.code != 200) return;
+        this.AccountTable = res.data.items;
+        this.total = res.data.total;
+      });
+    },
+    getAppList() {
+      getAppList().then((res) => {
+        this.departments = res.data;
+      });
+    },
+    addAccount() {
+      this.isShow = true;
+      this.disabled = false;
+      this.accountDialogVisible = true;
+      this.isAdd = true;
+    },
+    // 编辑 数据回显
+    editAccount(row) {
+      this.isAdd = false;
+      this.accountDialogVisible = true;
+      row = JSON.parse(JSON.stringify(row));
+      if (row.role == 2) {
+        this.disabled = true;
+        this.isShow = false;
+      } else {
+        this.disabled = false;
+        this.isShow = true;
+      }
+      this.accountForm = row;
+      this.department = row.appList;
+    },
+    searchAccount() {
+      if (this.$store.getters.roles[0] !== "SUPER_ADMIN") {
+        this.subAccount.loginId = this.$store.state.user.loginId;
+      }
+      this.getAccountList();
+    },
+    // 删除
+    delAccount(row) {
+      this.$confirm("你确定要删除这条子账户吗？", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then(() => {
+          delSonAccount({ id: row.id }).then((res) => {
+            if (res.code != 200) return;
+            this.getAccountList();
+            this.$message.success("删除成功");
+          });
+        })
+        .catch(() => {});
+    },
+    handelAddAccount() {
+      this.$refs.ruleForm.validate((val) => {
+        if (!val) return;
+        // 添加
+        if (this.isAdd) {
+          addAccount(this.accountForm).then((res) => {
+            if (res.code != 200) return this.$message.error(res.msg);
+            this.$message.success("添加成功");
+            this.getAccountList();
+            this.initBusinessIdOptions();
+            this.accountDialogVisible = false;
+          });
+        } else {
+          updateAccount(this.accountForm).then((res) => {
+            if (res.code != 200) return this.$message.error(res.msg);
+            this.$message.success("编辑成功");
+            this.getAccountList();
+            this.initBusinessIdOptions();
+            this.accountDialogVisible = false;
+          });
+        }
+      });
+    },
+    setPermissions(row) {
+      this.permissionsDialogVisible = true;
+      this.platNames = [];
+      row = JSON.parse(JSON.stringify(row));
+      this.permissionsForm.userId = row.id;
+      this.permissionsForm.skip = row.skip;
+      this.permissionsForm.creative = row.creative;
+      this.permissionsForm.mediaAccess = row.mediaAccess;
+
+      row.platIds.forEach((item) => {
+        this.platNames.push(
+          this.platOptions.find((plat) => plat.id === item).name
+        );
+      });
+    },
+    getSelectDep(department) {
+      if (department.length === this.departments.length) {
+        this.checkedThing = true;
+      } else {
+        this.checkedThing = false;
+      }
+      this.accountForm.appList = department;
+    },
+    // 应用全选
+    selectAllThing() {
+      this.department = [];
+      if (this.checkedThing) {
+        this.departments.map((item) => {
+          this.department.push(item.id);
+        });
+      } else {
+        this.department = [];
+      }
+      this.accountForm.appList = this.department;
+    },
+    closeDialog() {
+      this.$refs.ruleForm.resetFields();
+      this.accountForm = {
+        name: "",
+        loginId: "",
+        password: "",
+        appList: [],
+        role: "",
+        sts: "",
+      };
+      this.department = [];
+      this.checkedThing = false;
+    },
+    closePermissionsDialog() {
+      this.permissionsDialogVisible = false;
+    },
+    initPlatOptions() {
+      getPlatOptions().then((res) => {
+        this.platOptions = res.data;
+      });
+    },
+    initBusinessIdOptions() {
+      getBusinessIdOptions().then((res) => {
+        this.businessIdOptions = res.data;
+      });
+    },
+    //设置权限
+    handlePermissions() {
+      let platIds = [];
+      this.platNames.forEach((item) => {
+        platIds.push(this.platOptions.find((plat) => plat.name === item).id);
+      });
+      this.permissionsForm.platIds = platIds;
+      handlePermissions(this.permissionsForm).then((res) => {
+        if (res.code != 200) return this.$message.error(res.msg);
+        this.$message.success("编辑成功");
+        this.getAccountList();
+        this.permissionsDialogVisible = false;
+      });
+    },
+    handleSizeChange(val) {
+      this.subAccount.limit = val;
+      this.getAccountList();
+    },
+    handleCurrentChange(val) {
+      this.subAccount.page = val;
+      this.getAccountList();
+    },
+  },
+};
+</script>
+<style lang="scss" scoped>
+.box {
+  display: flex;
+  // justify-content: space-between;
+  // align-items: center;
+  height: 60px;
+}
+.addAccount {
+  margin-bottom: 20px;
+}
+.tabledo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  .doicon {
+    margin: 0 5px;
+    font-size: 16px;
+    cursor: pointer;
+    .power {
+      font-size: 20px;
+    }
+  }
+}
+</style>

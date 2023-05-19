@@ -1,0 +1,624 @@
+<template>
+  <div class="app-container">
+    <div class="filter-container">
+      <el-select
+        v-model="query.os"
+        class="filter-item"
+        placeholder="操作系统"
+        clearable
+      >
+        <el-option label="全部" value="" />
+        <el-option label="Android" :value="1" />
+        <el-option label="iOS" :value="0" />
+      </el-select>
+      <el-select
+        v-model="query.appIds"
+        class="filter-item"
+        placeholder="应用"
+        multiple
+        collapse-tags
+        filterable
+        clearable
+      >
+        <el-option
+          v-for="item in appOptions"
+          :key="item.id"
+          :label="item.name"
+          :value="item.id"
+        />
+      </el-select>
+      <el-button
+        v-waves
+        class="filter-item"
+        type="primary"
+        icon="el-icon-search"
+        @click="handleGetPager"
+        >查询</el-button
+      >
+    </div>
+    <div class="body-container">
+      <div class="filter-container">
+        <el-button
+          v-waves
+          type="primary"
+          icon="el-icon-plus"
+          class="filter-item"
+          @click="handleAdd"
+          >应用</el-button
+        >
+      </div>
+      <el-table
+        :key="tableKey"
+        v-loading="listLoading"
+        :data="list"
+        border
+        fit
+        highlight-current-row
+      >
+        <el-table-column label="应用" align="center">
+          <template slot-scope="{ row }">
+            <div class="app-td-container">
+              <div class="app-icon">
+                <el-image
+                  fit="fill"
+                  style="width: 40px; height: 40px; border-radius: 10px"
+                  :src="
+                    row.iconUrl
+                      ? getCreativeUrl(row.iconUrl)
+                      : 'https://creative.bxsnews.com/medpro/imgs/app-none.png'
+                  "
+                />
+              </div>
+              <div class="app-info-container">
+                <div class="app-name">
+                  <svg-icon :icon-class="row.os === 1 ? 'android' : 'ios'" />
+                  <span>{{ row.name }}</span>
+                </div>
+                <div class="app-id">
+                  <span>ID:{{ row.id }}</span>
+                  <el-popover trigger="hover" content="复制ID">
+                    <i
+                      slot="reference"
+                      class="el-icon-copy-document"
+                      style="cursor: pointer"
+                      @click="copyId(row.id)"
+                    />
+                  </el-popover>
+                </div>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="广告位数量" align="center" prop="adPlaceNum" />
+        <!-- <el-table-column
+          label="状态"
+          align="center"
+          prop="adPlaceNum"
+          width="100"
+        >
+          <template slot-scope="{ row }">
+            <div>
+              <el-tag v-if="row.sts === 'A'">运行中</el-tag>
+              <el-tag type="danger" v-if="row.sts === 'S'">已停止</el-tag>
+            </div>
+          </template></el-table-column
+        > -->
+        <el-table-column label="操作" align="center">
+          <template slot-scope="{ row }">
+            <!-- <el-button type="primary" size="mini">
+              <router-link
+                :to="{ path: '/traffic/adplace', query: { appId: row.id } }"
+                >查看广告位</router-link
+              >
+            </el-button> -->
+            <el-button
+              type="primary"
+              size="mini"
+              @click="handleAppAccountLink(row)"
+              >账户绑定</el-button
+            >
+            <el-button
+              v-waves
+              size="mini"
+              type="primary"
+              icon="el-icon-plus"
+              class="filter-item"
+              @click="handleAddplace(row)"
+              >广告位</el-button
+            >
+            <el-button type="primary" size="mini" @click="handleUpdate(row)">
+              编辑
+            </el-button>
+            <el-button size="small" type="danger" @click="handleDelete(row)"
+              >删除</el-button
+            >
+          </template>
+        </el-table-column>
+      </el-table>
+      <pagination
+        v-show="total > 0"
+        :total="total"
+        :page.sync="query.page"
+        :limit.sync="query.limit"
+        @pagination="handleGetPager"
+      />
+    </div>
+    <!-- 应用 -->
+    <el-dialog
+      ref="dialog"
+      :title="dialogType === 0 ? '新增' : '编辑'"
+      :visible.sync="dialogVisible"
+    >
+      <el-form
+        ref="form"
+        :model="temp"
+        :rules="rules"
+        label-width="100px"
+        label-position="left"
+      >
+        <el-form-item v-if="dialogType === 1" label="应用ID">
+          <el-input v-model="temp.id" disabled />
+        </el-form-item>
+        <el-form-item label="操作系统">
+          <el-radio-group v-model="temp.os" :disabled="dialogType === 1">
+            <el-radio :label="1">Android</el-radio>
+            <el-radio :label="0">iOS</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="应用名称" prop="name">
+          <el-input v-model="temp.name" maxlength="30" show-word-limit />
+        </el-form-item>
+        <el-form-item label="包名" prop="bundle">
+          <el-input v-model="temp.bundle" />
+        </el-form-item>
+        <el-form-item label="下载地址">
+          <el-input v-model="temp.downloadUrl" placeholder="选填" />
+        </el-form-item>
+        <el-form-item label="图标">
+          <el-upload
+            ref="myUpload"
+            :action="uploadUrl"
+            :headers="header"
+            :multiple="false"
+            :on-success="handleLogoSuccess"
+            :on-remove="handleLogoRemove"
+            accept="image/*"
+            list-type="picture-card"
+            :limit="1"
+          >
+            <img v-if="temp.iconUrl" :src="temp.iconUrl" width="100%" />
+            <div v-else>
+              <i class="el-icon-upload" />
+            </div>
+          </el-upload>
+        </el-form-item>
+        <el-form-item label="行业">
+          <el-cascader
+            v-model="temp.tradeId"
+            :props="SetKesDept"
+            :options="industry"
+          />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="temp.sts" placeholder="请选择广告位">
+            <el-option label="运行中" :value="'A'"></el-option>
+            <el-option label="已暂停" :value="'S'"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="接入方式">
+          <el-select v-model="temp.accessType" placeholder="请选择接入方式">
+            <el-option
+              v-for="item in accessTypes"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSubmitForm">确定</el-button>
+      </span>
+    </el-dialog>
+    <!-- 广告位 -->
+    <el-dialog
+      ref="dialog"
+      :title="'新增'"
+      :visible.sync="addplacedialogVisible"
+    >
+      <el-form
+        ref="form"
+        :model="addplacetemp"
+        :rules="addplacerules"
+        label-width="100px"
+        label-position="left"
+      >
+        <el-form-item label="应用" prop="appId">
+          <el-select
+            v-model="addplacetemp.appId"
+            placeholder="请选择应用"
+            :disabled="addplacedialogType === 1"
+            filterable
+          >
+            <el-option
+              v-for="item in addplaceappOptionsAll"
+              :key="item.id"
+              :value="item.id"
+              :label="item.name"
+            >
+              <svg-icon :icon-class="item.os === 1 ? 'android' : 'ios'" />
+              <span>{{ item.name }}</span>
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="广告位名称" prop="name">
+          <el-input
+            v-model="addplacetemp.name"
+            maxlength="30"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="广告样式" prop="position">
+          <el-select v-model="addplacetemp.position" clearable filterable>
+            <el-option
+              v-for="item in positionOptions"
+              :key="item.id"
+              :value="item.id"
+              :label="item.name"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item
+          v-if="addplacetemp.position === 1 && $store.getters.skip === 1"
+          label="跳过"
+        >
+          <el-radio-group v-model="addplacetemp.skip">
+            <el-radio label="A">开启</el-radio>
+            <el-radio label="S">关闭</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item v-if="addplacedialogType === 1" label="启用">
+          <el-radio-group v-model="addplacetemp.sts">
+            <el-radio label="A">启用</el-radio>
+            <el-radio label="S">停止</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="素材模板" v-if="isShowCreativeTemplate != -1">
+          <!-- <el-input v-model="temp.templateIds" /> -->
+          <el-select
+            multiple
+            v-model="addplacetemp.templateIds"
+            placeholder="请选择素材模板"
+          >
+            <el-option
+              v-for="item in materialTempList"
+              :key="item.id"
+              :value="item.id"
+              :label="item.sizeName"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="addplacetemp.remark" />
+        </el-form-item>
+        <el-form-item label="审核状态" v-if="$store.getters.creative === 1">
+          <el-switch
+            v-model="addplacetemp.auditSts"
+            active-value="A"
+            inactive-value="S"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+          />
+        </el-form-item>
+        <el-form-item label="投放等级" v-if="$store.getters.creative === 1">
+          <el-select v-model="addplacetemp.level" placeholder="请选择">
+            <el-option
+              v-for="item in levelOptions"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="addplacedialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="addplacehandleSubmitForm"
+          >确定</el-button
+        >
+      </span>
+    </el-dialog>
+
+    <!-- 删除提示框 -->
+    <el-dialog :title="'提示'" :visible.sync="delVisible" width="50%" center>
+      <div class="del-dialog-cnt">确认删除</div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="delVisible = false">取消</el-button>
+        <el-button type="primary" @click="deleteRow">确认</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog title="账户绑定" :visible.sync="dialogPlatLinkVisible">
+      <app-platform :app-id="appId" :linked-show="true" />
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="dialogPlatLinkVisible = false"
+          >确认</el-button
+        >
+      </span>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import waves from "@/directive/waves";
+import { getPositionList } from "@/api/common";
+import { addAdplace, updateAdplace } from "@/api/place";
+
+import Pagination from "@/components/Pagination";
+import { Message } from "element-ui";
+import { getToken } from "@/utils/auth";
+import { industrySelect } from "@/api/synthReport";
+import { addApp, getAppList, getAppPager, updateApp } from "@/api/app";
+import { copy } from "@/utils/string";
+import request from "@/utils/request";
+import AppPlatform from "@/components/Platform";
+
+const HTTP_PREFIX = "http://creative.bxsnews.com/material/";
+export default {
+  name: "App",
+  components: { Pagination, AppPlatform },
+  directives: { waves },
+  data() {
+    return {
+      query: {
+        os: null,
+        appIds: null,
+        page: 0,
+        limit: 20,
+      },
+      appOptions: [],
+      appOptionsAll: [],
+      addplaceappOptionsAll: [],
+      positionOptions: [],
+      isShowCreativeTemplate: -1,
+      levelOptions: [
+        { id: 1, name: "一级" },
+        { id: 2, name: "二级" },
+        { id: 3, name: "三级" },
+        { id: 4, name: "四级" },
+      ],
+
+      tableKey: 0,
+      industry: [],
+      listLoading: false,
+      list: [],
+      SetKesDept: {
+        value: "id",
+        label: "name",
+        children: "children",
+        emitPath: false,
+      },
+      accessTypes: [
+        { id: 1, name: "api" },
+        { id: 0, name: "sdk" },
+      ],
+      total: 0,
+      // 添加应用
+      temp: {
+        os: 1,
+        accessType: "",
+        tradeId: "",
+      },
+
+      dialogType: 0,
+      dialogVisible: false,
+      delVisible: false,
+      // 添加广告位
+      addplacetemp: {
+        auditSts: "",
+        level: "",
+        skip: "S",
+      },
+      addplacedialogType: 0,
+      addplacedialogVisible: false,
+
+      rules: {
+        name: [{ required: true, message: "请输入名称", trigger: "blur" }],
+        bundle: [{ required: true, message: "请输入包名", trigger: "blur" }],
+      },
+      addplacerules: {
+        appId: [{ required: true, message: "请选择APP", trigger: "change" }],
+        name: [{ required: true, message: "请输入名称", trigger: "blur" }],
+        position: [
+          { required: true, message: "请选择位置", trigger: "change" },
+        ],
+      },
+      uploadUrl: global.UPLOAD_URL,
+      header: {
+        Authorization: getToken(),
+      },
+      dialogPlatLinkVisible: false,
+      appId: null,
+    };
+  },
+  watch: {
+    dialogVisible(newValue, oldValue) {
+      if (oldValue) {
+        this.$nextTick(() => {
+          this.$refs.myUpload.clearFiles();
+        });
+      }
+    },
+  },
+  created() {
+    this.initAppOptions();
+    this.handleGetPager();
+    this.getIndustrySelect();
+    this.initaddplaceAppOptions();
+    this.initPositionOptions();
+  },
+  methods: {
+    initPositionOptions() {
+      getPositionList().then((res) => {
+        this.positionOptions = res.data;
+      });
+    },
+    initaddplaceAppOptions() {
+      getAppList().then((res) => {
+        this.appOptionsAll = res.data;
+      });
+    },
+    initAppOptions() {
+      getAppList().then((res) => {
+        this.appOptions = this.addplaceappOptionsAll = res.data;
+      });
+    },
+    handleGetPager() {
+      getAppPager(this.query).then((res) => {
+        this.total = res.data.total;
+        this.list = res.data.items;
+      });
+    },
+    async getIndustrySelect() {
+      const res = await industrySelect();
+      if (res.code != 200) return;
+      this.industry = res.data;
+    },
+    handleAdd() {
+      this.dialogType = 0;
+      this.temp = { os: 1 };
+      this.dialogVisible = true;
+    },
+    handleAddplace(row) {
+      this.addplacedialogType = 0;
+      this.addplacetemp = { skip: "S",appId:row.id };
+      this.addplacedialogVisible = true;
+    },
+    handleUpdate(row) {
+      this.dialogType = 1;
+      this.temp = JSON.parse(JSON.stringify(row));
+      this.temp.iconUrl = HTTP_PREFIX + row.iconUrl;
+      this.dialogVisible = true;
+    },
+    // 应用
+    handleSubmitForm() {
+      let _this = this;
+      this.$refs.form.validate(async (valid) => {
+        if (valid) {
+          if (_this.dialogType === 0) {
+            await addApp(_this.temp).then((res) => {
+              Message({
+                message: res.msg,
+                type: "success",
+                duration: 5 * 1000,
+              });
+            });
+          } else if (_this.dialogType === 1) {
+            await updateApp(_this.temp).then((res) => {
+              Message({
+                message: res.msg,
+                type: "success",
+                duration: 5 * 1000,
+              });
+            });
+          }
+          _this.dialogVisible = false;
+          _this.handleGetPager();
+          _this.temp = {};
+        }
+      });
+    },
+    addplacehandleSubmitForm() {
+      let _this = this;
+      this.$refs.form.validate(async (valid) => {
+        if (valid) {
+          if (_this.addplacedialogType === 0) {
+            await addAdplace(_this.addplacetemp).then((res) => {
+              Message({
+                message: res.msg,
+                type: "success",
+                duration: 5 * 1000,
+              });
+            });
+          } else if (_this.addplacedialogType === 1) {
+            await updateAdplace(_this.addplacetemp).then((res) => {
+              Message({
+                message: res.msg,
+                type: "success",
+                duration: 5 * 1000,
+              });
+            });
+          }
+          _this.addplacedialogVisible = false;
+          _this.handleGetPager();
+        }
+      });
+    },
+    handleLogoSuccess(res) {
+      this.temp.iconUrl = res.data;
+    },
+    handleLogoRemove() {
+      this.temp.iconUrl = undefined;
+    },
+    copyId(id) {
+      let result = copy(id);
+      if (result === false) {
+        Message({
+          message: "不支持复制",
+          type: "error",
+          duration: 2 * 1000,
+        });
+      } else {
+        Message({
+          message: "复制成功",
+          type: "success",
+          duration: 2 * 1000,
+        });
+      }
+    },
+    getCreativeUrl(url) {
+      if (url) {
+        return HTTP_PREFIX + url;
+      } else {
+        return null;
+      }
+    },
+    // 确定删除
+    deleteRow() {
+      request.delete("/app?id=" + this.permissionId).then((response) => {
+        if (response.msg) {
+          this.$message.success("删除成功");
+          this.delVisible = false;
+          this.handleGetPager();
+        }
+      });
+    },
+    handleDelete(row) {
+      this.delVisible = true;
+      this.permissionId = row.id;
+    },
+    handleAppAccountLink(row) {
+      this.appId = row.id;
+      this.dialogPlatLinkVisible = true;
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.app-td-container {
+  display: flex;
+  padding-left: 20px;
+  text-align: left;
+  .app-icon {
+    flex: 40px 0 1;
+  }
+  .app-info-container {
+    flex: 1;
+    padding-left: 20px;
+    // text-align: center;
+  }
+}
+</style>

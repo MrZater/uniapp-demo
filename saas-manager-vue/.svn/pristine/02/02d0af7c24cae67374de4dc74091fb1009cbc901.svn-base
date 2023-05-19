@@ -1,0 +1,353 @@
+<template>
+  <div
+    class="upload-container"
+    v-loading="isLoading"
+    element-loading-text="接入代码生成中，请耐心等待"
+    element-loading-spinner="el-icon-loading"
+    :element-loading-custom-class="'loading'"
+  >
+    <el-card class="two_card">
+      <el-row :gutter="20" class="row_one">
+        <el-col :span="3">
+          <el-button type="primary" @click="openWord">查看接入文档</el-button>
+        </el-col>
+        <el-col :span="3">
+          <el-button type="primary" @click="updateLog">查看更新日志</el-button>
+        </el-col>
+        <el-col :span="3">
+          <el-button type="primary" @click="downloadDemo">下载DEMO</el-button>
+        </el-col>
+      </el-row>
+      <el-form
+        :model="SDKuploadForm"
+        :rules="SDKuploadRules"
+        ref="ruleForm"
+        label-width="120px"
+      >
+        <el-form-item label="操作系统" prop="os">
+          <el-radio-group v-model="SDKuploadForm.os" @change="changeOs">
+            <el-radio :label="1" border>Android</el-radio>
+            <el-radio :label="0" border>IOS</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="当前版本" prop="version">
+          <el-select
+            v-model="SDKuploadForm.versionId"
+            placeholder="请选择当前版本"
+            @change="handleVersionSelect"
+          >
+            <el-option
+              v-for="item in versionOption"
+              :key="item.id"
+              :label="item.version"
+              :value="item.id"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="更新日期">
+          <span>{{ updateTime }}</span>
+        </el-form-item>
+        <el-form-item label="选择广告平台" prop="version">
+          <el-checkbox-group v-model="checkList" @change="handleChecked">
+            <div class="advertPlatform">
+              <el-checkbox
+                class="checked"
+                :label="advertplatform[i].id"
+                v-for="(e, i) in advertplatform"
+                :key="i"
+              >
+                <div
+                  class="item"
+                  :class="
+                    checkList.includes(advertplatform[i].id) ? 'current' : ''
+                  "
+                >
+                  <h3 class="title">{{ e.name }}</h3>
+                  <div class="version">{{ e.version }}</div>
+                  <div class="foot">
+                    <span
+                      class="span_word"
+                      v-for="(item, index) in e.sourcePositions"
+                      :key="index"
+                      >{{
+                        item == 1
+                          ? " 开屏 "
+                          : item == 2
+                          ? " 横幅  "
+                          : item == 3
+                          ? " 插屏 "
+                          : item == 4
+                          ? " 原生自渲染 "
+                          : item == 5
+                          ? " 激励视频 "
+                          : item == 6
+                          ? " 原生模版 "
+                          : ""
+                      }}</span
+                    >
+                  </div>
+                </div>
+              </el-checkbox>
+            </div>
+          </el-checkbox-group>
+        </el-form-item>
+      </el-form>
+      <el-row class="row_foot">
+        <el-button type="primary" @click="toAccessCode">生成接入代码</el-button>
+      </el-row>
+    </el-card>
+  </div>
+</template>
+<script>
+import {
+  versionList,
+  advertSource,
+  downLoadSDK,
+  advertSourceById,
+} from "@/api/MedproVersion";
+import { toDate } from "@/utils/toTimer";
+import excel from "@/utils/1";
+import axios from "axios";
+export default {
+  data() {
+    return {
+      isLoading: false,
+      SDKuploadForm: {
+        os: 1,
+        version: "",
+        versionId: null,
+      },
+      updateTime: "",
+      advertplatform: [],
+      versionOption: [{}],
+      SDKuploadRules: {
+        os: [{ required: true, message: "请选择操作系统", trigger: "blur" }],
+        version: [
+          { required: true, message: "请选择当前版本", trigger: "blur" },
+        ],
+      },
+      checkList: [],
+      versionList: [],
+    };
+  },
+  mounted() {
+    this.getMedproSdkList();
+    this.getAdvertSource();
+    this.getDate();
+  },
+  computed: {
+    title() {
+      return this.$store.getters.title;
+    },
+    versionName() {
+      let name = "";
+      if (this.versionOption.length > 0) {
+        this.versionOption.forEach((item) => {
+          if (item.id == this.SDKuploadForm.versionId) {
+            name = item.version;
+          }
+        });
+      } else {
+        return "";
+      }
+      return name;
+    },
+  },
+  methods: {
+    getDate() {
+      let date = new Date();
+      this.updateTime = toDate(date);
+    },
+    async getMedproSdkList() {
+      const res = await versionList({ os: this.SDKuploadForm.os });
+      if (res.code == 200) {
+        this.versionList = res.data.items;
+        let arr = [];
+        res.data.forEach((e) => {
+          let obj = {};
+          obj["id"] = e.id;
+          obj["version"] = e.version;
+          obj["modifyTime"] = toDate(e.modifyTime);
+          arr.push(obj);
+        });
+        this.versionOption = arr;
+        if (this.versionOption.length > 0) {
+          this.SDKuploadForm.versionId = this.versionOption[0].id;
+          this.updateTime = this.versionOption[0].modifyTime;
+        }
+      }
+    },
+    async getAdvertSource() {
+      if (this.SDKuploadForm.versionId === null) {
+        await this.getMedproSdkList();
+        if (this.SDKuploadForm.versionId === null) {
+          this.advertplatform = null;
+          return;
+        }
+      }
+      const res = await advertSourceById(this.SDKuploadForm.versionId);
+      if (res.code == 200) {
+        this.advertplatform = res.data;
+      }
+    },
+    handleChecked() {},
+    changeOs() {
+      this.SDKuploadForm.version = "";
+      this.SDKuploadForm.versionId = null;
+      this.updateTime = "";
+      this.getMedproSdkList();
+      this.getAdvertSource();
+    },
+
+    downloadFile(data) {
+      console.log(this.checkList);
+      let blob = new Blob([data], { type: "application/zip" });
+      let url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a"); // 创建a标签
+      link.href = url;
+      link.download = `${this.title}_Sdk_${
+        this.SDKuploadForm.os == 1 ? "Android" : "IOS"
+      }_${this.versionName}_${toDate(Date.now(), "YYYY-MM-DD_hhmmss")}.zip`; // 重命名文件
+      link.click();
+      URL.revokeObjectURL(url);
+    },
+    async toAccessCode() {
+      if (this.checkList.length == 0)
+        return this.$message.warning("请选择广告平台");
+      if (this.SDKuploadForm.versionId == "")
+        return this.$message.warning("请选择版本号");
+      let obj = {
+        id: this.SDKuploadForm.versionId,
+        os: this.SDKuploadForm.os,
+        sourceSdkPackageIds: this.checkList,
+      };
+      this.isLoading = true;
+      axios({
+        url: process.env.VUE_APP_BASE_API + "/accessCenter/downloadSdk",
+        headers: {
+          Authorization: this.$store.getters.token,
+        },
+        method: "post",
+        responseType: "blob",
+        data: obj,
+      })
+        .then((res) => {
+          this.downloadFile(res.data);
+          this.isLoading = false;
+        })
+        .catch((res) => {
+          this.downloadFile(res.data);
+        });
+    },
+    handleVersionSelect() {
+      this.getAdvertSource();
+      // let id = this.SDKuploadForm.version;
+      // let resultObj = this.versionList.filter((item) => {
+      //   return item.id == id;
+      // });
+      // this.updateTime = toDate(resultObj[0].modifyTime);
+    },
+    updateLog() {
+      this.$router.push({
+        path: "/Accesscenter/updateLog",
+        query: {
+          os: this.SDKuploadForm.os,
+        },
+      });
+    },
+    openWord() {
+      if (this.SDKuploadForm.os == 0) {
+        window.open(
+          "https://creative.medproad.com/medpro/html/Mediatom-iOS-SDK-对接文档.html"
+        );
+      } else {
+        window.open(
+          "https://creative.medproad.com/medpro/html/Mediatom-Android-SDK接入文档.html"
+        );
+      }
+    },
+    downloadDemo() {
+      if (this.SDKuploadForm.os == 0) {
+        window.open(
+          "https://creative.medproad.com/medpro/app/demo/Medpro_iOS_Demo.zip"
+        );
+      } else {
+        window.open(
+          "https://creative.medproad.com/medpro/app/demo/Medpro_Android_Demo.zip"
+        );
+      }
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.upload-container {
+  width: 100%;
+  height: 100vh;
+}
+.row_one {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+::v-deep .el-loading-spinner .el-loading-text {
+  font-size: 20px;
+}
+::v-deep .el-loading-spinner i {
+  font-size: 40px;
+}
+.two_card {
+  margin-top: 10px;
+  .advertPlatform {
+    overflow: hidden;
+    margin: 15px;
+    // background-color: forestgreen;
+    .item {
+      float: left;
+      width: 270px;
+      height: 160px;
+      padding-left: 20px;
+      box-sizing: border-box;
+      border: 2px solid rgb(212, 205, 205);
+      border-radius: 3px;
+      .title {
+        font-size: 16px;
+        margin: 20px 0 30px 0;
+        font-weight: 400;
+      }
+      .version {
+        margin: 0 0 20px 0;
+      }
+      .foot {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        .span_word {
+          margin-right: 7px;
+        }
+      }
+    }
+
+    .checked {
+      position: relative;
+      margin-right: 0 !important;
+    }
+    .el-checkbox ::v-deep .el-checkbox__input {
+      position: absolute;
+      top: 10px;
+      right: 18px;
+    }
+    .current {
+      border: 2px solid #1890ff !important;
+    }
+  }
+}
+
+.row_foot {
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 200px;
+}
+</style>

@@ -1,0 +1,259 @@
+<template>
+  <div class="audit-message-container">
+    <div class="audit" v-if="isAudit">
+      <div class="search">
+        <el-row :gutter="0">
+          <el-col :span="6">
+            <el-select
+              v-model="query.publishSts"
+              placeholder="请选择发布状态"
+              @change="handleChangepublishSts"
+            >
+              <el-option label="已发布" :value="1" />
+              <el-option label="未发布" :value="0" />
+            </el-select>
+          </el-col>
+          <el-col :span="2" :offset="16">
+            <el-button type="primary" size="small" @click="addMessage"
+              >新增信息</el-button
+            >
+          </el-col>
+        </el-row>
+      </div>
+      <div class="table" v-if="tableList.length>0">
+        <el-table
+          v-loading="isLoading"
+          ref="table"
+          :header-cell-style="{ background: '#f7f8fa' ,color:'#000'}"
+          :data="tableList"
+          style="width: 100%"
+        >
+          <el-table-column align="center" prop="type" label="消息类型"
+            ><template slot-scope="{ row }">
+              {{
+                row.type == 1
+                  ? "平台通知"
+                  : row.type == 2
+                  ? "功能更新"
+                  : row.type == 3
+                  ? "运营活动"
+                  : ""
+              }}
+            </template></el-table-column
+          >
+          <el-table-column
+            align="center"
+            prop="title"
+            label="消息标题"
+            width='180px'
+          ><template slot-scope="{row}">
+            <span class="table_title" >{{row.title}}</span>
+            </template></el-table-column>
+          <el-table-column
+            align="center"
+            prop="publishTime"
+            label="发布时间"
+          ></el-table-column>
+          <el-table-column align="center" label="发布状态">
+            {{
+              query.publishSts == 1
+                ? "已发布"
+                : query.publishSts == 0
+                ? "未发布"
+                : "-"
+            }}
+          </el-table-column>
+          <el-table-column
+            align="center"
+            prop="createUser"
+            label="发布人"
+          ></el-table-column>
+          <!-- <el-table-column
+            align="center"
+            prop=""
+            label="接收群体"
+          ></el-table-column> -->
+          <el-table-column align="center" prop="" label="操作"
+            ><template slot-scope="{ row }">
+              <div class="todo">
+                <el-tooltip content="编辑" placement="top" effect="light">
+                  <div class="doicon" @click="toEdit(row)">
+                    <svg-icon
+                      style="color: #3685df"
+                      class="svgicon"
+                      icon-class="edit"
+                    ></svg-icon>
+                  </div>
+                </el-tooltip>
+                <el-tooltip content="删除" placement="top" effect="light">
+                  <div
+                    class="doicon"
+                    v-if="
+                      $store.state.user.roles[0] == 'SUPER_ADMIN' ||
+                      $store.state.user.roles[0] == 'ADMIN'
+                    "
+                    @click="handleDelete(row)"
+                  >
+                    <svg-icon
+                      style="color: red"
+                      class="svgicon"
+                      icon-class="delete"
+                    ></svg-icon>
+                  </div>
+                </el-tooltip>
+              </div>
+
+              <!-- <el-button size='small' type="" @click="toEdit(row)">编辑</el-button>
+              <el-button size='small' type="" @click="handleDelete(row)">删除</el-button> -->
+            </template></el-table-column
+          >
+        </el-table>
+        <el-pagination
+          style="margin-top: 20px"
+          :current-page="query.page"
+          :page-sizes="[5, 10, 15]"
+          :page-size="query.limit"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
+         <Empty class="empty" v-else></Empty>
+    </div>
+    <div class="edit_add" v-else>
+      <EditMessage
+        :rowinfo="row"
+        :model="model"
+        @goback="isAudit = true"
+        @handleEdit="handleEdit"
+      />
+    </div>
+  </div>
+</template>
+
+<script>
+import EditMessage from "../EditMessage";
+import { messagePage, editMessage } from "@/api/message.js";
+import Empty from "@/components/empty";
+
+
+export default {
+  components: { EditMessage,Empty },
+  data() {
+    return {
+      model: "",
+      isAudit: true,
+      query: {
+        publishSts: 1,
+        page: 1,
+        limit: 10,
+      },
+      total: 0,
+      isLoading: false,
+      tableList: [],
+      row: {},
+    };
+  },
+  mounted() {
+    this.getMessagePage();
+  },
+  methods: {
+    isPub(date) {
+      let timestamp = new Date(date).getTime();
+      let now = new Date().getTime();
+      return timestamp < now ? true : false;
+    },
+    handleChangepublishSts() {
+      this.getMessagePage();
+    },
+    async getMessagePage() {
+      this.isLoading = true;
+      let resp = await messagePage(this.query);
+      if (resp.code != 200) return;
+      this.tableList = resp.data.items;
+      this.total = resp.data.total;
+      this.isLoading = false;
+    },
+    handleSizeChange(val) {
+      this.query.limit = val;
+      this.getMessagePage();
+    },
+    handleCurrentChange(val) {
+      this.query.page = val;
+      this.getMessagePage();
+    },
+    addMessage() {
+      this.row = { publishType: 0 };
+      this.isAudit = false;
+      this.model = "add";
+    },
+    handleEdit() {
+      this.isAudit = true;
+      this.query.page = 1;
+      this.getMessagePage();
+    },
+    toEdit(row) {
+      this.row = row;
+      this.model = "edit";
+      this.isAudit = false;
+    },
+    handleDelete(row) {
+      this.$confirm("此操作将永久删除该条信息, 是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then(async () => {
+          let resp = await editMessage({ id: row.id, sts: "D" });
+          if (resp.code !== 200) return;
+          this.query.page = 1;
+          this.getMessagePage();
+          this.$message.success("删除成功！");
+          if (resp.data.unReadMessage == 1) {
+            this.$store.commit("user/SET_UNREADMESSAGE", "1");
+          } else {
+            this.$store.commit("user/SET_UNREADMESSAGE", "0");
+          }
+        })
+        .catch(() => {});
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.audit-message-container {
+  width: 100%;
+  // padding: 20px 10px;
+  .search {
+    background-color: #fff;
+    padding: 10px;
+  }
+  .table {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #fff;
+    .todo {
+      display: flex;
+      justify-content: center;
+      .doicon {
+        cursor: pointer;
+        margin-left: 10px;
+      }
+    }
+    .table_title{
+      display: inline-block;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+      width: 100%;
+    }
+  }
+  .empty{
+    margin-top: 10px;
+    height: 70vh;
+    background-color: #fff;
+  }
+}
+</style>

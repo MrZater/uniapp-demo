@@ -1,0 +1,58 @@
+const path = require('path')
+//打包结果分析工具  打包后进入资源页面，但在开发环境也会打开资源页面
+let BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
+// 删除/清理构建文件夹
+const {
+    CleanWebpackPlugin
+} = require('clean-webpack-plugin')
+const name = process.env.VUE_APP_TITLE || '' // page title
+function resolve(dir) {
+    return path.join(__dirname, dir)
+}
+
+// 公共配置
+const commonConfig = {
+    name: name,
+    resolve: {
+        // extensions: ['.js', '.vue', '.json'],
+        alias: {
+            '@': resolve('src')
+        }
+    },
+}
+
+// 生产环境配置
+let prodConfig = {}
+if (process.env.NODE_ENV === "production") {
+    prodConfig = {
+        devtool: "none",
+        mode: process.env.NODE_ENV,
+        entry: './src/main.js',
+        output: {
+            filename: '[name].[chunkhash:8].js',
+            path: path.resolve(__dirname, './dist')
+        },
+        plugins: [
+            new BundleAnalyzerPlugin(),
+            new CleanWebpackPlugin(),
+        ],
+        // 生产环境下，使用cdn引入这些全局变量
+        externals: {
+            vue: "Vue",
+            vuex: "Vuex",
+            "vue-router": "VueRouter",
+            axios: "axios",
+            echarts: 'echarts',
+            '@wangeditor/editor': 'wangEditor',
+            xlsx: 'XLSX',
+            'element-ui': 'ELEMENT'
+        },
+    }
+} else {
+    prodConfig = {}
+}
+
+module.exports = {
+    ...commonConfig,
+    ...prodConfig
+}

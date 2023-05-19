@@ -1,0 +1,28 @@
+const state = {
+    title: process.env.NODE_ENV === 'development' ?
+        'MedPro' : window.location.host == 'medpro.ydmob.com:7001' ?
+        'MedPro' : window.location.host == 'medpro.ydmob.com' ?
+        'MedPro' : window.location.host.includes('') ? 'CMedia' : '',
+    origin: process.env.NODE_ENV === 'development' ?
+        'http://medpro.ydmob.com:7001' : window.location.origin
+
+}
+const mutations = {
+    CHANGE_TITLE: (state, value) => {
+        state.title = value
+    },
+}
+
+const actions = {
+    changeTitle({
+        commit
+    }, data) {
+        commit('CHANGE_TITLE', data)
+    }
+}
+export default {
+    namespaced: true,
+    state,
+    mutations,
+    actions
+}

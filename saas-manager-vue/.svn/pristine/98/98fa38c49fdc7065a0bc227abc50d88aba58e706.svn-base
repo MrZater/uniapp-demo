@@ -1,0 +1,1778 @@
+<template>
+  <div class="app-main">
+    <el-card class="header_card">
+      <div class="header_box">
+        <div class="datacheck">
+          <h4>数据维度</h4>
+          <div v-show="checkedDate">
+            <el-select v-model="dateAngleSelect" placeholder="请选择">
+              <el-option
+                v-for="item in dateAngle"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+            <span class="tips"
+              >提示：日期对比功能启用后，仅支持选择单一维度进行对比</span
+            >
+          </div>
+          <el-checkbox-group
+            v-show="!checkedDate"
+            v-model="searchParams.groupByList"
+            @change="dateDimensionChange"
+          >
+            <ul class="check_item">
+              <li v-for="(e, i) in dateAngle" :key="i">
+                <el-checkbox :disabled="i == 0" :label="e.label">{{
+                  e.name
+                }}</el-checkbox>
+              </li>
+            </ul>
+          </el-checkbox-group>
+        </div>
+        <div class="firstOption">
+          <h3>筛选</h3>
+          <div class="condition">
+            <div class="item">
+              <div class="ite">
+                <!-- 日期 -->
+                <el-date-picker
+                  v-model="time"
+                  :clearable="false"
+                  class="item"
+                  type="daterange"
+                  value-format="yyyy-MM-dd"
+                  align="right"
+                  unlink-panels
+                  range-separator="至"
+                  start-placeholder="开始日期"
+                  end-placeholder="结束日期"
+                  :picker-options="pickerOptions"
+                  @change="getSTimeChange"
+                />
+              </div>
+              <!-- 广告样式-->
+              <div class="ite">
+                <el-select
+                  v-model="searchParams.positionIdList"
+                  clearable
+                  filterable
+                  class="item"
+                  multiple
+                  collapse-tags
+                  placeholder="广告样式"
+                  @change="advertChange"
+                >
+                  <el-option
+                    v-for="item in options3"
+                    :key="item.value"
+                    :label="item.name"
+                    :value="item.id"
+                  />
+                </el-select>
+              </div>
+              <!-- <div class="ite">
+        <div class="isSelect">
+          <el-checkbox class="isChecked" v-model="checkedDate"></el-checkbox>
+        </div>
+         <el-date-picker
+          :disabled="!checkedDate"
+            v-model="time"
+            class="item"
+            type="daterange"
+            value-format="yyyy-MM-dd"
+            align="right"
+            unlink-panels
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+             @change="getSTimeChange"
+            :picker-options="pickerOptions"
+
+          />
+
+        </div> -->
+              <!-- 应用 -->
+              <div class="ite">
+                <el-select
+                  v-model="department1"
+                  clearable
+                  filterable
+                  class="item"
+                  placeholder="应用"
+                  multiple
+                  collapse-tags
+                  @visible-change="appSelectClose"
+                  @change="getSelectDep1"
+                >
+                  <div style="padding-left: 10px">
+                    <el-radio v-model="searchParams.appIdListExclude" :label="1"
+                      >包括</el-radio
+                    >
+                    <el-radio v-model="searchParams.appIdListExclude" :label="0"
+                      >不包括</el-radio
+                    >
+                    <el-checkbox
+                      v-model="checkedThing1"
+                      :style="selfstyle"
+                      @change="selectAllThing1"
+                      >全选</el-checkbox
+                    >
+
+                    <el-option
+                      v-for="(item, index) in departments1"
+                      :key="index"
+                      :label="item.name"
+                      :value="item.id"
+                    />
+                  </div>
+                </el-select>
+              </div>
+              <!-- 广告位 -->
+              <div class="ite">
+                <el-select
+                  v-model="department2"
+                  filterable
+                  class="item"
+                  style="width: 240px"
+                  placeholder="广告位"
+                  multiple
+                  collapse-tags
+                  @visible-change="advertCloseSelect"
+                  @change="getSelectDep2"
+                >
+                  <div style="padding-left: 10px">
+                    <el-radio
+                      v-model="searchParams.placeIdListExclude"
+                      :label="1"
+                      >包括</el-radio
+                    >
+                    <el-radio
+                      v-model="searchParams.placeIdListExclude"
+                      :label="0"
+                      >不包括</el-radio
+                    >
+                    <el-checkbox
+                      v-model="checkedThing2"
+                      :style="selfstyle"
+                      @change="selectAllThing2"
+                      >全选</el-checkbox
+                    >
+                    <el-option
+                      v-for="(item, index) in departments2"
+                      :key="index"
+                      :label="item.name"
+                      :value="item.id"
+                    />
+                  </div>
+                </el-select>
+              </div>
+            </div>
+            <div class="item">
+              <div class="ite">
+                <!-- 流量分组 -->
+                <el-select
+                  v-model="department5"
+                  filterable
+                  class="item"
+                  placeholder="流量分组"
+                  multiple
+                  collapse-tags
+                  @change="getSelectDep5"
+                >
+                  <div style="padding-left: 10px">
+                    <el-radio
+                      v-model="searchParams.groupIdListExclude"
+                      :label="1"
+                      >包括</el-radio
+                    >
+                    <el-radio
+                      v-model="searchParams.groupIdListExclude"
+                      :label="0"
+                      >不包括</el-radio
+                    >
+                    <el-checkbox
+                      v-model="checkedThing5"
+                      :style="selfstyle"
+                      @change="selectAllThing5"
+                      >全选</el-checkbox
+                    >
+
+                    <el-option
+                      v-for="(item, index) in departments5"
+                      :key="index"
+                      :label="item.name"
+                      :value="item.id"
+                    />
+                  </div>
+                </el-select>
+              </div>
+              <div class="ite">
+                <!-- 渠道 -->
+                <el-select
+                  v-model="department3"
+                  filterable
+                  class="item"
+                  placeholder="渠道"
+                  multiple
+                  collapse-tags
+                  @change="getSelectDep3"
+                >
+                  <div style="padding-left: 10px">
+                    <el-checkbox
+                      v-model="checkedThing3"
+                      :style="selfstyle"
+                      @change="selectAllThing3"
+                      >全选</el-checkbox
+                    >
+
+                    <el-option
+                      v-for="(item, index) in departments3"
+                      :key="index"
+                      :label="item"
+                      :value="item"
+                    />
+                  </div>
+                </el-select>
+              </div>
+              <div class="ite">
+                <!-- 广告平台 -->
+                <el-select
+                  v-model="department4"
+                  filterable
+                  class="item"
+                  placeholder="广告源"
+                  multiple
+                  collapse-tags
+                  @change="getSelectDep4"
+                >
+                  <div style="padding-left: 10px">
+                    <el-radio
+                      v-model="searchParams.platIdListExclude"
+                      :label="1"
+                      >包括</el-radio
+                    >
+                    <el-radio
+                      v-model="searchParams.platIdListExclude"
+                      :label="0"
+                      >不包括</el-radio
+                    >
+                    <el-checkbox
+                      v-model="checkedThing4"
+                      :style="selfstyle"
+                      @change="selectAllThing4"
+                      >全选</el-checkbox
+                    >
+
+                    <el-option
+                      v-for="(item, index) in departments4"
+                      :key="index"
+                      :label="item.name"
+                      :value="item.id"
+                    />
+                  </div>
+                </el-select>
+              </div>
+              <div class="ite">
+                <!-- 代码位 -->
+                <el-select
+                  v-model="department6"
+                  filterable
+                  class="item"
+                  placeholder="代码位"
+                  multiple
+                  collapse-tags
+                  @change="getSelectDep6"
+                >
+                  <div style="padding-left: 10px">
+                    <el-radio
+                      v-model="searchParams.sourceIdListExclude"
+                      :label="1"
+                      >包括</el-radio
+                    >
+                    <el-radio
+                      v-model="searchParams.sourceIdListExclude"
+                      :label="0"
+                      >不包括</el-radio
+                    >
+                    <el-checkbox
+                      v-model="checkedThing6"
+                      :style="selfstyle"
+                      @change="selectAllThing6"
+                      >全选</el-checkbox
+                    >
+
+                    <el-option
+                      v-for="(item, index) in departments6"
+                      :key="index"
+                      :label="item.name"
+                      :value="item.id"
+                    />
+                  </div>
+                </el-select>
+              </div>
+            </div>
+            <div class="item">
+              <div class="ite searchButton">
+                <el-button
+                  style="float: right"
+                  type="primary"
+                  size="small"
+                  icon="el-icon-search"
+                  @click="searchBtn"
+                  >搜索</el-button
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </el-card>
+    <!-- 表格 -->
+    <div ref="table_box" class="table_box">
+      <el-card>
+        <div class="head_">
+          <el-button
+            icon="el-icon-edit"
+            size="small"
+            type="primary"
+            @click="custom"
+            >自定义指标</el-button
+          >
+          <el-button
+            class="el-icon-download"
+            size="small"
+            type="primary"
+            @click="exportReport"
+            >导出报表</el-button
+          >
+        </div>
+        <div v-loading="loadingtableData" class="loadingtable">
+          <el-table
+            v-if="reportData.length > 0"
+            ref="box"
+            :header-cell-style="{ background: '#f7f8fa' }"
+            :data="reportData"
+            border
+            style="width: 100%"
+          >
+            <el-table-column
+              v-for="e in reportData1"
+              :key="e.id"
+              :row-class-name="e.label"
+              :prop="e.label"
+              :label="e.name"
+              :width="e.width ? e.width : 140"
+              :fixed="e.flag === 0"
+              :render-header="renderHeader"
+              align="center"
+            />
+          </el-table>
+          <Empty v-else />
+        </div>
+
+        <el-pagination
+          :current-page="searchParams.page"
+          :page-sizes="[10, 20, 30, 40]"
+          :page-size="searchParams.limit"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </el-card>
+    </div>
+
+    <!-- 指标弹框 -->
+    <el-dialog
+      title="指标"
+      :visible.sync="customDialog"
+      width="50%"
+      @close="closeCustomDialog"
+    >
+      <div class="container_box">
+        <div class="left">
+          <div class="head_top">1.勾选需要显示的指标</div>
+          <div class="head_bottom">
+            <div class="checkAll_">
+              <span @click="checkAll">全选</span> /
+              <span @click="InvertSelect">反选</span> /
+              <span @click="customSelect">默认</span>
+            </div>
+
+            <div class="checkbox_1">
+              <div v-for="(e, i) in targetArr" :key="e.id" class="item_">
+                <label :class="e.ischeck ? 'active' : ''" :for="i"
+                  ><input
+                    :id="i"
+                    type="checkbox"
+                    :checked="e.ischeck"
+                    :label="e.name"
+                    @change="handelChecked(e, i)"
+                  />{{ e.name }}</label
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="right">
+          <div class="head_top_">2. 拖动调整指标显示顺序</div>
+          <div class="head_bottom_">
+            <vuedraggable
+              v-model="dragArr"
+              animation="350"
+              chosen-class="chosen"
+            >
+              <transition-group>
+                <div v-for="(e, i) in dragArr" :key="i" class="drag_item">
+                  <span class="el-icon-rank" />
+                  <span class="drag_text">{{ e.name }}</span>
+                  <span class="el-icon-close" @click="closeChecked(e, i)" />
+                </div>
+              </transition-group>
+            </vuedraggable>
+          </div>
+        </div>
+      </div>
+      <span slot="footer">
+        <el-button @click="customDialog = false">取 消</el-button>
+        <el-button type="primary" @click="handelConfirmDialog">确 定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+<script>
+import tips from "@/components/tips/HelpHint/HelpHint.vue";
+import { getPlaceList } from "@/api/place";
+import { getAppList } from "@/api/app";
+import { getPositionList } from "@/api/common";
+
+import {
+  appToAdvert,
+  appToFlow,
+  appToCode,
+  advertToCode,
+  advertToFlow,
+  getSynthReport,
+  advertPlatform,
+  flowGroups,
+  codeBit,
+  getChannel,
+} from "@/api/synthReport";
+import excel from "@/utils/1";
+import Empty from "@/components/empty";
+import request from "@/utils/request";
+import { toDate } from "@/utils/toTimer";
+import vuedraggable from "vuedraggable";
+export default {
+  name: "SynthReport",
+  components: { vuedraggable, tips, Empty },
+  data() {
+    return {
+      isFirst: true,
+      dragArr: [],
+      targetArr: [
+        { id: 200, ischeck: false, name: "DAU", label: "dau" },
+        { id: 201, ischeck: false, name: "人均收益", label: "arpu" },
+        { id: 206, ischeck: false, name: "新用户", label: "newLogin" },
+        { id: 207, ischeck: false, name: "新用户占比", label: "newUserRate" },
+        { id: 203, ischeck: false, name: "DEU", label: "deu" },
+        { id: 204, ischeck: false, name: "渗透率", label: "permeability" },
+        { id: 210, ischeck: false, name: "展示/DAU", label: "aipau" },
+        { id: 205, ischeck: false, name: "展示/DEU", label: "aipu" },
+        {
+          id: 313,
+          ischeck: false,
+          name: "预估收益",
+          label: "income",
+        },
+        {
+          id: 314,
+          ischeck: false,
+          name: "预估 eCPM",
+          label: "estimatedRevenueEcpm",
+        },
+        { id: 194, ischeck: false, name: "流量请求", label: "request" },
+        {
+          id: 195,
+          ischeck: false,
+          name: "流量填充率",
+          label: "requestFilledRate",
+        },
+        { id: 196, ischeck: false, name: "展示", label: "impress" },
+        { id: 209, ischeck: false, name: "展示率", label: "impressRate" },
+        // { id: 199, ischeck: false, name: "eCPM", label: "ecpm" },
+        { id: 197, ischeck: false, name: "点击", label: "click" },
+        { id: 198, ischeck: false, name: "点击率", label: "clickRate" },
+        { id: 192, ischeck: false, name: "广告请求", label: "advRequest" },
+        {
+          id: 193,
+          ischeck: false,
+          name: "广告填充率",
+          label: "advRequestFilledRate",
+        },
+        { id: 315, ischeck: false, name: "展示 Gap", label: "impressionGap" },
+        { id: 316, ischeck: false, name: "点击 Gap", label: "clickGap" },
+        { id: 202, ischeck: false, name: "收益", label: "unitRevenue" },
+        { id: 11, ischeck: false, name: "展示 API", label: "unitImpression" },
+        { id: 14, ischeck: false, name: "eCPM API", label: "unitEcpm" },
+        { id: 12, ischeck: false, name: "点击 API", label: "unitClick" },
+        { id: 13, ischeck: false, name: "点击率 API", label: "unitCtr" },
+        { id: 9, ischeck: false, name: "请求 API", label: "unitRequest" },
+        {
+          id: 10,
+          ischeck: false,
+          name: "填充率 API",
+          label: "unitFilledRate",
+        },
+      ],
+      searchParams: {
+        page: 1,
+        limit: 20,
+        dateStart: "",
+        dateEnd: "",
+        appIdList: [], // 应用id数组
+        appIdListExclude: 1,
+        placeIdList: [], // 广告位id数组
+        placeIdListExclude: 1,
+        positionIdList: [], // 广告样式数组
+        positionIdListExclude: 1,
+        groupIdList: [], // 流量分组
+        groupIdListExclude: 1,
+        channelIdList: [], // 渠道分组
+        channelIdListExclude: 1,
+        platIdList: [], // 平台id数组
+        platIdListExclude: 1,
+        sourceIdList: [], // 代码位数组
+        sourceIdListExclude: 1,
+        groupByList: ["date"],
+      },
+      newLocalData: [],
+      exportNewArr: [],
+      total: 0,
+      newArr: [],
+      selfstyle: {
+        textAlign: "right",
+        paddingRight: "10px",
+      },
+      customDialog: false, // 指标弹框
+      echartsParams: { positionIdList: "" },
+      dateDimension: [], // 数据维度 复选框
+      checkedDate: false,
+      // disabled: true,
+      dateAngle: [
+        {
+          label: "date",
+          name: "日期",
+          flag: 0,
+          ischeck: false,
+        },
+        {
+          label: "app_id",
+          name: "应用",
+          flag: 0,
+          ischeck: false,
+        },
+        {
+          label: "place_id",
+          name: "广告位",
+          flag: 0,
+          ischeck: false,
+        },
+        {
+          label: "group_id",
+          name: "分组",
+          flag: 0,
+          ischeck: false,
+        },
+        {
+          label: "channel",
+          name: "渠道",
+          flag: 0,
+          ischeck: false,
+        },
+        {
+          label: "ad_source_id",
+          name: "代码位",
+          flag: 0,
+          ischeck: false,
+        },
+        {
+          label: "position_id",
+          name: "广告样式",
+          flag: 0,
+          ischeck: false,
+        },
+        {
+          label: "sdk_version",
+          name: "sdk版本",
+          flag: 0,
+          ischeck: false,
+        },
+        {
+          label: "plat_account_id",
+          name: "广告平台",
+          flag: 0,
+          ischeck: false,
+        },
+         {
+          label: "test_id",
+          name: "AB分组",
+          flag: 0,
+          ischeck: false,
+        },
+      ],
+      loadingtableData: false,
+      dateAngleSelect: "",
+      time: [],
+      options3: [], // 广告样式
+      department1: [],
+      department2: [],
+      department3: "", // 渠道
+      department4: [],
+      department5: [],
+      department6: [],
+
+      checkedThing1: false,
+      checkedThing2: false,
+      checkedThing3: false, // 渠道
+      checkedThing4: false,
+      checkedThing5: false,
+      checkedThing6: false,
+
+      departments1: [],
+      departments2: [],
+      departments3: [],
+      departments4: [],
+      departments5: [],
+      departments6: [],
+      reportData: [],
+      reportData1: [],
+      options1: [],
+      pickerOptions: {
+        shortcuts: [
+          {
+            text: "最近一周",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+              picker.$emit("pick", [start, end]);
+            },
+          },
+          {
+            text: "最近14天",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 14);
+              picker.$emit("pick", [start, end]);
+            },
+          },
+          {
+            text: "最近一个月",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+              picker.$emit("pick", [start, end]);
+            },
+          },
+        ],
+      },
+    };
+  },
+  async mounted() {
+    await this.getApp();
+    await this.getLocalStorag();
+    await this.getPlace();
+    await this.getPosition();
+    await this.getChannelData();
+    await this.getDate();
+    await this.getadvertPlatform();
+    await this.getFlowGroups();
+    await this.getCodeBit();
+    await this.getReportData();
+  },
+  async activated() {
+    if (!this.isFirst) {
+      await this.getApp();
+      await this.getLocalStorag();
+      await this.getPlace();
+      await this.getPosition();
+      await this.getChannelData();
+      await this.getDate();
+      await this.getadvertPlatform();
+      await this.getFlowGroups();
+      await this.getCodeBit();
+      await this.getReportData();
+    }
+    this.isFirst = false;
+  },
+  methods: {
+    getLocalStorag() {
+      let data = [
+        { id: 205, ischeck: false, name: "展示/DEU", label: "aipu" },
+        { id: 200, ischeck: false, name: "DAU", label: "dau" },
+        { id: 206, ischeck: false, name: "新用户", label: "newLogin" },
+        { id: 207, ischeck: false, name: "新用户占比", label: "newUserRate" },
+        { id: 203, ischeck: false, name: "DEU", label: "deu" },
+        { id: 204, ischeck: false, name: "渗透率", label: "permeability" },
+        { id: 210, ischeck: false, name: "展示/DAU", label: "aipau" },
+        { id: 197, ischeck: false, name: "点击", label: "click" },
+        { id: 198, ischeck: false, name: "点击率", label: "clickRate" },
+        { id: 192, ischeck: false, name: "广告请求", label: "advRequest" },
+        {
+          id: 193,
+          ischeck: false,
+          name: "广告填充率",
+          label: "advRequestFilledRate",
+        },
+      ];
+      if (!localStorage.getItem("tableData")) {
+        localStorage.setItem("tableData", JSON.stringify(data));
+      }
+    },
+    // 渠道
+    getChannelData() {
+      getChannel().then((res) => {
+        this.departments3 = res.data;
+      });
+    },
+    getCodeBit() {
+      codeBit().then((res) => {
+        this.departments6 = res.data;
+      });
+    },
+    // 流量分组
+    getFlowGroups() {
+      flowGroups().then((res) => {
+        this.departments5 = res.data;
+      });
+    },
+    // 广告平台
+    getadvertPlatform() {
+      advertPlatform().then((res) => {
+        this.departments4 = res.data;
+      });
+    },
+    getReportData() {
+      this.newArr = [];
+      for (let i = 0; i < this.searchParams.groupByList.length; i++) {
+        for (let j = 0; j < this.dateAngle.length; j++) {
+          if (this.searchParams.groupByList[i] === this.dateAngle[j].label) {
+            this.newArr.push(this.dateAngle[j]);
+          }
+        }
+      }
+      this.exportNewArr = this.newArr;
+      this.newArr = JSON.parse(JSON.stringify(this.newArr));
+      this.newArr.forEach((e) => {
+        if (e.label === "date") {
+          e.label = "date";
+        }
+        if (e.label === "app_id") {
+          e.label = "appName";
+        }
+        if (e.label === "place_id") {
+          e.label = "placeName";
+        }
+        if (e.label === "group_id") {
+          e.label = "groupName";
+        }
+        if (e.label === "channel") {
+          e.label = "channel";
+        }
+        if (e.label === "ad_source_id") {
+          e.label = "sourceName";
+        }
+        if (e.label === "position_id") {
+          e.label = "positionName";
+        }
+        if (e.label === "sdk_version") {
+          e.label = "sdkVersion";
+        }
+        if (e.label === "plat_account_id") {
+          e.label = "platName";
+        }
+        if (e.label === "test_id") {
+          e.label = "testGroupName";
+        }
+      });
+      getSynthReport(this.searchParams).then((res) => {
+        this.loadingtableData = true;
+        if (res.code != 200) return;
+        setTimeout(() => {
+          this.loadingtableData = false;
+        }, 400);
+        if (res.data.items.length > 0) {
+          res.data.aggregate.date = "汇总:";
+          res.data.items.unshift(res.data.aggregate);
+          this.reportData = res.data.items;
+
+          this.total = res.data.total;
+          for (let i = 0; i < res.data.items.length; i++) {
+            for (let key in res.data.items[i]) {
+              if (
+                (key === "requestFilledRate" ||
+                  key === "clickRate" ||
+                  key === "impressRate" ||
+                  key === "permeability" ||
+                  key === "clickGap" ||
+                  key === "unitCtr" ||
+                  key === "unitFilledRate" ||
+                  key === "impressionGap" ||
+                  key === "advRequestFilledRate" ||
+                  key === "newUserRate") &&
+                res.data.items[i][key] !== null
+              ) {
+                res.data.items[i][key] = res.data.items[i][key] + "%";
+              }
+            }
+          }
+          if (localStorage.getItem("tableData")) {
+            // let resultArr = [
+            //   ...this.newArr,
+            //   ...JSON.parse(localStorage.getItem("tableData")),
+            // ];
+            let resultArr = JSON.parse(localStorage.getItem("tableData"));
+            // 后台表格数据第二条  第一条是汇总数据
+            let resultObj = res.data.items[1];
+            res.data.items.forEach((o) => {
+              if (o.unitCtr !== null) {
+                resultObj = o;
+                return;
+              }
+            });
+            let resultNewArr = [];
+            for (let i = 0; i < resultArr.length; i++) {
+              for (let k in resultObj) {
+                if (resultArr[i].label === k && resultObj[k] !== null) {
+                  resultNewArr.push(resultArr[i]);
+                }
+              }
+            }
+            this.newLocalData = resultNewArr;
+            resultNewArr = [...this.newArr, ...resultNewArr];
+            // 获取表格宽度  动态设置单元格宽度
+            let tabletWidth = this.$refs.table_box.offsetWidth;
+            if (resultNewArr.length < 7) {
+              this.getWidth(tabletWidth, resultNewArr);
+            }
+
+            this.reportData1 = resultNewArr;
+          }
+        } else {
+          this.reportData = res.data.items;
+          this.total = res.data.total;
+        }
+      });
+    },
+    // 封装一个  动态 设置表格 宽度 函数
+    getWidth(width, arr) {
+      width = width / arr.length;
+      for (let i = 0; i < arr.length; i++) {
+        arr[i].width = width;
+      }
+    },
+    getDate() {
+      // 昨天
+      let today = toDate(Date.now() - 24 * 60 * 60 * 1000);
+      // 13天前
+      let day13Before = toDate(Date.now() - 14 * 24 * 60 * 60 * 1000);
+      this.time = [day13Before, today];
+      this.searchParams.dateStart = this.time[0];
+      this.searchParams.dateEnd = this.time[1];
+    },
+    getSTimeChange() {
+      // let end = Date.parse(this.time[1]);
+      // let start = Date.parse(this.time[0]);
+      // let result = (end - start) / 1000 / 60 / 60 / 24;
+      // if (result > 30) return this.$message.error("时间跨度不能超过一个月");
+      if (this.time) {
+        this.searchParams.dateStart = this.time[0];
+        this.searchParams.dateEnd = this.time[1];
+      } else {
+        this.searchParams.dateStart = "";
+        this.searchParams.dateEnd = "";
+        this.time = [];
+      }
+    },
+    // 应用
+    getApp() {
+      getAppList().then((res) => {
+        this.departments1 = res.data;
+      });
+    },
+    // 广告位
+    getPlace() {
+      getPlaceList().then((res) => {
+        this.departments2 = res.data;
+      });
+    },
+    // 广告样式
+    getPosition() {
+      getPositionList().then((res) => {
+        this.options3 = res.data;
+      });
+    },
+    // 数据维度  选择数组
+    dateDimensionChange(val) {
+      // this.searchParams.groupByList = val;
+    },
+    // 应用单选
+    async getSelectDep1(department) {
+      this.handleSelect("app_id");
+      if (department.length === this.departments1.length) {
+        this.checkedThing1 = true;
+      } else {
+        this.checkedThing1 = false;
+      }
+      this.searchParams.appIdList = department;
+    },
+    // 应用 下拉关闭
+    appSelectClose(val) {
+      if (!val && this.department1.length > 0) {
+        this.department2 = [];
+        this.department5 = [];
+        this.department6 = [];
+        this.checkedThing2 = false;
+        this.checkedThing5 = false;
+        //   // 广告位
+        appToAdvert(this.department1).then((res) => {
+          this.departments2 = res.data;
+        });
+        // 流量分组
+        appToFlow(this.department1).then((res) => {
+          this.departments5 = res.data;
+        });
+        // 代码位
+        appToCode(this.department1).then((res) => {
+          this.departments6 = res.data;
+        });
+      }
+      if (!val && this.department1.length == 0) {
+        this.getPlace();
+        this.getFlowGroups();
+        this.getCodeBit();
+      }
+    },
+    // 应用全选
+    async selectAllThing1() {
+      this.handleSelect("app_id");
+      this.department1 = [];
+      if (this.checkedThing1) {
+        this.departments1.map((item) => {
+          this.department1.push(item.id);
+        });
+      } else {
+        this.department1 = [];
+      }
+      this.searchParams.appIdList = this.department1;
+    },
+    // 广告位下拉关闭
+    advertCloseSelect(val) {
+      if (!val && this.department2.length > 0) {
+        //   // 广告位 影响代码位
+        advertToCode(this.department2).then((res) => {
+          this.departments6 = res.data;
+        });
+        // 广告位 影响 流量分组
+        advertToFlow(this.department2).then((res) => {
+          this.departments5 = res.data;
+        });
+      }
+      if (!val && this.department2.length == 0) {
+        //   // 代码位
+        this.getCodeBit();
+        this.getFlowGroups();
+      }
+    },
+    // 广告位单选
+    async getSelectDep2(department) {
+      this.handleSelect("place_id");
+      if (department.length === this.departments2.length) {
+        this.checkedThing2 = true;
+      } else {
+        this.checkedThing2 = false;
+      }
+      this.searchParams.placeIdList = department;
+    },
+    // 广告位全选
+    async selectAllThing2() {
+      this.handleSelect("place_id");
+      this.department2 = [];
+      if (this.checkedThing2) {
+        this.departments2.map((item) => {
+          this.department2.push(item.id);
+        });
+      } else {
+        this.department2 = [];
+      }
+      this.searchParams.placeIdList = this.department2;
+    },
+    // 渠道全选
+    selectAllThing3() {
+      this.handleSelect("channel");
+      this.department3 = [];
+      if (this.checkedThing3) {
+        this.departments3.map((item) => {
+          this.department3.push(item);
+        });
+      } else {
+        this.department3 = [];
+      }
+      this.searchParams.channelIdList = this.department3;
+    },
+    // 渠道单选
+    getSelectDep3(department) {
+      this.handleSelect("channel");
+      if (department.length === this.departments3.length) {
+        this.checkedThing3 = true;
+      } else {
+        this.checkedThing3 = false;
+      }
+      this.searchParams.channelIdList = department;
+    },
+    // 广告平台 单选
+    getSelectDep4(department) {
+      this.handleSelect("plat_account_id");
+      if (department.length === this.departments4.length) {
+        this.checkedThing4 = true;
+      } else {
+        this.checkedThing4 = false;
+      }
+      this.searchParams.platIdList = department;
+    },
+    // 广告平台 全选
+    selectAllThing4() {
+      this.handleSelect("plat_account_id");
+      this.department4 = [];
+      if (this.checkedThing4) {
+        this.departments4.map((item) => {
+          this.department4.push(item.id);
+        });
+      } else {
+        this.department4 = [];
+      }
+      this.searchParams.platIdList = this.department4;
+    },
+    // 流量分组 全选
+    selectAllThing5() {
+      this.handleSelect("group_id");
+      this.department5 = [];
+      if (this.checkedThing5) {
+        this.departments5.map((item) => {
+          this.department5.push(item.id);
+        });
+      } else {
+        this.department5 = [];
+      }
+      this.searchParams.groupIdList = this.department5;
+    },
+    // 流量分组 单选
+    getSelectDep5(department) {
+      this.handleSelect("group_id");
+      if (department.length === this.departments5.length) {
+        this.checkedThing5 = true;
+      } else {
+        this.checkedThing5 = false;
+      }
+      this.searchParams.groupIdList = department;
+    },
+    // 代码位单选
+    getSelectDep6(department) {
+      this.handleSelect("ad_source_id");
+      if (department.length === this.departments6.length) {
+        this.checkedThing6 = true;
+      } else {
+        this.checkedThing6 = false;
+      }
+      this.searchParams.sourceIdList = department;
+    },
+
+    // 代码位全选
+    selectAllThing6() {
+      this.handleSelect("ad_source_id");
+      this.department6 = [];
+      if (this.checkedThing6) {
+        this.departments6.map((item) => {
+          this.department6.push(item.id);
+        });
+      } else {
+        this.department6 = [];
+      }
+      this.searchParams.sourceIdList = this.department6;
+    },
+    // 自定义指标
+    custom() {
+      if (localStorage.getItem("tableData")) {
+        this.dragArr = JSON.parse(localStorage.getItem("tableData"));
+        for (let i = 0; i < this.dragArr.length; i++) {
+          let index = this.targetArr.findIndex((e) => {
+            return this.dragArr[i].id === e.id;
+          });
+          if (index !== -1) {
+            this.targetArr[index].ischeck = true;
+          }
+        }
+      }
+      this.customDialog = true;
+    },
+    // 全选
+    checkAll() {
+      this.dragArr = [];
+      this.targetArr.forEach((e, i) => {
+        e.ischeck = true;
+        this.dragArr.push(e);
+      });
+    },
+    // 反选
+    InvertSelect() {
+      this.targetArr.forEach((e, i) => {
+        if (e.ischeck) {
+          this.targetArr[i].ischeck = false;
+          let index = this.dragArr.findIndex((item, index) => {
+            return this.targetArr[i].id === item.id;
+          });
+          this.dragArr.splice(index, 1);
+        } else {
+          this.targetArr[i].ischeck = true;
+          this.dragArr.push(e);
+        }
+      });
+    },
+    // 默认
+    customSelect() {
+      this.dragArr = [];
+      this.targetArr.forEach((e, i) => {
+        if (
+          i == 0 ||
+          i == 1 ||
+          i == 2 ||
+          i == 3 ||
+          i == 4 ||
+          i == 5 ||
+          i == 6 ||
+          i == 7 ||
+          i == 8 ||
+          i == 12 ||
+          i == 3
+        ) {
+          this.targetArr[i].ischeck = true;
+          this.dragArr.push(e);
+        } else {
+          this.targetArr[i].ischeck = false;
+        }
+      });
+    },
+    handelChecked(val, i) {
+      let index = this.dragArr.findIndex((e) => {
+        return val.id === e.id;
+      });
+      if (!val.ischeck || index === -1) {
+        // this.targetArr[i].ischeck = true;
+        this.$set(this.targetArr[i], "ischeck", true);
+        this.dragArr.push(val);
+      } else if (val.ischeck && index !== -1) {
+        // this.targetArr[i].ischeck = false;
+        this.$set(this.targetArr[i], "ischeck", false);
+        this.dragArr.splice(index, 1);
+      }
+    },
+    InvertChange() {},
+    closeChecked(e, i) {
+      let index = this.targetArr.findIndex((item) => {
+        return item.id === e.id;
+      });
+      // this.$set(this.targetArr[index], "ischeck", false);
+      this.targetArr[index].ischeck = false;
+      this.targetArr = this.targetArr;
+      this.dragArr.splice(i, 1);
+    },
+    // 搜索
+    async searchBtn() {
+      if (!this.searchParams.dateStart || !this.searchParams.dateStart) {
+        return this.$message.error("日期为必选项");
+      }
+      await this.getReportData();
+    },
+    async handelConfirmDialog() {
+      if (this.dragArr.length === 0) {
+        return this.$message.error("至少选择一个指标");
+      }
+      await this.getReportData();
+      this.reportData1 = this.dragArr;
+      localStorage.setItem("tableData", JSON.stringify(this.dragArr));
+      this.customDialog = false;
+
+      location.reload();
+    },
+    closeCustomDialog() {},
+    // 分页
+    handleSizeChange(val) {
+      this.searchParams.limit = val;
+      this.getReportData();
+    },
+    handleCurrentChange(val) {
+      this.searchParams.page = val;
+      this.getReportData();
+    },
+    // 导出excel
+    async exportReport() {
+      let exportArr = [...this.exportNewArr, ...this.newLocalData];
+      let codeList = [];
+      let nameList = [];
+      for (let i = 0; i < exportArr.length; i++) {
+        nameList.push(exportArr[i].name);
+        codeList.push(exportArr[i].label);
+      }
+      this.searchParams.codeList = codeList;
+      this.searchParams.nameList = nameList;
+      try {
+        const res = await this.exportToExcel();
+        await excel(res, `sheetjs.xlsx`);
+      } catch (e) {
+        console.log(e, "导出excel错误信息");
+      }
+    },
+    exportToExcel() {
+      return request.post(
+        global.BASE_URL + "report/downloadFullReport",
+        this.searchParams,
+        {
+          responseType: "blob",
+        }
+      );
+    },
+    // 广告样式下拉改变
+    advertChange() {
+      this.handleSelect("position_id");
+    },
+    handleSelect(id) {
+      if (!this.searchParams.groupByList.includes(id)) {
+        this.searchParams.groupByList.push(id);
+      }
+    },
+
+    renderHeader(h, { column, $index }) {
+      if (column.property === "dau") {
+        return this.$createElement("tips", {
+          props: {
+            content: `每天打开应用的独立用户数`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "deu") {
+        return this.$createElement("tips", {
+          props: {
+            content: `每天观看过广告的独立用户数`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "permeability") {
+        return this.$createElement("tips", {
+          props: {
+            content: `每天观看过广告的用户占比，渗透率=DEU/DAU`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "aipau") {
+        return this.$createElement("tips", {
+          props: {
+            content: `人均展示次数`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "aipu") {
+        return this.$createElement("tips", {
+          props: {
+            content: `观看过广告的用户人均展示次数`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "income") {
+        return this.$createElement("tips", {
+          props: {
+            content: `预估收益=SUM(代码位人工填写的eCPM价格*Medpro统计的展示/1000)`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "unitRequest") {
+        return this.$createElement("tips", {
+          props: {
+            content: `Medpro通过Reporting API向广告平台拉取到的广告请求数，部分平台不提供此数据`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "requestFilledRate") {
+        return this.$createElement("tips", {
+          props: {
+            content: `应用向Medpro发送请求后，响应成功的占比`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "estimatedRevenueEcpm") {
+        return this.$createElement("tips", {
+          props: {
+            content: `（预估收益/Medpro统计的展示）*1000`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "impress") {
+        return this.$createElement("tips", {
+          props: {
+            content: `Medpro统计的广告曝光次数，由于统计口径差异、网络丢包等因素，Medpro统计的展示数据与广告平台展示数据可能存在差异`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "arpu") {
+        return this.$createElement("tips", {
+          props: {
+            content: `人均收益，ARPU=收益/DAU`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "impressRate") {
+        return this.$createElement("tips", {
+          props: {
+            content: `Medpro收到来自广告平台的广告返回后，展示成功的占比。公式为 展示率 = (展示/填充)`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "click") {
+        return this.$createElement("tips", {
+          props: {
+            content: `Medpro统计的广告点击数，由于部分广告平台不提供点击回调，Medpro统计的点击数据与广告平台点击数据可能存在差异`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "click") {
+        return this.$createElement("tips", {
+          props: {
+            content: `Medpro统计的广告点击数，由于部分广告平台不提供点击回调，Medpro统计的点击数据与广告平台点击数据可能存在差异`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "clickRate") {
+        return this.$createElement("tips", {
+          props: {
+            content: `Medpro统计的点击率，点击率=点击数/展示数`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "newLogin") {
+        return this.$createElement("tips", {
+          props: {
+            content: `首次使用应用的用户数`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "newUserRate") {
+        return this.$createElement("tips", {
+          props: {
+            content: `首次使用应用的用户占比，计算公式：新增用户/DAU`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "advRequest") {
+        return this.$createElement("tips", {
+          props: {
+            content: `Medpro向广告平台发送请求的次数。一次流量请求可能触发多次广告请求`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "request") {
+        return this.$createElement("tips", {
+          props: {
+            content: `应用向Medpro发送请求的次数，一次流量请求可能触发多次广告请求`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "advRequest") {
+        return this.$createElement("tips", {
+          props: {
+            content: `Medpro向广告平台发送请求的次数。一次流量请求可能触发多次广告请求`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "advRequestFilledRate") {
+        return this.$createElement("tips", {
+          props: {
+            content: `Medpro向广告平台发送请求后，返回成功的占比`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "unitRevenue") {
+        return this.$createElement("tips", {
+          props: {
+            content: `Medpro通过Reporting API向广告平台拉取到的收益`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "unitClick") {
+        return this.$createElement("tips", {
+          props: {
+            content: `Medpro通过Reporting API向广告平台拉取到的展示`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "unitEcpm") {
+        return this.$createElement("tips", {
+          props: {
+            content: `Medpro通过Reporting API向广告平台拉取到的收益和展示API计算出eCPM API，公式：（收益/展示API）*1000`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "unitCtr") {
+        return this.$createElement("tips", {
+          props: {
+            content: `点击API/展示API`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "impressionGap") {
+        return this.$createElement("tips", {
+          props: {
+            content: `Medpro统计展示与广告平台统计展示的差异，公式为 展示Gap=(展示-展示API)/展示API`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "clickGap") {
+        return this.$createElement("tips", {
+          props: {
+            content: `Medpro统计点击与广告平台统计点击的差异，公式为 点击Gap=(点击-点击API)/点击API`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "unitFilledRate") {
+        return this.$createElement("tips", {
+          props: {
+            content: `Medpro通过Reporting API向广告平台拉取到的填充率，部分平台不提供此数据`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      return this.$createElement("tips", {
+        props: {
+          content: ``,
+          title: column.label,
+          isShow: false,
+        },
+      });
+    },
+  },
+};
+</script>
+<style lang="scss" scoped>
+.app-main {
+  background-color: #eff1f4;
+  .header_card {
+    margin: 10px 0px 15px 0;
+  }
+  .header_box {
+    .item {
+      width: 200px;
+      .ite {
+        &:nth-child(4) {
+          width: 220px !important;
+        }
+      }
+    }
+    width: 100%;
+    height: 200px;
+    margin: 20px auto;
+    //   background-color: red;
+    .datacheck {
+      display: flex;
+      width: 100%;
+      height: 40px;
+      margin-bottom: 10px;
+      .tips {
+        font-size: 13px;
+        color: #333;
+      }
+      h4 {
+        width: 120px;
+        height: 40px;
+        text-align: center;
+        line-height: 40px;
+        font-size: 14px;
+        color: #333;
+        //   background-color: cornflowerblue;
+      }
+      .el-checkbox-group {
+        display: flex;
+        .check_item {
+          display: flex;
+          flex: 1;
+          .el-checkbox {
+            flex: 1;
+            text-align: center;
+            font-size: 12px !important;
+          }
+          li {
+            width: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+          }
+        }
+      }
+    }
+    .firstOption {
+      display: flex;
+      width: 100%;
+      height: 160px;
+      // background-color: darkorange;
+      h3 {
+        width: 120px;
+        height: 40px;
+        line-height: 40px;
+        text-align: center;
+        font-size: 14px;
+        color: #333;
+      }
+      .condition {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        //   background-color: darkslateblue;
+        .item {
+          width: 100%;
+          float: left;
+          .searchButton {
+            float: right !important;
+            .el-button {
+              margin: 10px 0 0 30px;
+            }
+          }
+          .ite {
+            position: relative;
+            float: left;
+            width: 21%;
+            margin: 0 18px 8px 0;
+
+            &:nth-child(1) {
+              width: 25%;
+            }
+            &:nth-child(2) {
+              width: 25%;
+            }
+
+            .isChecked {
+              position: absolute;
+              top: 10px;
+              left: 10px;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .table_box {
+    width: 100%;
+    .el-pagination {
+      margin: 20px 0 0 20px;
+    }
+    /deep/ .el-table--border th {
+      border-right: none;
+    }
+    /deep/ .el-table--border td {
+      border-right: none;
+    }
+    .head_ {
+      display: flex;
+      justify-content: flex-end;
+      width: 100%;
+      margin-bottom: 30px;
+    }
+  }
+  .container_box {
+    width: 100%;
+    height: 500px;
+    border: 1px solid #dddfe6;
+    .left {
+      float: left;
+      width: 70%;
+      height: 500px;
+      .head_top {
+        width: 100%;
+        height: 40px;
+        line-height: 40px;
+        color: #333;
+        border: 1px solid #dddfe6;
+        padding-left: 20px;
+        border-top: none;
+        border-right: none;
+      }
+      .head_bottom {
+        width: 100%;
+        height: 460px;
+        padding: 15px 10px;
+        box-sizing: border-box;
+        .checkAll_ {
+          text-align: right;
+          height: 30px;
+          font-size: 14px;
+          line-height: 30px;
+          color: #0075ff;
+          cursor: pointer;
+        }
+        .checkbox_1 {
+          display: flex;
+          flex-wrap: wrap;
+          width: 100%;
+          margin-top: 20px;
+          .item_ {
+            // display: flex;
+            // justify-content: space-between;
+            width: 33.33%;
+            height: 20px;
+            margin-bottom: 16px;
+            font-size: 15px;
+            label {
+              font-weight: 400;
+              input {
+                width: 18px;
+                height: 18px;
+                vertical-align: middle;
+                margin-right: 10px;
+              }
+            }
+            .active {
+              color: #0075ff;
+            }
+          }
+        }
+        .checkbox_2 {
+          overflow: hidden;
+          width: 100%;
+          // height: 100px;
+          margin-top: 15px;
+          .item_ {
+            display: flex;
+            justify-content: space-between;
+            float: left;
+            width: 33.33%;
+            height: 20px;
+            margin-bottom: 8px;
+          }
+        }
+        .checkbox_3 {
+          margin-top: 15px;
+        }
+      }
+    }
+    .right {
+      float: left;
+      width: 30%;
+      height: 400px;
+      .chosen {
+        background-color: #f5f5f5 !important;
+      }
+      .head_top_ {
+        width: 100%;
+        height: 40px;
+        line-height: 40px;
+        color: #333;
+        border: 1px solid #dddfe6;
+        padding-left: 20px;
+        border-top: none;
+        border-right: none;
+        border-bottom: none;
+      }
+      .head_bottom_ {
+        overflow-y: scroll;
+        width: 100%;
+        height: 460px;
+        border: 1px solid #dddfe6;
+        .drag_item {
+          display: flex;
+          align-items: center;
+          width: 92%;
+          height: 35px;
+          margin: 0 auto;
+          background-color: #fff;
+          border: 1px solid #dddfe6;
+          box-shadow: 0 2px 2px 0 #dddfe6;
+          margin-top: 9px;
+          .el-icon-rank {
+            width: 50px;
+            text-align: center;
+            font-size: 22px;
+            cursor: move;
+          }
+          .drag_text {
+            flex: 1;
+            text-align: center;
+          }
+          .el-icon-close {
+            font-size: 18px;
+            width: 42px;
+            text-align: center;
+            cursor: pointer;
+          }
+        }
+      }
+    }
+  }
+}
+</style>

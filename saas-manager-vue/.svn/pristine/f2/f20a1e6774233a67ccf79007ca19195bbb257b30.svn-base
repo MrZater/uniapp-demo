@@ -1,0 +1,78 @@
+import request from '@/utils/request'
+
+export function getAppList() {
+  return request({
+    url: '/app/list',
+    method: 'get'
+  })
+}
+
+export function getAppPager(data) {
+  return request({
+    url: '/app/pager',
+    method: 'post',
+    data
+  })
+}
+
+export function addApp(data) {
+  return request({
+    url: '/app/add',
+    method: 'post',
+    data
+  })
+}
+
+export function updateApp(data) {
+  return request({
+    url: '/app/update',
+    method: 'post',
+    data
+  })
+}
+
+export function platformLinkList(appId) {
+  return request({
+    url: `/aggregate/platformList/` + appId,
+    method: 'post'
+  })
+}
+
+export function updateAppPlatLink(data) {
+  return request({
+    url: '/app/bindPlat',
+    method: 'post',
+    data
+  })
+}
+// 通过商务查app列表
+export function getAdminAndAppListByBusinessId(data) {
+  return request({
+    url: '/dashboard/getAdminAndAppListByBusinessId',
+    method: 'post',
+    data
+  })
+}
+export function getAppListByAdminId(data) {
+  return request({
+    url: '/dashboard/getAppListByAdminId',
+    method: 'post',
+    data
+  })
+}
+// 获取账号列表
+export function getadminList() {
+  return request({
+    url: '/user/adminList',
+    method: 'get',
+
+  })
+}
+// 获取账号列表
+export function getMediaAppList() {
+  return request({
+    url: '/app/getMediaAppList',
+    method: 'get',
+
+  })
+}

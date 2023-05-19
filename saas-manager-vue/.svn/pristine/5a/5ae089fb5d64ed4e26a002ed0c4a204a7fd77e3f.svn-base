@@ -1,0 +1,576 @@
+<template>
+  <div class="batch-add-container">
+    <div class="header">
+      <span class="goback" @click="goback"
+        ><i class="el-icon-back">返回</i></span
+      >
+      <h3>批量添加代码位</h3>
+    </div>
+    <!-- 内容区 -->
+    <div class="content">
+      <!-- 表头标题 -->
+      <div class="title">
+        <div class="title_app">
+          <div class="image">
+            <el-image
+              :src="iconUrl ? getCreativeUrl(iconUrl) : '/images/app-none.png'"
+              :fit="'fill'"
+            />
+          </div>
+          <div class="titlebox">
+            <p class="name"><span class="label"></span>{{ appName }}</p>
+            <p class="id"><span class="label"></span>{{ appId }}</p>
+          </div>
+        </div>
+        <div class="title_place">
+          <div class="titlebox">
+            <p class="name"><span class="label"></span>{{ placeName }}</p>
+            <p class="id"><span class="label"></span>{{ placeId }}</p>
+          </div>
+        </div>
+        <div class="title_position">
+          <div class="titlebox">
+            <p class="name position">
+              <span class="label"></span>{{ positionName }}
+            </p>
+          </div>
+        </div>
+      </div>
+      <!-- 广告源 -->
+      <div class="platform" v-if="appId">
+        <div class="label">广告源：</div>
+        <div class="platformbox">
+          <AppPlatform
+            :isBatch="true"
+            :app-id="appId"
+            :linked-show="false"
+            :active="null"
+            :disabled="false"
+            :is-edit="false"
+            @getplatrow="getplatrow"
+          />
+        </div>
+      </div>
+      <div class="control">
+        <el-button
+          icon="el-icon-plus"
+          size="mini"
+          type="primary"
+          @click="addMore"
+          >代码位</el-button
+        >
+        <el-button
+          :disabled="selectData.length == 0"
+          type="warning "
+          size="mini"
+          @click="deleteData"
+          >批量删除</el-button
+        >
+      </div>
+      <div class="table">
+        <el-form ref="batchform" :model="query">
+          <el-table
+            :key="tableKey"
+            :data="query.sourceData"
+            style="width: 100%"
+            @selection-change="handleSelectionChange"
+          >
+            <!-- 选择栏 -->
+            <el-table-column align="center" type="selection" fixed>
+            </el-table-column>
+            <!-- 广告源名称 -->
+            <el-table-column align="center" label="广告源" fixed>
+              <template slot-scope="scope">
+                <el-form-item label="" prop="">
+                  {{ scope.row.platName }}
+                </el-form-item>
+              </template>
+            </el-table-column>
+            <!-- 代码位ID -->
+            <el-table-column
+              align="center"
+              label="代码位ID"
+              fixed
+              width="150px"
+            >
+              <template slot-scope="scope">
+                <el-form-item
+                  :prop="'sourceData[' + scope.$index + '].platPlaceId'"
+                  :rules="{
+                    required: true,
+                    message: '代码位ID不能为空',
+                    trigger: 'blur',
+                  }"
+                  label-width="0"
+                >
+                  <el-input
+                    size="mini"
+                    placeholder="请输入代码位ID"
+                    v-model="scope.row.platPlaceId"
+                  /> </el-form-item
+              ></template>
+            </el-table-column>
+            <!-- 代码位名称 -->
+            <el-table-column
+              align="center"
+              label="代码位名称"
+              fixed
+              width="150px"
+              ><template slot-scope="scope">
+                <el-form-item
+                  :prop="'sourceData[' + scope.$index + '].name'"
+                  :rules="{
+                    required: true,
+                    message: '代码位名称不能为空',
+                    trigger: 'blur',
+                  }"
+                  label-width="0"
+                >
+                  <el-input
+                    size="mini"
+                    placeholder="请输入代码位名称"
+                    v-model="scope.row.name"
+                  /> </el-form-item></template
+            ></el-table-column>
+            <!-- 价格类型 -->
+            <el-table-column align="center" label="价格类型" fixed width="120px"
+              ><template slot-scope="scope">
+                <el-form-item
+                  :prop="'sourceData[' + scope.$index + '].settleType'"
+                  :rules="{
+                    required: true,
+                    message: '请选择价格类型',
+                    trigger: 'change',
+                  }"
+                  label-width="0"
+                >
+                  <el-select
+                    size="mini"
+                    v-model="scope.row.settleType"
+                    placeholder=""
+                  >
+                    <el-option
+                      v-if="settleType == '1'"
+                      :label="'竞价'"
+                      :value="1"
+                    />
+                    <el-option :label="'固价'" :value="0" />
+                  </el-select> </el-form-item></template
+            ></el-table-column>
+            <!-- 价格 -->
+            <el-table-column align="center" label="价格" fixed width="120px"
+              ><template slot-scope="scope">
+                <div v-if="settleType == '1'">
+                  <el-form-item
+                    v-if="scope.row.settleType == '0'"
+                    :prop="'sourceData[' + scope.$index + '].bidfloor'"
+                    :rules="{
+                      required: true,
+                      message: '请输入底价',
+                      trigger: 'blur',
+                    }"
+                    label-width="0"
+                  >
+                    <el-input
+                      size="mini"
+                      placeholder="请输入底价"
+                      v-model="scope.row.bidfloor"
+                    />
+                  </el-form-item>
+                  <span v-else class="bidding">竞价</span>
+                </div>
+
+                <div v-else>
+                  <el-form-item
+                    :prop="'sourceData[' + scope.$index + '].bidfloor'"
+                    :rules="{
+                      required: true,
+                      message: '请输入底价',
+                      trigger: 'blur',
+                    }"
+                    label-width="0"
+                  >
+                    <span>
+                      <el-input
+                        size="mini"
+                        placeholder="请输入底价"
+                        v-model="scope.row.bidfloor" /></span
+                  ></el-form-item>
+                </div> </template
+            ></el-table-column>
+            <!-- 代码位状态 -->
+            <el-table-column align="center" label="状态" fixed width="60px"
+              ><template slot-scope="scope">
+                <el-form-item :prop="'sourceData[' + scope.$index + '].sts'">
+                  <el-switch
+                    v-model="scope.row.sts"
+                    active-value="A"
+                    inactive-value="S"
+                  /> </el-form-item></template
+            ></el-table-column>
+            <!-- 请求上限 -->
+            <el-table-column align="center" label="请求上限" width="150px">
+              <template slot-scope="scope">
+                <el-form-item
+                  :prop="'sourceData[' + scope.$index + '].requestFreq'"
+                  label-width="0"
+                >
+                  <el-input
+                    type="number"
+                    min="0"
+                    size="mini"
+                    placeholder="请输入请求上限"
+                    v-model="scope.row.requestFreq"
+                  /> </el-form-item
+              ></template>
+            </el-table-column>
+            <!-- 展示上限 -->
+            <el-table-column align="center" label="展示上限" width="150px">
+              <template slot-scope="scope">
+                <el-form-item
+                  :prop="'sourceData[' + scope.$index + '].impressFreq'"
+                  label-width="0"
+                >
+                  <el-input
+                    min="0"
+                    type="number"
+                    size="mini"
+                    placeholder="请输入展示上限"
+                    v-model="scope.row.impressFreq"
+                  /> </el-form-item
+              ></template>
+            </el-table-column>
+            <!-- 点击上限 -->
+            <el-table-column align="center" label="点击上限" width="150px">
+              <template slot-scope="scope">
+                <el-form-item
+                  :prop="'sourceData[' + scope.$index + '].clickFreq'"
+                  label-width="0"
+                >
+                  <el-input
+                    type="number"
+                    min="0"
+                    size="mini"
+                    placeholder="请输入点击上限"
+                    v-model="scope.row.clickFreq"
+                  /> </el-form-item
+              ></template>
+            </el-table-column>
+            <!-- 展示频次（天） -->
+            <el-table-column
+              align="center"
+              label="展示频次（天）"
+              width="150px"
+            >
+              <template slot-scope="scope">
+                <el-form-item
+                  :prop="'sourceData[' + scope.$index + '].impressFreqDay'"
+                  label-width="0"
+                >
+                  <el-input
+                    type="number"
+                    min="0"
+                    size="mini"
+                    placeholder="请输入展示频次（天）"
+                    v-model="scope.row.impressFreqDay"
+                  /> </el-form-item
+              ></template>
+            </el-table-column>
+            <!-- 展示频次（小时） -->
+            <el-table-column
+              align="center"
+              label="展示频次（小时）"
+              width="150px"
+            >
+              <template slot-scope="scope">
+                <el-form-item
+                  :prop="'sourceData[' + scope.$index + '].impressFreqHour'"
+                  label-width="0"
+                >
+                  <el-input
+                    type="number"
+                    min="0"
+                    size="mini"
+                    placeholder="请输入展示频次（小时）"
+                    v-model="scope.row.impressFreqHour"
+                  /> </el-form-item
+              ></template>
+            </el-table-column>
+            <!-- 展示间隔（秒） -->
+            <el-table-column
+              align="center"
+              label="展示间隔（秒）"
+              width="150px"
+            >
+              <template slot-scope="scope">
+                <el-form-item
+                  :prop="'sourceData[' + scope.$index + '].impressInterval'"
+                  label-width="0"
+                >
+                  <el-input
+                    type="number"
+                    min="0"
+                    size="mini"
+                    placeholder="请输入展示间隔（秒）"
+                    v-model="scope.row.impressInterval"
+                  /> </el-form-item
+              ></template>
+            </el-table-column>
+            <!-- 点击频次 -->
+            <el-table-column align="center" label="点击频次" width="150px">
+              <template slot-scope="scope">
+                <el-form-item
+                  :prop="'sourceData[' + scope.$index + '].clickInterval'"
+                  label-width="0"
+                >
+                  <el-input
+                    type="number"
+                    min="0"
+                    size="mini"
+                    placeholder="请输入点击频次"
+                    v-model="scope.row.clickInterval"
+                  /> </el-form-item
+              ></template>
+            </el-table-column>
+          </el-table>
+        </el-form>
+      </div>
+      <div class="footer">
+        <el-button
+          :disabled="query.sourceData.length == 0"
+          type="primary"
+          @click="handleBatchAdd"
+          >批量添加</el-button
+        >
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import AppPlatform from "@/components/Platform";
+import { getAppInfoById, batchAddSource } from "@/api/aggregate";
+
+const HTTP_PREFIX = "http://creative.medproad.com/material/";
+export default {
+  name: "batchAdd",
+  components: {
+    AppPlatform,
+  },
+  data() {
+    return {
+      tableKey: "" + new Date(),
+      query: { sourceData: [] },
+      appId: "",
+      appName: "",
+      placeId: "",
+      placeName: "",
+      positionId: "",
+      positionName: "",
+      iconUrl: "",
+      os: "",
+      settleType: "",
+      platName: "",
+      platId: "",
+      testId: "",
+      groupId: "",
+      selectData: [],
+    };
+  },
+
+  mounted() {
+    if (this.$route.query) {
+      this.appId = this.$route.query.appId ? this.$route.query.appId : "";
+      this.placeId = this.$route.query.placeId ? this.$route.query.placeId : "";
+      this.groupId = this.$route.query.groupId ? this.$route.query.groupId : "";
+      this.testId = this.$route.query.testId ? this.$route.query.testId : "";
+    }
+    this.getAppInfoById();
+  },
+  methods: {
+    async getAppInfoById() {
+      let resp = await getAppInfoById({
+        id: this.appId,
+        placeId: this.placeId,
+      });
+      this.appName = resp.data[0] ? resp.data[0].name : "";
+      this.placeName = resp.data[0] ? resp.data[0].placeName : "";
+      this.positionId = resp.data[0] ? resp.data[0].position : "";
+      this.positionName = resp.data[0] ? resp.data[0].positionName : "";
+      this.iconUrl = resp.data[0] ? resp.data[0].iconUrl : "";
+      this.os = resp.data[0] ? resp.data[0].os : "";
+    },
+    getCreativeUrl(url) {
+      if (url) {
+        return HTTP_PREFIX + url;
+      } else {
+        return null;
+      }
+    },
+    addMore() {
+      if (!this.platId) {
+        this.$message.error("请选择广告源");
+        return;
+      }
+      this.tableKey = "" + new Date();
+      this.query.sourceData.push({
+        key: Math.random(),
+        platName: this.platName,
+        settleType: this.settleType,
+        sts: "A",
+        // 广告位id
+        placeId: this.placeId,
+        // 广告源id
+        platId: this.platId,
+        // 流量分组id
+        groupId: this.groupId,
+        // 测试分组id
+        testId: this.testId,
+        name:
+          "" +
+          this.appName +
+          "-" +
+          (this.os == 1 ? "安卓" : "IOS") +
+          "-" +
+          this.positionName,
+      });
+    },
+    // 选中事件
+    handleSelectionChange(list) {
+      this.selectData = JSON.parse(JSON.stringify(list));
+    },
+    // 批量删除
+    deleteData() {
+      let indexArr = [];
+      this.selectData.forEach((child, c) => {
+        this.query.sourceData.forEach((item, i) => {
+          if (item.key == child.key) {
+            indexArr.push(i);
+          }
+        });
+      });
+      indexArr.reverse().forEach((item) => {
+        this.query.sourceData.splice(item, 1);
+      });
+    },
+
+    getplatrow(row) {
+      this.query.sourceData = [];
+      this.platId = row.id;
+      this.platName = row.name;
+      this.settleType = row.settleType;
+    },
+    goback() {
+      this.$router.push({
+        path: "/traffic/aggregate",
+        query: { appId: this.appId, placeId: this.placeId },
+      });
+    },
+    async handleBatchAdd() {
+      this.$refs.batchform.validate(async (val) => {
+        if (!val) return;
+        let resp = await batchAddSource(this.query);
+        if (resp.code == 200) {
+          this.$message.success(resp.msg);
+          this.$router.push({
+            path: "/traffic/aggregate",
+            query: { appId: this.appId, placeId: this.placeId },
+          });
+        }
+      });
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.batch-add-container {
+  width: 100%;
+  background-color: #fff;
+  .header {
+    padding: 10px;
+    display: flex;
+    .goback {
+      font-size: 16px;
+      margin-right: 30px;
+      cursor: pointer;
+      &:hover {
+        color: blue;
+      }
+    }
+  }
+  .content {
+    padding-left: 30px;
+    width: 100%;
+    .title {
+      margin-top: 30px;
+      width: 100%;
+      display: flex;
+      .title_app,
+      .title_place {
+        line-height: 50px;
+        width: 320px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        .image {
+          width: 40px;
+          height: 40px;
+          overflow: hidden;
+          margin-right: 5px;
+        }
+      }
+      .titlebox {
+        .name {
+          font-size: 16px;
+          font-weight: 500;
+          line-height: 30px;
+        }
+        .id {
+          font-size: 14px;
+          line-height: 20px;
+        }
+        .label {
+          font-weight: 600;
+        }
+        .name.position {
+          line-height: 50px;
+        }
+      }
+    }
+    .platform {
+      margin-top: 40px;
+      display: flex;
+      .label {
+        width: 6%;
+        font-weight: 600;
+        color: #666;
+      }
+      .platformbox {
+        width: 90%;
+      }
+    }
+    .control {
+      margin-top: 30px;
+      margin-bottom: 30px;
+      width: 100%;
+    }
+    .table {
+      width: 98%;
+      .bidding {
+        color: blue;
+        // margin-top: -10px;
+        position: absolute;
+        top: 18px;
+        left: 40%;
+      }
+    }
+    .footer {
+      margin-top: 20px;
+      padding-bottom: 20px;
+      display: flex;
+      justify-content: center;
+    }
+  }
+}
+</style>

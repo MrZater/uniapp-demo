@@ -1,0 +1,594 @@
+<template>
+  <div>
+    <el-card>
+      <el-row class="box" :gutter="24">
+        <el-col :span="5">
+          <div class="grid-content bg-purple">
+            <el-input
+              v-model="subAccount.name"
+              clearable
+              placeholder="请输入账号名称登录名称"
+              @clear="clear"
+              @keyup.native="trimName('subAccount', 'name')"
+            />
+          </div>
+        </el-col>
+
+        <el-col :span="4">
+          <div class="grid-content bg-purple">
+            <el-select
+              v-model="subAccount.role"
+              placeholder="选择权限"
+              clearable
+              @clear="clear"
+            >
+              <el-option
+                v-for="(item, i) in options"
+                :key="i"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+          </div>
+        </el-col>
+        <el-col :span="4">
+          <div class="grid-content bg-purple">
+            <el-select
+              v-model="subAccount.sts"
+              placeholder="状态"
+              clearable
+              @clear="clear"
+            >
+              <el-option
+                v-for="(item, i) in options1"
+                :key="i"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+          </div>
+        </el-col>
+        <el-col :span="4">
+          <div class="grid-content bg-purple">
+            <el-button type="primary" plain @click="searchAccount"
+              >搜索</el-button
+            >
+          </div>
+        </el-col>
+      </el-row>
+    </el-card>
+    <el-card>
+      <el-button type="primary" class="addAccount" @click="addAccount"
+        >新增账户</el-button
+      >
+
+      <el-table :data="AccountTable" border style="width: 100%">
+        <el-table-column
+          align="center"
+          prop="name"
+          label="账户名称"
+          width="180"
+        />
+        <el-table-column
+          align="center"
+          prop="loginId"
+          label="登陆账号"
+          width="180"
+        />
+        <el-table-column align="center" prop="role" label="角色">
+          <template slot-scope="{ row }">
+            <div>
+              <span v-if="row.role === 2">管理员</span>
+              <span v-if="row.role === 3">运营</span>
+              <span v-if="row.role === 4">报表</span>
+              <span v-if="row.role === 5">审核</span>
+              <span v-if="row.role === 6">商务</span>
+              <span v-if="row.role === 7">媒体</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column align="center" prop="createUserName" label="所属账户">
+        </el-table-column>
+
+        <el-table-column prop="sts" label="状态" align="center">
+          <template slot-scope="{ row }">
+            <div>
+              <el-tag v-if="row.sts === 'A'">启用</el-tag>
+              <el-tag v-if="row.sts === 'S'" type="danger">停用</el-tag>
+            </div>
+            <template />
+          </template>
+        </el-table-column>
+        <el-table-column prop="sts" label="操作" align="center" width="250px">
+          <template slot-scope="{ row }">
+            <div>
+              <el-button size="mini" type="primary" @click="editAccount(row)"
+                >编辑</el-button
+              >
+              <el-button size="mini" type="danger" @click="delAccount(row)"
+                >删除</el-button
+              >
+              <el-button
+                size="mini"
+                type="warning"
+                @click="setPermissions(row)"
+                v-if="row.role === 2"
+                >设置权限</el-button
+              >
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
+    <!-- 添加 -->
+    <el-dialog
+      :title="isAdd ? '添加子账户' : '编辑子账户'"
+      :visible.sync="accountDialogVisible"
+      width="50%"
+      @close="closeDialog"
+    >
+      <el-form
+        ref="ruleForm"
+        :rules="rules"
+        :model="accountForm"
+        label-width="130px"
+      >
+        <el-form-item label="账号名称" prop="name">
+          <el-input
+            v-model="accountForm.name"
+            maxlength="30"
+            placeholder="账号名称"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="登录账号" prop="loginId">
+          <el-input
+            v-model="accountForm.loginId"
+            :disabled="!isAdd"
+            placeholder="登录账号"
+          />
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input
+            v-model="accountForm.password"
+            placeholder="密码"
+            type="password"
+            show-password
+          />
+        </el-form-item>
+        <el-form-item label="应用范围" prop="">
+          <el-select
+            v-model="department"
+            placeholder="选择应用"
+            multiple
+            collapse-tags
+            @change="getSelectDep"
+          >
+            <div style="padding-left: 10px">
+              <el-checkbox
+                v-model="checkedThing"
+                :style="selfstyle"
+                @change="selectAllThing"
+                >全选</el-checkbox
+              >
+            </div>
+            <el-option
+              v-for="(item, index) in departments"
+              :key="index"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="角色" prop="role">
+          <el-radio-group v-model="accountForm.role">
+            <el-radio
+              v-if="$store.getters.roles[0] !== 'ADMIN'"
+              :disabled="disabled"
+              :label="2"
+              >管理员</el-radio
+            >
+            <el-radio v-if="isShow" :label="3">运营</el-radio>
+            <el-radio v-if="isShow" :label="4">报表</el-radio>
+            <el-radio v-if="isShow && $store.getters.creative === 1" :label="5"
+              >审核</el-radio
+            >
+            <el-radio
+              v-if="$store.getters.roles[0] !== 'ADMIN'"
+              :disabled="disabled"
+              :label="6"
+              >商务</el-radio
+            >
+            <el-radio
+              v-if="
+                $store.getters.roles[0] == 'SUPER_ADMIN' ||
+                ($store.getters.roles[0] == 'ADMIN' &&
+                  $store.state.user.mediaAccess == 1)
+              "
+              :disabled="disabled"
+              :label="7"
+              >媒体</el-radio
+            >
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item
+          v-if="accountForm.role == 2"
+          label="商务"
+          prop="businessId"
+        >
+          <el-select v-model="accountForm.businessId" placeholder="请选择">
+            <el-option
+              v-for="(item, i) in businessIdOptions"
+              :key="i"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item v-if="!isAdd" label="状态" prop="sts">
+          <el-select v-model="accountForm.sts" placeholder="请选择">
+            <el-option
+              v-for="(item, i) in options1"
+              :key="i"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="accountDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="handelAddAccount">确 定</el-button>
+      </span>
+    </el-dialog>
+
+    <!-- 设置权限-->
+    <el-dialog
+      title="设置权限"
+      :visible.sync="permissionsDialogVisible"
+      width="50%"
+      @close="closePermissionsDialog"
+    >
+      <el-form label-width="130px">
+        <el-form-item label="素材审核权限">
+          <el-switch
+            v-model="permissionsForm.creative"
+            :active-value="1"
+            :inactive-value="0"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+          />
+        </el-form-item>
+        <el-form-item label="跳过按钮统一">
+          <el-switch
+            v-model="permissionsForm.skip"
+            :active-value="1"
+            :inactive-value="0"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+          />
+        </el-form-item>
+        <el-form-item label="媒体权限">
+          <el-switch
+            v-model="permissionsForm.mediaAccess"
+            :active-value="1"
+            :inactive-value="0"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+          />
+        </el-form-item>
+
+        <el-form-item label="广告源">
+          <div>
+            <el-checkbox-group v-model="platNames" size="small">
+              <el-checkbox
+                border
+                v-for="(item, i) in platOptions"
+                :key="i"
+                :label="item.name"
+              ></el-checkbox>
+            </el-checkbox-group>
+          </div>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="permissionsDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="handlePermissions">确 定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+<script>
+import {
+  accountList,
+  addAccount,
+  delSonAccount,
+  updateAccount,
+  handlePermissions,
+  getBusinessIdOptions,
+} from "@/api/advanced";
+import { getAppList } from "@/api/app";
+import { getPlatOptions } from "@/api/plat";
+// import { mapGetters} from 'vuex'
+export default {
+  computed: {
+    // ...mapGetters(['roles'])
+  },
+  data() {
+    return {
+      subAccount: {
+        name: "",
+        loginId: "",
+        role: "",
+        sts: "",
+        businessId: null,
+      },
+      accountDialogVisible: false,
+      permissionsDialogVisible: false,
+      AccountTable: [],
+      platOptions: [],
+      businessIdOptions: [],
+      platNames: [],
+      isAdd: true,
+      isShow: true,
+      disabled: false,
+
+      options: [
+        {
+          value: "3",
+          label: "运营",
+        },
+        {
+          value: "4",
+          label: "报表",
+        },
+        {
+          value: "5",
+          label: "审核",
+        },
+        {
+          value: "6",
+          label: "商务",
+        },
+      ],
+      accountForm: {
+        name: "",
+        loginId: "",
+        password: "",
+        appList: [],
+        role: "",
+        sts: "",
+        businessId: null,
+      },
+      permissionsForm: {
+        userId: null,
+        platIds: [],
+        skip: 0,
+        creative: 0,
+        mediaAccess: 0,
+      },
+      checkedThing: false,
+      department: [],
+      selfstyle: {
+        textAlign: "right",
+        paddingRight: "10px",
+      },
+      options1: [
+        {
+          value: "A",
+          label: "启用",
+        },
+        {
+          value: "S",
+          label: "暂停",
+        },
+      ],
+      tableData: [],
+      departments: [],
+      rules: {
+        name: [{ required: true, message: "请输入账号名称", trigger: "blur" }],
+        loginId: [
+          { required: true, message: "请输入登录账号", trigger: "blur" },
+        ],
+        role: [{ required: true, message: "请选择权限", trigger: "blur" }],
+        sts: [{ required: true, message: "请选择状态", trigger: "blur" }],
+        password: [{ required: true, message: "请输入密码", trigger: "blur" }],
+      },
+    };
+  },
+
+  mounted() {
+    if (this.$store.getters.roles[0] === "SUPER_ADMIN") {
+      this.options.unshift({ value: 2, label: "管理员" });
+      this.options.unshift({ value: 7, label: "媒体" });
+    }
+    if (
+      this.$store.getters.roles[0] === "ADMIN" &&
+      this.$store.state.user.mediaAccess == 1
+    ) {
+      console.log(1111)
+      this.options.unshift({ value: 7, label: "媒体" });
+    }
+    if (this.$store.getters.roles[0] !== "SUPER_ADMIN") {
+      this.subAccount.loginId = this.$store.state.user.loginId;
+    }
+    this.getAccountList();
+    this.getAppList();
+    this.initPlatOptions();
+    this.initBusinessIdOptions();
+  },
+  methods: {
+    clear() {
+      // this.getAccountList();
+    },
+    // 去中间空格
+    trimName(val, value) {
+      this[val][value] = this[val][value].replace(/\s+/g, "");
+    },
+    getAccountList() {
+      accountList(this.subAccount).then((res) => {
+        if (res.code != 200) return;
+        this.AccountTable = res.data.items;
+        this.total = res.data.total;
+      });
+    },
+    getAppList() {
+      getAppList().then((res) => {
+        this.departments = res.data;
+      });
+    },
+    addAccount() {
+      this.isShow = true;
+      this.disabled = false;
+      this.accountDialogVisible = true;
+      this.isAdd = true;
+    },
+    // 编辑 数据回显
+    editAccount(row) {
+      this.isAdd = false;
+      this.accountDialogVisible = true;
+      row = JSON.parse(JSON.stringify(row));
+      if (row.role == 2) {
+        this.disabled = true;
+        this.isShow = false;
+      } else {
+        this.disabled = false;
+        this.isShow = true;
+      }
+      this.accountForm = row;
+      this.department = row.appList;
+    },
+    searchAccount() {
+      if (this.$store.getters.roles[0] !== "SUPER_ADMIN") {
+        this.subAccount.loginId = this.$store.state.user.loginId;
+      }
+      this.getAccountList();
+    },
+    // 删除
+    delAccount(row) {
+      this.$confirm("你确定要删除这条子账户吗？", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then(() => {
+          delSonAccount({ id: row.id }).then((res) => {
+            if (res.code != 200) return;
+            this.getAccountList();
+            this.$message.success("删除成功");
+          });
+        })
+        .catch(() => {});
+    },
+    handelAddAccount() {
+      this.$refs.ruleForm.validate((val) => {
+        if (!val) return;
+        // 添加
+        if (this.isAdd) {
+          addAccount(this.accountForm).then((res) => {
+            if (res.code != 200) return this.$message.error(res.msg);
+            this.$message.success("添加成功");
+            this.getAccountList();
+            this.initBusinessIdOptions();
+            this.accountDialogVisible = false;
+          });
+        } else {
+          updateAccount(this.accountForm).then((res) => {
+            if (res.code != 200) return this.$message.error(res.msg);
+            this.$message.success("编辑成功");
+            this.getAccountList();
+            this.initBusinessIdOptions();
+            this.accountDialogVisible = false;
+          });
+        }
+      });
+    },
+    setPermissions(row) {
+      this.permissionsDialogVisible = true;
+      this.platNames = [];
+      row = JSON.parse(JSON.stringify(row));
+      this.permissionsForm.userId = row.id;
+      this.permissionsForm.skip = row.skip;
+      this.permissionsForm.creative = row.creative;
+      this.permissionsForm.mediaAccess = row.mediaAccess;
+
+      row.platIds.forEach((item) => {
+        this.platNames.push(
+          this.platOptions.find((plat) => plat.id === item).name
+        );
+      });
+    },
+    getSelectDep(department) {
+      if (department.length === this.departments.length) {
+        this.checkedThing = true;
+      } else {
+        this.checkedThing = false;
+      }
+      this.accountForm.appList = department;
+    },
+    // 应用全选
+    selectAllThing() {
+      this.department = [];
+      if (this.checkedThing) {
+        this.departments.map((item) => {
+          this.department.push(item.id);
+        });
+      } else {
+        this.department = [];
+      }
+      this.accountForm.appList = this.department;
+    },
+    closeDialog() {
+      this.$refs.ruleForm.resetFields();
+      this.accountForm = {
+        name: "",
+        loginId: "",
+        password: "",
+        appList: [],
+        role: "",
+        sts: "",
+      };
+      this.department = [];
+      this.checkedThing = false;
+    },
+    closePermissionsDialog() {
+      this.permissionsDialogVisible = false;
+    },
+    initPlatOptions() {
+      getPlatOptions().then((res) => {
+        this.platOptions = res.data;
+      });
+    },
+    initBusinessIdOptions() {
+      getBusinessIdOptions().then((res) => {
+        this.businessIdOptions = res.data;
+      });
+    },
+    //设置权限
+    handlePermissions() {
+      let platIds = [];
+      this.platNames.forEach((item) => {
+        platIds.push(this.platOptions.find((plat) => plat.name === item).id);
+      });
+      this.permissionsForm.platIds = platIds;
+      handlePermissions(this.permissionsForm).then((res) => {
+        if (res.code != 200) return this.$message.error(res.msg);
+        this.$message.success("编辑成功");
+        this.getAccountList();
+        this.permissionsDialogVisible = false;
+      });
+    },
+  },
+};
+</script>
+<style lang="scss" scoped>
+.box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 60px;
+}
+.addAccount {
+  margin-bottom: 20px;
+}
+</style>

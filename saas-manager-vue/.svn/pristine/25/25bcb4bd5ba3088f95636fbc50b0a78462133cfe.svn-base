@@ -1,0 +1,284 @@
+<template>
+  <div class="charts-container">
+    <div class="control">
+      <el-select
+        v-model="target"
+        size="mini"
+        style="width: 150px"
+        placeholder=""
+        @change="changeTarget"
+      >
+        <div
+          slot="prefix"
+          style="height: 35px; line-height: 24px; font-size: 20px"
+        >
+          <svg-icon
+            :style="{ color: lineColor }"
+            icon-class="line"
+          />
+        </div>
+        <el-option
+          v-for="item in targetList"
+          :key="item.value"
+          :label="item.label"
+          :value="item.value"
+        />
+      </el-select>
+    </div>
+    <div
+      ref="charts"
+      v-loading="isLoading"
+      class="charts"
+    />
+  </div>
+</template>
+
+<script>
+import { userActionTrend } from '@/api/synthReport'
+const echarts = require('echarts')
+
+export default {
+  props: {
+    query: {
+      type: Object,
+      default: {}
+    }
+  },
+  data() {
+    return {
+      myEcharts: null,
+      xAxisList: [],
+      chartList: [],
+      target: 'dau',
+      targetList: [
+        {
+          label: 'DAU',
+          value: 'dau',
+          color: '#ffab31'
+        },
+        {
+          label: 'DEU',
+          value: 'deu',
+          color: '#0055ff'
+        },
+        {
+          label: '渗透率',
+          value: 'permeability',
+          color: '#39da61'
+        },
+        {
+          label: '展示 / DAU',
+          value: 'aipau',
+          color: '#ff6688'
+        },
+        {
+          label: '展示 / DEU',
+          value: 'aipu',
+          color: '#a8a8ff'
+        },
+        {
+          label: 'ARPDAU',
+          value: 'arpDau',
+          color: '#de7af9'
+        },
+        {
+          label: 'ARPDEU',
+          value: 'arpDeu',
+          color: 'rgb(0, 118, 143)'
+        },
+        {
+          label: '人均启动次数',
+          value: 'startAppDau',
+          color: 'rgb(76, 180, 231)'
+        }
+      ],
+      iscreat: true,
+      isLoading: false,
+      option: {
+        tooltip: {
+          trigger: 'axis',
+          formatter: (params) => {
+            let str = ''
+            params.forEach((item, index) => {
+              let temp = {}
+              if (item.seriesName == 'ARPDAU') {
+                temp.value = '￥' + item.value
+              } else if (item.seriesName == '渗透率') {
+                temp.value = item.value + '%'
+              } else {
+                temp.value = item.value
+              }
+              str += item.marker + item.seriesName + ': ' + temp.value + '<br>'
+            })
+
+            return params[0].axisValue + '<br>' + str
+          }
+        },
+        legend: { data: [] },
+        grid: {
+          top: '5%',
+          left: '1%',
+          right: '5%',
+          bottom: '1%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'category',
+          boundaryGap: false,
+          data: [],
+          axisLine: {
+            lineStyle: {
+              color: '#000',
+              width: 0.5
+            }
+          }
+        },
+        yAxis: [
+          // 0
+          {
+            type: 'value',
+            position: 'left',
+            axisLine: {
+              lineStyle: {
+                color: '#000',
+                width: 0.5
+              }
+            },
+            splitLine: {
+              show: true
+            },
+
+            axisTick: {
+              show: true
+            },
+
+            axisLabel: {
+              show: true
+            }
+          }
+        ],
+        series: [
+          {
+            name: '',
+            type: 'line',
+            smooth: true,
+            yAxisIndex: 0,
+            data: [],
+            symbol: 'circle', // 设定为实心点
+            symbolSize: 6, // 设定实心点的大小
+            itemStyle: {
+              normal: {
+                color: '#0055ff',
+                lineStyle: {
+                  color: '#0055ff',
+                  width: 2
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  computed: {
+    lineColor() {
+      let color = ''
+      this.targetList.forEach((item) => {
+        if (item.value == this.target) {
+          color = item.color
+        }
+      })
+      return color
+    }
+  },
+  watch: {
+    query: {
+      handler(val) {
+        this.getChartData()
+      },
+      deep: true
+    }
+  },
+  mounted() {
+    this.initCharts()
+    window.addEventListener('resize', this.getSize)
+    this.getSize()
+  },
+  destroyed() {
+    this.myEcharts.dispose()
+    window.removeEventListener('resize', this.getSize)
+  },
+  methods: {
+    changeTarget() {
+      this.setOption()
+    },
+    async getChartData() {
+      this.isLoading = true
+      let query = JSON.parse(JSON.stringify(this.query))
+      delete query.page
+      delete query.limit
+      let resp = await userActionTrend(query)
+      this.xAxisList = resp.data.lable ? resp.data.lable : []
+      this.chartList = resp.data.list ? resp.data.list : []
+      this.setOption()
+      this.isLoading = false
+    },
+    setOption() {
+      this.option.xAxis.data = JSON.parse(JSON.stringify(this.xAxisList))
+      this.option.series[0].data = []
+      this.chartList.forEach((item) => {
+        if (item.field == this.target) {
+          this.option.series[0] = {
+            name: item.name,
+            type: 'line',
+            smooth: true,
+            yAxisIndex: 0,
+            data: item.data,
+            symbol: 'circle', // 设定为实心点
+            symbolSize: 6, // 设定实心点的大小
+            itemStyle: {
+              normal: {
+                color: this.lineColor,
+                lineStyle: {
+                  color: this.lineColor,
+                  width: 2
+                }
+              }
+            }
+          }
+        }
+      })
+      this.initCharts()
+    },
+    initCharts() {
+      this.myEcharts = echarts.init(this.$refs.charts)
+      this.myEcharts.setOption(this.option)
+    },
+    getSize() {
+      // 判断是否是created时调用
+      if (!this.iscreat) {
+        this.myEcharts.resize()
+      }
+      this.iscreat = false
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+.charts-container {
+  margin-top: 15px;
+  background-color: #fff;
+  width: 100%;
+  padding: 10px;
+  .control {
+    margin-top: 10px;
+    margin-left: 50px;
+  }
+  .charts {
+    width: 100%;
+    height: 400px;
+    padding: 10px 30px 20px 30px;
+  }
+}
+</style>

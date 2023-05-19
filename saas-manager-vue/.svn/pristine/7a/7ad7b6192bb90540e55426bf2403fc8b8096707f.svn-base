@@ -1,0 +1,1441 @@
+<template>
+  <div class="tab-container">
+    <!-- welcome -->
+    <el-row class="welcome"
+      ><el-col
+        ><span class="welcome">
+          欢迎，【{{ welcomeToDescribe.username }}】【{{
+            welcomeToDescribe.roleName
+          }}】
+        </span></el-col
+      ></el-row
+    >
+    <el-row :gutter="20" class="panel-group">
+      <el-col :xs="12" :sm="12" :lg="4" class="card-panel-col">
+        <div class="card-panel">
+          <div class="card-panel-icon-wrapper icon-today">
+            <svg-icon icon-class="money" class-name="card-panel-icon" />
+          </div>
+          <div class="card-panel-description">
+            <div class="card-panel-text">今天预估收益（元）</div>
+            <div class="box">{{ income.today }}</div>
+            <!-- <count-to :start-val="0" :end-val="income.yesterday" /> -->
+          </div>
+        </div>
+      </el-col>
+
+      <el-col :xs="12" :sm="12" :lg="4" class="card-panel-col">
+        <div class="card-panel">
+          <div class="card-panel-icon-wrapper icon-yesterday">
+            <svg-icon icon-class="money" class-name="card-panel-icon" />
+          </div>
+          <div class="card-panel-description">
+            <div class="card-panel-text">昨天收益（元）</div>
+            <div class="box">{{ income.yesterday }}</div>
+            <!-- <count-to :start-val="0" :end-val="income.yesterday" /> -->
+          </div>
+        </div>
+      </el-col>
+      <el-col :xs="12" :sm="12" :lg="4" class="card-panel-col">
+        <div class="card-panel">
+          <div class="card-panel-icon-wrapper icon-last-seven-day">
+            <svg-icon icon-class="money" class-name="card-panel-icon" />
+          </div>
+          <div class="card-panel-description">
+            <div class="card-panel-text">前天收益（元）</div>
+            <div class="box">{{ income.beforeYesterday }}</div>
+            <!-- <count-to :start-val="0" :end-val="income.sevenDay" /> -->
+          </div>
+        </div>
+      </el-col>
+      <el-col :xs="12" :sm="12" :lg="4" class="card-panel-col">
+        <div class="card-panel">
+          <div class="card-panel-icon-wrapper icon-month">
+            <svg-icon icon-class="money" class-name="card-panel-icon" />
+          </div>
+          <div class="card-panel-description">
+            <div class="card-panel-text">本月累计收益（元）</div>
+            <div class="box">{{ income.month }}</div>
+            <!-- <count-to :start-val="0" :end-val="income.month" /> -->
+          </div>
+        </div>
+      </el-col>
+
+      <el-col :xs="12" :sm="12" :lg="4" class="card-panel-col">
+        <div class="card-panel">
+          <div class="card-panel-icon-wrapper icon-all">
+            <svg-icon icon-class="money" class-name="card-panel-icon" />
+          </div>
+          <div class="card-panel-description">
+            <div class="card-panel-text">上月累计收益（元）</div>
+            <div class="box">{{ income.lastMonth }}</div>
+            <!-- <count-to :start-val="0" :end-val="income.all" /> -->
+          </div>
+        </div>
+      </el-col>
+    </el-row>
+
+    <!-- 日期 -->
+    <el-row :gutter="30">
+      <el-col :lg="6" style="width: 25%; height: 40px; margin-top: 10px">
+        <el-date-picker
+          style="width: 80%"
+          v-model="time"
+          :clearable="false"
+          class="item"
+          type="daterange"
+          value-format="yyyy-MM-dd"
+          align="left"
+          unlink-panels
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          :picker-options="pickerOptions"
+          @change="getSTime"
+      /></el-col>
+      <!-- 商务 -->
+      <el-col
+        v-show="false"
+        :lg="6"
+        style="width: 25%; height: 40px; margin-top: 10px"
+      >
+        <el-select
+          :disabled="$store.state.user.roles[0] === 'BUSINESS'"
+          clearable
+          v-model="echartsParams.businessIds[0]"
+          placeholder="请选择商务"
+          style="width: 80%"
+        >
+          <el-option
+            v-for="item in businessList"
+            :key="item.id"
+            :label="item.username"
+            :value="item.id"
+          >
+          </el-option>
+        </el-select>
+      </el-col>
+
+      <!-- 账号 -->
+      <el-col
+        v-if="
+          $store.state.user.roles[0] === 'SUPER_ADMIN' ||
+          $store.state.user.roles[0] === 'BUSINESS'
+        "
+        :lg="6"
+        style="width: 25%; height: 40px; margin-top: 10px"
+      >
+        <el-select
+          v-model="echartsParams.adminUserIds[0]"
+          clearable
+          placeholder="请选择账号"
+          style="width: 80%"
+        >
+          <el-option
+            v-for="item in adminList"
+            :key="item.id"
+            :label="item.username"
+            :value="item.id"
+          >
+          </el-option>
+        </el-select>
+      </el-col>
+
+      <!-- 应用1 -->
+      <el-col :lg="6" style="width: 25%; height: 40px; margin-top: 10px">
+        <CustSelectApp
+          :word="'应用'"
+          :width="450"
+          :allData="departments1"
+          @selectListhandle="selectListhandleApp"
+        />
+      </el-col>
+
+      <!-- 广告位 -->
+
+      <el-col :lg="6" style="width: 25%; height: 40px; margin-top: 10px">
+        <CustSelectApp
+          :word="'广告位'"
+          :width="450"
+          :allData="departments2"
+          @selectListhandle="selectListhandlePlace"
+        />
+      </el-col>
+
+      <!-- 广告样式 -->
+      <el-col :lg="6" style="width: 25%; height: 40px; margin-top: 10px">
+        <el-select
+          style="width: 80%"
+          v-model="echartsParams.positionIdList"
+          class="item"
+          multiple
+          collapse-tags
+          placeholder="广告样式"
+        >
+          <el-option
+            v-for="item in options1"
+            :key="item.value"
+            :label="item.name"
+            :value="item.id"
+          /> </el-select
+      ></el-col>
+
+      <!-- 广告源-->
+      <el-col :lg="6" style="width: 25%; height: 40px; margin-top: 10px">
+        <CustSelectApp
+          :word="'广告源'"
+          :width="450"
+          :allData="departments3"
+          @selectListhandle="selectListhandlePlat"
+        />
+      </el-col>
+
+      <!-- 系统平台 -->
+      <el-col :lg="6" style="width: 25%; height: 40px; margin-top: 10px">
+        <el-select
+          style="width: 80%"
+          v-model="echartsParams.osIdList"
+          class="item"
+          multiple
+          placeholder="系统平台"
+        >
+          <el-option
+            v-for="item in systemPlatformOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          /> </el-select
+      ></el-col>
+      <el-col :lg="6" style="width: 25%; height: 40px; margin-top: 10px">
+        <el-button type="primary" icon="el-icon-search" @click="handleSearch"
+          >搜索</el-button
+        ></el-col
+      >
+    </el-row>
+
+    <div class="earcth">
+      <div ref="box" v-loading="loadingEcharts" class="eartch_left" />
+      <div class="data_right">
+        <el-checkbox-group v-model="checkList" @change="changeEcharts">
+          <h3>指标</h3>
+          <ul>
+            <li><el-checkbox class="dau" label="dau">DAU</el-checkbox></li>
+            <li>
+              <el-checkbox class="unitRevenue" label="unitRevenue"
+                >收益</el-checkbox
+              >
+            </li>
+            <li>
+              <el-checkbox class="ecpm" label="ecpm">eCPM</el-checkbox>
+            </li>
+            <li>
+              <el-checkbox class="arpu" label="arpu">人均收益</el-checkbox>
+            </li>
+            <li>
+              <el-checkbox class="estimatedRevenue" label="estimatedRevenue"
+                >预估收益</el-checkbox
+              >
+            </li>
+            <li>
+              <el-checkbox
+                class="estimatedRevenueEcpm"
+                label="estimatedRevenueEcpm"
+                >预估eCPM</el-checkbox
+              >
+            </li>
+
+            <li>
+              <el-checkbox class="request" label="request"
+                >流量请求</el-checkbox
+              >
+            </li>
+
+            <li>
+              <el-checkbox class="impression" label="impression"
+                >展示</el-checkbox
+              >
+            </li>
+
+            <li>
+              <el-checkbox class="aipau" label="aipau">展示 / DAU</el-checkbox>
+            </li>
+          </ul>
+        </el-checkbox-group>
+      </div>
+    </div>
+    <div class="table">
+      <div class="showbox">
+        <h2>数据维度</h2>
+        <el-checkbox
+          v-if="
+            $store.state.user.roles[0] === 'SUPER_ADMIN' ||
+            $store.state.user.roles[0] === 'BUSINESS'
+          "
+          v-model="showTable.account"
+          medium
+          ><h3>账户名称</h3></el-checkbox
+        >
+        <el-checkbox v-show="false" v-model="showTable.business" medium
+          ><h3>商务名称</h3></el-checkbox
+        >
+
+        <el-checkbox v-model="showTable.appname" medium
+          ><h3>应用名称</h3></el-checkbox
+        >
+        <el-checkbox v-model="showTable.os" medium
+          ><h3>操作系统</h3></el-checkbox
+        >
+      </div>
+      <div class="table_box" v-if="tableList.length > 0">
+        <el-table
+          border
+          stripe
+          :data="tableList"
+          style="width: 100%"
+          v-loading="loading"
+        >
+          <el-table-column align="center" width="100" fixed prop="date" label="日期">
+          </el-table-column>
+          <el-table-column
+            align="center"
+            v-if="showTable.account"
+            fixed
+            width="180px"
+            prop="adminUserId"
+            label="账户名称"
+          >
+            <template slot-scope="{ row }">
+              {{ row.adminUser !== undefined ? row.adminUser : "-" }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            align="center"
+            v-if="showTable.appname"
+            fixed
+            width="150px"
+            prop="appName"
+            label="应用名称"
+          >
+            <template slot-scope="{ row }">
+              {{ row.appName ? row.appName : "-" }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            align="center"
+            v-if="showTable.os"
+            fixed
+            width="150px"
+            prop="os"
+            label="操作系统"
+          >
+            <template slot-scope="{ row }">
+              {{ row.os == 1 ? "安卓" : row.os == 0 ? "ios" : "-" }}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" width="150px" prop="dau" label="DAU">
+            <template slot-scope="{ row }">
+              {{ row.dau }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            align="center"
+            width="150px"
+            prop="unitRevenue"
+            label="收益"
+          >
+            <template slot-scope="{ row }">
+              {{ row.unitRevenue ? row.unitRevenue : "0" }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            align="center"
+            width="150px"
+            prop="arpu"
+            label="人均收益"
+          >
+            <template slot-scope="{ row }">
+              {{ row.arpu ? row.arpu : "0" }}
+            </template>
+          </el-table-column>
+          <!-- <el-table-column align="center" width="150px" prop="deu" label="DEU">
+          <template slot-scope="{ row }">
+            {{ row.deu }}
+          </template>
+        </el-table-column> -->
+          <!-- <el-table-column
+          align="center"
+          width="150px"
+          prop="permeability"
+          label="渗透率"
+        >
+          <template slot-scope="{ row }">
+            {{
+              row.permeability == 0
+                ? 0
+                : (row.permeability + 0).toFixed(2) + "%"
+            }}
+          </template>
+        </el-table-column> -->
+          <el-table-column
+            v-if="!hasPlatIdList"
+            align="center"
+            width="150px"
+            prop="request"
+            label="流量请求"
+          >
+          </el-table-column>
+          <el-table-column
+            align="center"
+            width="150px"
+            prop="impress"
+            label="展示"
+          >
+          </el-table-column>
+          <el-table-column
+            align="center"
+            width="150px"
+            prop="aipau"
+            label="展示 / DAU"
+          >
+            <template slot-scope="{ row }">
+              {{ row.aipau == 0 ? 0 : (row.aipau + 0).toFixed(2) }}
+            </template>
+          </el-table-column>
+
+          <el-table-column
+            align="center"
+            width="150px"
+            prop="income"
+            label="预估收益"
+          >
+            <template slot-scope="{ row }">
+              {{ row.income == 0 ? 0 : (row.income + 0).toFixed(2) }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            align="center"
+            width="150px"
+            prop="estimatedRevenueEcpm"
+            label="预估eCPM"
+          >
+            <template slot-scope="{ row }">
+              {{
+                row.estimatedRevenueEcpm == 0
+                  ? 0
+                  : (row.estimatedRevenueEcpm + 0).toFixed(2)
+              }}
+            </template>
+          </el-table-column>
+
+          <el-table-column
+            align="center"
+            width="150px"
+            prop="unitEcpm"
+            label="eCPM"
+          >
+            <template slot-scope="{ row }">
+              {{ row.unitEcpm == 0 ? 0 : (row.unitEcpm + 0).toFixed(2) }}
+            </template>
+          </el-table-column>
+
+          <!-- <el-table-column
+          align="center"
+          v-if="showTable.business"
+          fixed="right"
+          width="150px"
+          prop="businessId"
+          label="商务名称"
+        >
+          <template slot-scope="{ row }">
+            {{ row.business !== null ? row.business : "/" }}
+          </template>
+        </el-table-column> -->
+        </el-table>
+        <el-pagination
+          v-if="tableList.length > 0"
+          style="margin: 30px 0 0 0"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          :current-page="echartsParams.page"
+          :page-sizes="[5, 10, 20, 50]"
+          :page-size="echartsParams.limit"
+          layout="total,sizes,prev,pager,next,jumper"
+          :total="totalCount"
+        ></el-pagination>
+      </div>
+
+      <Empty v-else></Empty>
+    </div>
+  </div>
+</template>
+
+<script>
+import {
+  incomeData,
+  homeEcharts,
+  welcomeToDescribe,
+  getBusinessList,
+  getTableList,
+} from "@/api/index";
+import { getPlaceList, getPlaceListByAppId } from "@/api/place";
+import {
+  getAppList,
+  getAdminAndAppListByBusinessId,
+  getAppListByAdminId,
+} from "@/api/app";
+import { getPositionList } from "@/api/common";
+import { toDate } from "@/utils/toTimer";
+import { platListByUser, appToAdvert } from "@/api/synthReport";
+import echarts from "echarts";
+import CustSelectApp from "@/components/CustSelectApp";
+
+import Empty from "@/components/empty";
+import {adminEchartsOption,adminDateOotion} from '@/utils/options'
+
+export default {
+  name: "Admin",
+  components: {
+    CustSelectApp,
+    Empty,
+  },
+  data() {
+    return {
+      iscreat: true,
+      myEcharts: {},
+      loadingEcharts: false,
+      echartsParams: {
+        adminUserIds: [],
+        businessIds: [],
+        dateStart: "",
+        dateEnd: "",
+        appIdList: [], // 应用id数组
+        appIdListExclude: 1,
+        placeIdList: [],
+        placeIdListExclude: 1,
+        positionIdList: [],
+        positionIdListExclude: 1,
+        platIdList: [],
+        platIdListExclude: 1,
+        osIdList: [],
+        osIdListExclude: 1,
+        groupByList: ["a.date"],
+        limit: 10,
+        page: 1,
+      },
+      time: [],
+      income: {
+        beforeYesterday: 0,
+        beforeYesterdayLabel: "",
+        lastMonth: 0,
+        lastMonthLabel: "",
+        month: 0,
+        monthLabel: "",
+        yesterday: 0,
+        yesterdayLabel: "",
+      },
+
+      chartOption: {},
+      chartData: null,
+      pickerOptions: adminDateOotion,
+      checkList: ["unitRevenue", "dau"],
+      ecjartsList: [],
+      nodataOption: {},
+      option: adminEchartsOption,
+
+      departments1: [], // 应用 全部数据数组
+      department1: [], // 应用 选中数据
+
+      options1: [],
+      options2: [],
+      departments2: [],
+      departments3: [],
+
+      // checkedThing2: false,
+      // checkedThing3: false,
+      department2: [],
+      department3: [],
+
+      selfstyle: {
+        textAlign: "right",
+        paddingRight: "10px",
+      },
+      appOptions: [],
+      adverStyleOptions: [],
+      systemPlatformOptions: [
+        { label: "Android", value: "1" },
+        { label: "iOS", value: "0" },
+      ],
+      adverStyleVal: "",
+      systemPlatform: [],
+      welcomeToDescribe: {},
+      businessList: [],
+      adminList: [],
+      // table列表数据
+      tableList: [],
+      sum: {},
+      // table列表加载中
+      loading: false,
+      showTable: {
+        account: false,
+        business: false,
+        os: false,
+        appname: false,
+      },
+      // 分页器
+      totalCount: 1,
+      // table对照列表
+      businessListforTable: [],
+      adminListforTable: [],
+      hasPlatIdList: false,
+    };
+  },
+
+  created() {
+    this.nodataOption = Object.assign({}, this.option);
+    window.addEventListener("resize", this.getSize);
+    this.getSize();
+  },
+  destroyed() {
+    window.removeEventListener("resize", this.getSize);
+  },
+  async mounted() {
+    await this.getListforTable();
+    this.getIncome();
+    this.echartsInit();
+    this.getHomeEcharts();
+    this.getDate();
+    this.getApp();
+    this.getPlace();
+    this.getPosition();
+    this.getPlatOptionList();
+    this.getwelcomeToDescribe();
+    this.getBusinessList();
+    this.getTableList();
+  },
+  watch: {
+    "echartsParams.businessIds": {
+      handler(val) {
+        if (val[0] === "") {
+          this.echartsParams.businessIds = [];
+        }
+        this.echartsParams.adminUserIds = [];
+        this.getPlatOptionList();
+
+        if (!val) {
+          this.adminList = [];
+          this.echartsParams.adminUserIds = [];
+          this.getApp();
+          this.getPlace();
+
+          return;
+        }
+        this.getAdminAndAppListByBusinessId({
+          businessId: val[0],
+        });
+      },
+    },
+    "echartsParams.adminUserIds": {
+      handler(val) {
+        if (val[0] === "") {
+          this.echartsParams.adminUserIds = [];
+        }
+        if (!val) {
+          this.getAdminAndAppListByBusinessId({
+            businessId: this.echartsParams.businessIds[0],
+          });
+        }
+        this.getPlatOptionList();
+
+        this.getAppListByAdminId({ id: this.echartsParams.adminUserIds[0] });
+      },
+    },
+    departments1: {
+      handler(val) {
+        if (val.length > 0) {
+          let arr = val.map((item) => {
+            return item.id;
+          });
+          // console.log(val)
+          this.appToAdvert(arr);
+        } else {
+          this.departments2 = [];
+        }
+      },
+    },
+    "showTable.account": {
+      handler() {
+        this.echartsParams.page = 1;
+
+        this.handleSearch();
+      },
+    },
+    "showTable.business": {
+      handler() {
+        this.echartsParams.page = 1;
+
+        this.handleSearch();
+      },
+    },
+    "showTable.os": {
+      handler() {
+        this.echartsParams.page = 1;
+
+        this.handleSearch();
+      },
+    },
+    "showTable.appname": {
+      handler() {
+        this.echartsParams.page = 1;
+
+        this.handleSearch();
+      },
+    },
+  },
+  methods: {
+    async getListforTable() {
+      let response = await getAdminAndAppListByBusinessId({ businessId: "" });
+      if (response.code !== 200) return;
+      this.adminListforTable = response.data.adminList;
+    },
+    // 应用列表改变时获取广告位数据
+    appToAdvert(data) {
+      if (data.length === 0) {
+        return;
+      }
+      appToAdvert(data).then((res) => {
+        this.departments2 = res.data;
+      });
+    },
+    // 广告源
+    selectListhandlePlat(val) {
+      this.echartsParams.platIdList = [...val];
+    },
+    // 广告位
+    selectListhandlePlace(val) {
+      this.echartsParams.placeIdList = [...val];
+    },
+    // 应用
+    selectListhandleApp(val) {
+      // console.log(val,'val')
+      this.echartsParams.appIdList = [...val];
+      if (val.length > 0) {
+        this.appToAdvert(val);
+      } else {
+        let arr = this.departments1.map((item) => {
+          return item.id;
+        });
+        this.appToAdvert(arr);
+      }
+    },
+
+    // 改变也容量
+    handleSizeChange(val) {
+      this.echartsParams.limit = val;
+      this.echartsParams.page = 1;
+
+      this.getTableList();
+    },
+    handleCurrentChange(val) {
+      this.echartsParams.page = val;
+      this.getTableList();
+    },
+    // 获取table列表数据
+    async getTableList() {
+      this.hasPlatIdList = false;
+
+      if (this.echartsParams.platIdList.length > 0) {
+        this.hasPlatIdList = true;
+      }
+      this.loading = true;
+      if (
+        !this.echartsParams.groupByList.includes("app.admin_user") &&
+        this.showTable.account
+      ) {
+        this.echartsParams.groupByList.push("app.admin_user");
+      }
+      if (
+        !this.echartsParams.groupByList.includes("u.business_id") &&
+        this.showTable.business
+      ) {
+        this.echartsParams.groupByList.push("u.business_id");
+      }
+      if (
+        !this.echartsParams.groupByList.includes("app.os") &&
+        this.showTable.os
+      ) {
+        this.echartsParams.groupByList.push("app.os");
+      }
+      if (
+        !this.echartsParams.groupByList.includes("a.app_id") &&
+        this.showTable.appname
+      ) {
+        this.echartsParams.groupByList.push("a.app_id");
+      }
+
+      let resp = await getTableList(this.echartsParams);
+      this.echartsParams.groupByList = ["a.date"];
+
+      if (resp.code !== 200) return;
+      if (!resp.data) {
+        this.tableList = [];
+        this.loading = false;
+
+        return;
+      }
+      if (resp.data.items.length === 0) {
+        this.tableList = [];
+        return;
+      }
+
+      this.sum = resp.data.aggregate;
+      this.sum.date = "汇总";
+      this.sum.os = "-";
+
+      this.tableList = resp.data.items;
+
+      for (let i = 0; i < this.adminListforTable.length; i++) {
+        for (let j = 0; j < this.tableList.length; j++) {
+          if (this.adminListforTable[i].id === this.tableList[j].adminUserId) {
+            this.tableList[j].adminUser = this.adminListforTable[i].username;
+          }
+          if (this.tableList[j].adminUserId === 1) {
+            this.tableList[j].adminUser = "超级管理员";
+          }
+        }
+      }
+      this.totalCount = resp.data.total;
+
+      this.tableList.unshift(this.sum);
+      this.loading = false;
+    },
+    // 获取商务列表
+    async getBusinessList() {
+      let resp = await getBusinessList();
+      if (resp.code !== 200) return;
+      this.businessList = resp.data;
+      if (this.$store.state.user.roles[0] === "BUSINESS") {
+        this.echartsParams.businessIds[0] = this.businessList[0].id;
+        this.getHomeEcharts();
+        this.getAdminAndAppListByBusinessId({
+          businessId: this.echartsParams.businessIds[0],
+        });
+      }
+    },
+    // 通过用户id查app列表
+    async getAppListByAdminId(id) {
+      if (!id.id) {
+        this.getApp();
+        return;
+      }
+      let resp = await getAppListByAdminId(id);
+      if (resp.code !== 200) return;
+
+      if (!resp.data) {
+        this.departments1 = [];
+      } else {
+        this.departments1 = resp.data;
+      }
+    },
+    // 通过商务id获取账户列表和应用列表
+    async getAdminAndAppListByBusinessId(businessId) {
+      let resp = await getAdminAndAppListByBusinessId(businessId);
+      if (resp.code !== 200) return;
+      // if(!resp.data){}
+      this.departments1 = resp.data.appList;
+      this.departments1 = resp.data.appList;
+      // adminList
+      this.adminList = resp.data.adminList;
+
+      for (let i = 0; i < this.adminList.length; i++) {
+        for (let j = 0; j < this.tableList.length; j++) {
+          if (this.adminList[i].id === this.tableList[j].adminUserId) {
+            this.tableList[j].adminUser = this.adminList[i].username;
+          }
+        }
+      }
+      if (this.departments1.length > 0) {
+        let arr = this.departments1.map((item) => {
+          if (item === null) {
+            return;
+          } else {
+            return item.id;
+          }
+        });
+        // this.appToAdvert(arr);
+      } else {
+        this.departments2 = [];
+      }
+    },
+    // 获取welcome角色和用户名
+    async getwelcomeToDescribe() {
+      let resp = await welcomeToDescribe();
+      if (resp.code !== 200) return;
+      this.welcomeToDescribe = resp.data;
+    },
+
+    getSize() {
+      // 判断是否是created时调用
+      if (!this.iscreat) {
+        this.myEcharts.resize();
+      }
+      this.iscreat = false;
+    },
+    getIncome() {
+      incomeData().then((res) => {
+        if (res.code !== 200) return this.$message.error(res.msg);
+        this.income = res.data;
+      });
+    },
+    getDate() {
+      // 昨天
+      let today = toDate(Date.now() - 24 * 60 * 60 * 1000);
+      // 13天前
+      let day13Before = toDate(Date.now() - 14 * 24 * 60 * 60 * 1000);
+      this.time = [day13Before, today];
+      this.echartsParams.dateStart = this.time[0];
+      this.echartsParams.dateEnd = this.time[1];
+    },
+    // 应用
+    getApp() {
+      if (this.echartsParams.businessIds[0] === "") {
+        getAppList().then((res) => {
+          if (!res.data) {
+            this.departments1 = [];
+            return;
+          }
+          this.departments1 = res.data;
+        });
+      } else {
+        this.getAdminAndAppListByBusinessId({
+          businessId: this.echartsParams.businessIds[0],
+        });
+      }
+    },
+    // 广告位
+    getPlace() {
+      getPlaceList().then((res) => {
+        if (res.code !== 200) return;
+        if (!res.data) {
+          this.departments2 = [];
+          return;
+        }
+        // console.log(1)
+        this.departments2 = res.data;
+      });
+    },
+    // async getPlaceListByAppId() {
+    //   if (this.echartsParams.platIdList.length === 0) return;
+    //   let resp = await appToAdvert(this.echartsParams.appIdList);
+    //   if (resp.code !== 200) return;
+    //   this.departments2 = resp.data;
+    // },
+    // 广告样式
+    getPosition() {
+      getPositionList().then((res) => {
+        this.options1 = res.data;
+      });
+    },
+    // 广告源
+    getPlatOptionList() {
+      platListByUser({
+        id: this.echartsParams.adminUserIds[0],
+        businessId: this.echartsParams.businessIds[0],
+      }).then((res) => {
+        this.departments3 = res.data;
+      });
+    },
+    getSTime() {
+      if (this.time) {
+        this.echartsParams.dateStart = this.time[0];
+        this.echartsParams.dateEnd = this.time[1];
+      } else {
+        this.echartsParams.dateStart = "";
+        this.echartsParams.dateEnd = "";
+        this.time = [];
+      }
+    },
+
+    handleSearch() {
+      this.getIncome();
+      if (this.echartsParams.businessIds[0] === "") {
+        this.echartsParams.businessIds = [];
+      }
+      // 维度
+      this.echartsParams.groupByList = [];
+      this.echartsParams.groupByList.push("a.date");
+      // 商务维度
+      if (this.showTable.business) {
+        this.echartsParams.groupByList.push("u.business_id");
+      }
+      // 操作系统
+      if (this.showTable.os) {
+        this.echartsParams.groupByList.push("app.os");
+      }
+      // 应用名称
+      if (this.showTable.appname) {
+        this.echartsParams.groupByList.push("a.app_id");
+      }
+      // 账户名称
+      if (this.showTable.account) {
+        this.echartsParams.groupByList.push("app.admin_user");
+      }
+      // console.log(this.echartsParams.appIdList[0],'000')
+      this.getHomeEcharts();
+      this.getTableList();
+    },
+
+    echartsInit() {
+      let myEcharts = echarts.init(this.$refs.box);
+      myEcharts.setOption(this.option);
+      this.myEcharts = myEcharts;
+    },
+    getHomeEcharts() {
+      this.loadingEcharts = true;
+      homeEcharts(this.echartsParams).then((res) => {
+        if (res.code !== 200) return;
+        // 无数据
+          console.log(res.data,'res')
+
+        if (!res.data) {
+          for (let j = 0; j < this.option.series.length; j++) {
+            this.option.series[j].data = [];
+            this.option.series[j].name = "";
+          }
+          this.option = Object.assign({}, this.nodataOption);
+          this.loadingEcharts = false;
+          this.echartsInit();
+          this.ecjartsList=[]
+          return;
+        }
+
+        setTimeout(() => {
+          this.loadingEcharts = false;
+        }, 400);
+        this.option.xAxis.data = res.data.lable;
+        res.data.list.forEach((e) => {
+          if (e.field === "estimatedRevenue") {
+            e.data.forEach((item, index) => {
+              e.data[index] = item.toFixed(2);
+            });
+          }
+          if (e.field === "unitRevenue") {
+            e.data.forEach((item, index) => {
+              e.data[index] = item.toFixed(2);
+            });
+          }
+        });
+
+        this.ecjartsList = res.data.list;
+        this.changeEcharts();
+      });
+    },
+    // 点击复选框
+    changeEcharts() {
+      for (let j = 0; j < this.option.series.length; j++) {
+        this.option.series[j].data = [];
+        this.option.series[j].name = "";
+      }
+      for (let i = 0; i < this.checkList.length; i++) {
+        // unitRevenue              50k
+        // impression               500k
+        // dua                      5k
+        // arpu                     1
+        // aipau                    15
+        // estimatedRevenue         50k
+        // estimatedRevenueEcpm     15
+        // this.option.yAxis
+        for (let j = 0; j < this.ecjartsList.length; j++) {
+          if (this.checkList[i] === this.ecjartsList[j].field) {
+            this.option.series[j].data = this.ecjartsList[j].data;
+            this.option.series[j].name = this.ecjartsList[j].name;
+            let yAxisIndex = this.option.series[j].yAxisIndex;
+            // 判断改图表中显示的数据是否有三个
+            if (this.checkList.length >= 3) {
+              // 大于三个，刻度和数值不显示
+              this.option.yAxis[yAxisIndex].position = "";
+              // 刻度
+              this.option.yAxis[yAxisIndex].splitLine.show = false;
+
+              this.option.yAxis[yAxisIndex].axisTick.show = false;
+              // 数值
+              this.option.yAxis[yAxisIndex].axisLabel.show = false;
+              // 添加一个背景刻度线
+              if (i === 0) {
+                this.option.yAxis[yAxisIndex].splitLine.show = true;
+              }
+            } else {
+              // 小于三个，分别给他们加上位置、数值和刻度显示
+              this.option.yAxis[yAxisIndex].axisTick.show = true;
+              this.option.yAxis[yAxisIndex].axisLabel.show = true;
+
+              if (i == 0) {
+                // 添加一个背景刻度线
+                this.option.yAxis[yAxisIndex].splitLine.show = true;
+                // 第一个的y坐标放在左边
+                this.option.yAxis[yAxisIndex].position = "left";
+              } else if (i == 1) {
+                this.option.yAxis[yAxisIndex].splitLine.show = false;
+
+                // 第二个的y坐标放在右边
+                this.option.yAxis[yAxisIndex].position = "right";
+              } else {
+                this.option.yAxis[yAxisIndex].splitLine.show = false;
+              }
+            }
+          }
+        }
+      }
+      this.echartsInit();
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+body {
+  // width: 100%;
+  overflow-x: scroll;
+}
+.tab-container {
+  padding: 10px;
+  background-color: rgb(250, 250, 250);
+  position: relative;
+  
+  .welcome {
+    margin: 10px 20px 10px 20px;
+  }
+  .item {
+    margin: 0 20px 20px 0;
+  }
+  .welcome{
+    font-size: 15px;
+  }
+  .panel-group {
+    .card-panel-col {
+      margin-bottom: 32px;
+      width: 20%;
+    }
+
+    .card-panel {
+      display: flex;
+      height: 108px;
+      cursor: pointer;
+      font-size: 12px;
+      position: relative;
+      overflow: hidden;
+      color: #666;
+      background: #fff;
+      box-shadow: 4px 4px 40px rgba(0, 0, 0, 0.05);
+      border-color: rgba(0, 0, 0, 0.05);
+
+      // &:hover {
+      //   .card-panel-icon-wrapper {
+      //     color: #fff;
+      //   }
+
+      //   .icon-yesterday {
+      //     background: #40c9c6;
+      //   }
+
+      //   .icon-last-seven-day {
+      //     background: #36a3f7;
+      //   }
+
+      //   .icon-month {
+      //     background: #f4516c;
+      //   }
+
+      //   .icon-all {
+      //     background: #34bfa3;
+      //   }
+      // }
+      .icon-today {
+        color: #74ebaf;
+      }
+
+      .icon-yesterday {
+        color: #40c9c6;
+      }
+
+      .icon-last-seven-day {
+        color: #36a3f7;
+      }
+
+      .icon-month {
+        color: #f4516c;
+      }
+
+      .icon-all {
+        color: #34bfa3;
+      }
+
+      .card-panel-icon-wrapper {
+        float: left;
+        margin: 14px 0 0 0px;
+        padding: 16px;
+        transition: all 0.38s ease-out;
+        border-radius: 6px;
+      }
+
+      .card-panel-icon {
+        float: left;
+        font-size: 48px;
+      }
+
+      .card-panel-description {
+        // float: left;
+        flex: 1;
+        font-weight: bold;
+        margin: 26px 0px 26px 0;
+
+        .card-panel-text {
+          line-height: 18px;
+          color: #666;
+          font-size: 15px;
+          margin-bottom: 12px;
+        }
+        .box {
+          font-size: 22px;
+          font-weight: 800;
+        }
+      }
+    }
+  }
+  .earcth {
+    display: flex;
+    width: 100%;
+    margin-top: 20px;
+    // overflow-x: scroll;
+    background-color: #fff;
+    .eartch_left {
+      width: 80%;
+      // height: 380px;
+      // background-color: blue;
+    }
+    .data_right {
+      flex: 1;
+
+      h3 {
+        font-weight: 400;
+        height: 40px;
+        line-height: 40px;
+        color: #333;
+        border: 1px solid rgb(214, 208, 208);
+        border-bottom: none;
+        box-sizing: border-box;
+        color: #333;
+        font-size: 14px;
+        padding-left: 30px;
+        background-color: #f5f7fa;
+      }
+      ul {
+        height: 300px;
+        overflow-y: scroll;
+        border: 1px solid rgb(214, 208, 208);
+        li {
+          height: 40px;
+          line-height: 40px;
+          padding-left: 20px;
+          box-sizing: border-box;
+          border-bottom: 1px solid rgb(214, 208, 208);
+        }
+      }
+    }
+  }
+  .searchTiaojian {
+    width: 100%;
+    background-color: red;
+    margin-bottom: 15px;
+  }
+}
+.box {
+  font-size: 22px;
+}
+// 单选框文字样式
+// 展示
+::v-deep .impression .el-checkbox__input.is-checked + .el-checkbox__label {
+  color: #0055ff;
+}
+// DAU
+::v-deep .dau .el-checkbox__input.is-checked + .el-checkbox__label {
+  color: #ffab31;
+}
+// 预估收益
+::v-deep
+  .estimatedRevenue
+  .el-checkbox__input.is-checked
+  + .el-checkbox__label {
+  color: #39da61;
+}
+// 预估eCPM
+::v-deep
+  .estimatedRevenueEcpm
+  .el-checkbox__input.is-checked
+  + .el-checkbox__label {
+  color: #ff6688;
+}
+// 展示/DAU
+::v-deep .aipau .el-checkbox__input.is-checked + .el-checkbox__label {
+  color: #a8a8ff;
+}
+// 收益
+::v-deep .unitRevenue .el-checkbox__input.is-checked + .el-checkbox__label {
+  color: #de7af9;
+}
+// 人均收益
+::v-deep .arpu .el-checkbox__input.is-checked + .el-checkbox__label {
+  color: #ff746c;
+}
+
+// ecpm
+::v-deep .ecpm .el-checkbox__input.is-checked + .el-checkbox__label {
+  color: rgb(0, 118, 143);
+}
+// deu
+::v-deep .deu .el-checkbox__input.is-checked + .el-checkbox__label {
+  color: rgb(76, 180, 231);
+}
+// 渗透率
+::v-deep .permeability .el-checkbox__input.is-checked + .el-checkbox__label {
+  color: rgb(255, 192, 159);
+}
+// 流量请求
+::v-deep .request .el-checkbox__input.is-checked + .el-checkbox__label {
+  color: rgb(145, 78, 0);
+}
+
+// 单选框框样式
+// 展示
+::v-deep .impression .el-checkbox__input.is-checked .el-checkbox__inner {
+  border-color: #0055ff;
+  background-color: #0055ff;
+}
+// DAU
+::v-deep .dau .el-checkbox__input.is-checked .el-checkbox__inner {
+  border-color: #ffab31;
+  background-color: #ffab31;
+}
+// 预估收益
+::v-deep .estimatedRevenue .el-checkbox__input.is-checked .el-checkbox__inner {
+  border-color: #39da61;
+  background-color: #39da61;
+}
+// 预估eCPM
+::v-deep
+  .estimatedRevenueEcpm
+  .el-checkbox__input.is-checked
+  .el-checkbox__inner {
+  border-color: #ff6688;
+  background-color: #ff6688;
+}
+// 展示/DAU
+::v-deep .aipau .el-checkbox__input.is-checked .el-checkbox__inner {
+  border-color: #a8a8ff;
+  background-color: #a8a8ff;
+}
+// 收益
+::v-deep .unitRevenue .el-checkbox__input.is-checked .el-checkbox__inner {
+  border-color: #de7af9;
+  background-color: #de7af9;
+}
+// 人均收益
+::v-deep .arpu .el-checkbox__input.is-checked .el-checkbox__inner {
+  border-color: #ff746c;
+  background-color: #ff746c;
+}
+// ecpm
+::v-deep .ecpm .el-checkbox__input.is-checked .el-checkbox__inner {
+  border-color: rgb(0, 118, 143);
+  background-color: rgb(0, 118, 143);
+}
+// deu
+::v-deep .deu .el-checkbox__input.is-checked .el-checkbox__inner {
+  border-color: rgb(76, 180, 231);
+  background-color: rgb(76, 180, 231);
+}
+// 渗透率
+::v-deep .permeability .el-checkbox__input.is-checked .el-checkbox__inner {
+  border-color: rgb(255, 192, 159);
+  background-color: rgb(255, 192, 159);
+}
+// 流量请求
+::v-deep .request .el-checkbox__input.is-checked .el-checkbox__inner {
+  border-color: rgb(145, 78, 0);
+  background-color: rgb(145, 78, 0);
+}
+
+// 搜索 应用
+
+::v-deep .el-checkbox.is-checked .el-checkbox__label {
+  color: #606266;
+}
+::v-deep.tab-container .app_option.tab-container {
+  border: 1px solid #000;
+  background-color: red;
+  width: 400px;
+}
+.app_option .appsearch .search-left {
+  box-sizing: border-box;
+}
+.app_option .appsearch .search-left .btn {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 30px;
+  background-color: #fff;
+  z-index: 10;
+  padding-top: 5px;
+  padding-left: 5px;
+}
+.app_option .appsearch .search-left .input {
+  position: absolute;
+  top: 30px;
+  left: 0;
+  width: 95%;
+  z-index: 10;
+  margin-bottom: 10px;
+  margin-left: 5px;
+  background-color: #fff;
+  margin-bottom: 10px;
+}
+.app_option .appsearch .search-left .checkbox_group {
+  margin-top: 70px;
+  // background-color: #40c9c6;
+}
+.app_option .appsearch .search-left .checkbox_group li {
+  display: block;
+  height: 50px;
+}
+.app_option .appsearch .search-left .checkbox_group li::after {
+  display: none;
+}
+.app_option .appsearch .search-left .checkbox_group .name {
+  font-weight: 700;
+}
+
+// table列表
+.table {
+  margin: 30px 3% 50px 3%;
+}
+.showbox {
+  margin: 20px 0 20px 0;
+}
+.showbox h2 {
+  display: inline-block;
+  margin: 0 20px;
+}
+.showbox .el-checkbox {
+  padding-bottom: 10px;
+}
+::v-deep.table .el-table tr:nth-of-type(1) {
+  background-color: #eee;
+}
+// ::v-deep.table .el-table__fixed-header-wrapper .el-table tr:nth-of-type(1){
+//   background-color: #f40;
+// }
+::v-deep.tab-container .el-range-editor--medium .el-range-input{
+  font-size: 12px;
+}
+// new app
+</style>

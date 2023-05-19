@@ -1,0 +1,79 @@
+{
+  "id": "2971386",
+  "name": "111",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "577319",
+      "name": "问号",
+      "font_class": "wenhao",
+      "unicode": "e72d",
+      "unicode_decimal": 59181
+    },
+    {
+      "icon_id": "6468801",
+      "name": "19资质认证",
+      "font_class": "zizhirenzheng",
+      "unicode": "e633",
+      "unicode_decimal": 58931
+    },
+    {
+      "icon_id": "783680",
+      "name": "代理资质 资质 企业资质",
+      "font_class": "dailizizhizizhiqiyezizhi",
+      "unicode": "e68c",
+      "unicode_decimal": 59020
+    },
+    {
+      "icon_id": "591725",
+      "name": "wxb账户",
+      "font_class": "wxbzhanghu",
+      "unicode": "e61e",
+      "unicode_decimal": 58910
+    },
+    {
+      "icon_id": "774482",
+      "name": "结算",
+      "font_class": "jiesuan",
+      "unicode": "e682",
+      "unicode_decimal": 59010
+    },
+    {
+      "icon_id": "1305480",
+      "name": "数据导出-01",
+      "font_class": "shujudaochu-01",
+      "unicode": "e640",
+      "unicode_decimal": 58944
+    },
+    {
+      "icon_id": "4780413",
+      "name": "API接入",
+      "font_class": "APIjieru",
+      "unicode": "ec16",
+      "unicode_decimal": 60438
+    },
+    {
+      "icon_id": "6255839",
+      "name": "流量",
+      "font_class": "liuliang",
+      "unicode": "e609",
+      "unicode_decimal": 58889
+    },
+    {
+      "icon_id": "10352335",
+      "name": "图表",
+      "font_class": "tubiao",
+      "unicode": "e61a",
+      "unicode_decimal": 58906
+    },
+    {
+      "icon_id": "4784146",
+      "name": "展开",
+      "font_class": "zhankai",
+      "unicode": "e663",
+      "unicode_decimal": 58979
+    }
+  ]
+}

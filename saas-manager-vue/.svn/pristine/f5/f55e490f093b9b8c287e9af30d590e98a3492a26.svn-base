@@ -1,0 +1,11 @@
+# 开发环境配置
+ENV = 'development'
+
+# 开发环境 访问接口
+VUE_APP_BASE_API = '/dev-api'
+
+# 开发环境 接口服务器地址
+VUE_APP_SERVER_API = 'https://app.medproad.com:8008/'
+
+# 路由懒加载
+VUE_CLI_BABEL_TRANSPILE_MODULES = true

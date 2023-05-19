@@ -1,0 +1,17 @@
+import request from '@/utils/request'
+
+export function getPositionList() {
+  return request({
+    url: '/common/position_list',
+    methods: 'get'
+  })
+}
+// 获取汇总数据
+export function getRoleList(data) {
+  return request({
+      url: '/user/getAccountList',
+      method: 'post',
+      data
+  })
+}
+

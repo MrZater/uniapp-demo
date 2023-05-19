@@ -1,0 +1,510 @@
+<template>
+  <div class="cust-select-container">
+    <el-popover
+      class="apppopover"
+      placement="bottom"
+      :width="width"
+      trigger="click"
+      @hide="closePopover"
+    >
+      <div class="downbox" :key="downboxKey">
+        <div class="search-left">
+          <div class="btn">
+            <el-checkbox
+              :indeterminate="appIsIndeterminate"
+              v-model="allcheked"
+              @change="selectAll"
+              >全选</el-checkbox
+            >
+            <el-checkbox v-model="adversechecked" @change="selectadverse"
+              >反选</el-checkbox
+            >
+          </div>
+          <div class="input">
+            <el-input
+              :autofocus="true"
+              clearable
+              prefix-icon="el-icon-search"
+              v-model="appsearch_word"
+              :placeholder="
+                searchById
+                  ? '请输入' + word + '名称或ID'
+                  : '请输入' + word + '名称'
+              "
+            ></el-input>
+          </div>
+          <div class="scrollbox">
+            <el-checkbox-group
+              v-model="selectData"
+              v-if="selectList.length > 0"
+              class="infinite-list"
+              v-infinite-scroll="handleLoad"
+              :infinite-scroll-distance="100"
+            >
+              <el-checkbox
+                class="infinite-list-item"
+                v-for="(item, index) in selectListTemp"
+                :value="item.id"
+                :label="item.id"
+                :key="index"
+              >
+                <div class="box" :style="{ width: width * 0.35 + 'px' }">
+                  <div class="name">
+                    <span>{{ item.name }}</span>
+                  </div>
+                  <div
+                    class="id"
+                    v-if="
+                      word !== '广告源' &&
+                      word !== '渠道' &&
+                      word !== '广告样式' &&
+                      word !== '代码位' &&
+                      word !== '账户' &&
+                      word !== '审核人员' &&
+                      word !== '流量分组'
+                    "
+                  >
+                    <svg-icon :icon-class="item.os === 1 ? 'android' : 'ios'" />
+                    <span>{{ item.id }}</span>
+                  </div>
+                </div>
+              </el-checkbox>
+            </el-checkbox-group>
+          </div>
+        </div>
+        <div class="search-right">
+          <div class="top">
+            <span class="selectnum">已选{{ selectData.length }}项</span>
+            <span class="clearAll" @click="clearAll">清空全部</span>
+          </div>
+          <div class="bottom">
+            <div class="option" v-for="(item, i) in showList" :key="i">
+              <div class="title">
+                <div class="name">
+                  <span>{{ item.name }}</span>
+                </div>
+                <div
+                  class="id"
+                  v-if="
+                    item.id &&
+                    word !== '广告源' &&
+                    word !== '渠道' &&
+                    word !== '广告样式' &&
+                    word !== '代码位' &&
+                    word !== '账户' &&
+                    word !== '审核人员' &&
+                    word !== '流量分组'
+                  "
+                >
+                  <svg-icon :icon-class="item.os === 1 ? 'android' : 'ios'" />
+                  <!-- <i
+                    :class="{
+                      iconfont: true,
+                      ios: item.os == 0,
+                      ad: item.os == 1,
+                    }"
+                    >{{ item.os === 1 ? "&#xe64d;" : "&#xe60c;" }}</i
+                  > -->
+                  <span>{{ item.id }}</span>
+                </div>
+              </div>
+              <div class="close" @click="removeitem(item, i)">
+                <i class="el-icon-close"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="appselect" slot="reference" @click="changeAppIcon">
+        <span
+          class="word"
+          :style="{ color: selectData.length == 0 ? '#c0c4cc' : '#555' }"
+          >{{
+            selectData.length === 0
+              ? "请选择" + word
+              : word + "：" + selectData.length + "项"
+          }}<i
+            :class="{
+              icon: true,
+              'el-icon-arrow-down': appClose,
+              'el-icon-arrow-up': !appClose,
+            }"
+          ></i
+        ></span>
+      </div>
+    </el-popover>
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+    allData: Array, // 全部数据
+    width: Number,
+    word: String,
+    searchById: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  data() {
+    return {
+      allDatatemp: [],
+      allcheked: false, // 全选
+      adversechecked: false, // 反选
+      appsearch_word: "", // 下拉框中的搜索字段
+      appClose: true, // 是否打开下拉框
+      appIsIndeterminate: false, // 是否全选
+      selectData: [], //选中数据
+      selectList: [], // 显示列表数据
+      selectListTemp: [],
+      showList: [], // 右侧显示数据
+      query: [],
+      count: 20,
+      downboxKey: +new Date(),
+    };
+  },
+
+  watch: {
+    allData: {
+      handler(val) {
+        this.downboxKey = +new Date();
+        this.count = 20;
+        // 保存修改总数据前的选中数据
+        let oldselectData = JSON.parse(JSON.stringify(this.selectData));
+        this.selectData = [];
+        // 将总数据保存到data中，并进行处理
+        this.allDatatemp = JSON.parse(JSON.stringify(val));
+        if (this.allDatatemp.length > 0) {
+          if (!this.allDatatemp[0].searchId) {
+            this.allDatatemp.forEach((item) => {
+              item.searchId = item.id;
+            });
+          }
+        }
+        // 默认数据列表为全部数据
+        this.selectList = JSON.parse(JSON.stringify(this.allDatatemp));
+        // 判断修改后的总数据是否包含之前的选中数据
+        this.selectList.forEach((item) => {
+          if (oldselectData.includes(item.id)) {
+            this.selectData.push(item.id);
+          }
+        });
+        // 全选判断
+        if (this.allDatatemp.length === this.selectData.length) {
+          this.allcheked = true;
+        } else {
+          this.allcheked = false;
+        }
+      },
+    },
+    appsearch_word: {
+      handler(val) {
+        // 无搜索字段
+        if (val === "") {
+          this.selectList = JSON.parse(JSON.stringify(this.allDatatemp));
+          return;
+        }
+        // 有搜索字段
+        let arr = [];
+        this.allDatatemp.forEach((item) => {
+          // 是否含有名字
+          let hasName = false;
+          if (item.name && item.name.includes(this.appsearch_word)) {
+            // 有，将该项数据添加到arr中
+            arr.push(item);
+            hasName = true;
+          }
+          // 判断该项是否加入到arr中
+          if (!hasName && this.searchById) {
+            // 未加入arr，且是可通过id搜索的
+            if (item.searchId && item.searchId.includes(this.appsearch_word)) {
+              // 将该项加入到arr中
+              arr.push(item);
+            }
+          }
+        });
+        // 将arr赋值给选择列表
+        this.selectList = arr;
+        // 重新给无限下拉项赋值
+        this.count = 10;
+      },
+    },
+    selectData: {
+      handler(val) {
+        this.$emit("selectListhandle", val);
+        this.showList = this.allDatatemp.filter((item) => {
+          return this.selectData.includes(item.id);
+        });
+        if (val.length === this.selectList.length) {
+          this.allcheked = true;
+        } else {
+          this.allcheked = false;
+        }
+      },
+    },
+    selectList: {
+      handler(val) {
+        if (val.length > 0) {
+          if (!val[0].searchId) {
+            val.forEach((item) => {
+              item.searchId = item.id;
+            });
+          }
+        }
+        if (val.length < 10) {
+          this.selectListTemp = JSON.parse(JSON.stringify(val));
+        } else {
+          this.selectListTemp = [];
+          val.forEach((item, i) => {
+            if (i < 10) {
+              this.selectListTemp.push(item);
+            }
+          });
+        }
+      },
+    },
+  },
+  mounted() {
+    if (this.word === "应用" && this.$route.query && this.$route.query.appId) {
+      this.selectData.push(this.$route.query.appId);
+    }
+  },
+
+  methods: {
+    removeitem(item, i) {
+      this.allcheked = false;
+      this.adversechecked = false;
+      this.selectData.forEach((child, c) => {
+        if (child === item.id) {
+          this.selectData.splice(c, 1);
+        }
+      });
+    },
+    clearAll() {
+      this.selectData = [];
+      this.allcheked = false;
+      this.adversechecked = false;
+    },
+    // 全选按钮事件
+    selectAll(val) {
+      this.adversechecked = false;
+      if (val) {
+        this.selectData = this.selectList.map((item) => {
+          return item.id;
+        });
+      } else {
+        this.selectData = [];
+      }
+    },
+    // 反选按钮事件
+    selectadverse() {
+      let arr = this.selectList.filter((item) => {
+        return !this.selectData.includes(item.id);
+      });
+      this.selectData = arr.map((item) => {
+        return item.id;
+      });
+
+      if (this.selectData.length === this.allData.length) {
+        this.allcheked = true;
+      } else if (this.selectData.length === 0) {
+        this.allcheked = false;
+      }
+    },
+    // 选择框点击事件
+    changeAppIcon() {
+      this.appClose = !this.appClose;
+    },
+    // 隐藏触发函数
+    closePopover() {
+      this.appClose = true;
+      this.appsearch_word = "";
+    },
+    handleLoad() {
+      if (this.selectListTemp.length > 0 && this.selectList[this.count]) {
+        this.selectListTemp.push(this.selectList[this.count]);
+      }
+      this.count++;
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@font-face {
+  font-family: "iconfont"; /* project id 3183855 */
+  src: url("");
+  src: url("?#iefix") format("embedded-opentype"),
+    url("//at.alicdn.com/t/font_3183855_sdoknrdb94.woff2") format("woff2"),
+    url("//at.alicdn.com/t/font_3183855_sdoknrdb94.woff") format("woff"),
+    url("//at.alicdn.com/t/font_3183855_sdoknrdb94.ttf") format("truetype"),
+    url("#iconfont") format("svg");
+}
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 14px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-stroke-width: 0.2px;
+  -moz-osx-font-smoothing: grayscale;
+}
+.iconfont.ad {
+  color: #68d740;
+}
+.iconfont.ios {
+  color: #6f99f8;
+}
+.apppopover {
+  cursor: pointer;
+  position: relative;
+
+  .appselect {
+    background-color: #fff;
+    display: inline-block;
+    position: relative;
+    width: 100%;
+    height: 36px;
+    border: 1px solid #dcdfe6;
+    border-radius: 5px;
+    line-height: 36px;
+    padding: 0 8px 0 12px;
+    .word {
+      color: #c0c4cc;
+      font-size: 14px;
+    }
+    .icon {
+      position: absolute;
+      right: 0;
+      margin: 10px;
+    }
+  }
+}
+.downbox {
+  position: relative;
+  width: 100%;
+  float: left;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  .search-left {
+    display: inline-block;
+    position: relative;
+    width: 50%;
+    margin-right: 5px;
+    box-sizing: border-box;
+    .btn {
+      margin: 10px;
+    }
+    .scrollbox {
+      margin: 5px 0 5px 0;
+      position: relative;
+      width: 100%;
+      height: 180px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      .el-checkbox {
+        width: 100%;
+        padding-left: 5px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+        .box {
+          .name,
+          .id {
+            width: 80% !important;
+          }
+        }
+        &:hover {
+          background-color: #eee;
+        }
+      }
+      .box {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        // border: 1px solid #000;
+
+        div.name,
+        div.id {
+          padding: 5px 0 5px 5px;
+          font-size: 14px;
+          color: #606266;
+          line-height: 120%;
+        }
+        div.name {
+          margin-bottom: 0;
+          // font-weight: 600;
+        }
+        div.id {
+          margin-top: 0;
+          font-size: 12px;
+        }
+      }
+    }
+  }
+
+  .search-right {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 48%;
+    height: 100%;
+    border-left: 1px solid #ccc;
+    padding: 5px;
+
+    .top {
+      .selectnum {
+        position: absolute;
+        left: 10px;
+      }
+      .clearAll {
+        position: absolute;
+        right: 10px;
+        color: #286bcf;
+        cursor: pointer;
+      }
+    }
+    .bottom {
+      height: 90%;
+      overflow: auto;
+
+      margin-top: 30px;
+      .option {
+        border-radius: 5px;
+
+        position: relative;
+        padding: 5px;
+        margin: 3px 6px 3px 6px;
+        background-color: #eee;
+        .title {
+          .name {
+            width: 80%;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 5px;
+          }
+          .id {
+            margin: 5px;
+            font-size: 12px;
+          }
+        }
+        .close {
+          position: absolute;
+          line-height: 30px;
+          font-size: 20px;
+          top: calc(50% - 15px);
+          right: 10px;
+          cursor: pointer;
+        }
+      }
+    }
+  }
+}
+// ::v-deep.search-left .scrollbox .el-checkbox__input {
+//   position: absolute;
+//   top: 20px;
+//   left: 3px;
+// }
+</style>

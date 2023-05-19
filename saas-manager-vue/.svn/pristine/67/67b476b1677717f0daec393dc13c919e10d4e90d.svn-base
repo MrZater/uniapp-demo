@@ -1,0 +1,1273 @@
+<template>
+  <div class="app-container">
+    <div class="filter-container">
+      <!-- 日期 -->
+      <el-date-picker
+        class="filter-item"
+        :clearable="false"
+        v-model="pickerDate"
+        type="daterange"
+        align="right"
+        unlink-panels
+        value-format="yyyy-MM-dd"
+        range-separator="至"
+        start-placeholder="开始日期"
+        end-placeholder="结束日期"
+        :picker-options="pickerOptions"
+      >
+      </el-date-picker>
+      <!-- 操作系统 -->
+      <el-select
+        style="width: 15rem"
+        v-model="query.os"
+        class="filter-item"
+        placeholder="请选择操作系统"
+        clearable
+      >
+        <el-option label="Android" :value="1" />
+        <el-option label="IOS" :value="0" />
+      </el-select>
+      <CustSelectOne
+        class="filter-item"
+        v-if="
+          $store.state.user.roles[0] === 'SUPER_ADMIN' ||
+          $store.state.user.roles[0] === 'BUSINESS' ||
+          $store.state.user.roles[0] == 'TECHNOLOGY' ||
+          $store.state.user.roles[0] == 'MANAGEMENT' ||
+          $store.state.user.roles[0] == 'BUSINESS_DIRECTOR' ||
+          $store.state.user.roles[0] == 'OPERATOR_DIRECTOR'
+        "
+        style="width: 15rem"
+        @handleSelect="handleSelectAdmin"
+        :model="query.userId"
+        :allData="adminList"
+        :width="240"
+        word="账户"
+        :clear="true"
+      />
+
+      <!-- 应用 -->
+      <CustSelectApp
+        class="filter-item"
+        :word="'应用'"
+        style="width: 15rem"
+        :width="500"
+        :allData="appOptions"
+        @selectListhandle="selectListhandle"
+        :searchById="true"
+      />
+
+      <!-- 查询按钮 -->
+      <el-button
+        v-waves
+        class="filter-item"
+        type="primary"
+        icon="el-icon-search"
+        @click="handleSearch"
+        >查询</el-button
+      >
+    </div>
+
+    <div class="body-container">
+      <div class="filter-container">
+        <el-button
+          v-waves
+          type="primary"
+          size="mini"
+          icon="el-icon-plus"
+          class="filter-item"
+          @click="handleAdd"
+          >应用</el-button
+        >
+      </div>
+      <div v-if="list.length > 0 || listLoading == true">
+        <el-table
+          :header-cell-style="{ background: '#f7f8fa', color: '#000' }"
+          :key="tableKey"
+          v-loading="listLoading"
+          :data="list"
+          highlight-current-row
+        >
+          <!-- 应用 -->
+          <el-table-column width="280px" fixed label="应用" align="center">
+            <template slot-scope="{ row }">
+              <div class="app-td-container">
+                <div class="app-icon">
+                  <el-image
+                    fit="contain"
+                    style="width: 40px; height: 40px; border-radius: 10px"
+                    :src="
+                      row.iconUrl
+                        ? getCreativeUrl(row.iconUrl)
+                        : '/images/app-none.png'
+                    "
+                  />
+                </div>
+                <div class="app-info-container">
+                  <div class="app-name">
+                    <svg-icon :icon-class="row.os === 1 ? 'android' : 'ios'" />
+                    <span>{{ row.name }}</span>
+                  </div>
+                  <div class="app-id">
+                    <span>ID:{{ row.id }}</span>
+                    <el-tooltip
+                      content="复制ID"
+                      placement="right"
+                      effect="light"
+                    >
+                      <i
+                        @click="copyId(row.id)"
+                        style="cursor: pointer; margin-left: 2px"
+                        class="el-icon-copy-document"
+                      ></i>
+                    </el-tooltip>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </el-table-column>
+          <!-- 账户名称 -->
+          <el-table-column
+            v-if="$store.state.user.roles[0] === 'SUPER_ADMIN'"
+            min-width="180px"
+            fixed
+            label="账户名称"
+            align="center"
+            prop="company"
+          >
+          </el-table-column>
+          <!-- 广告位个数 -->
+          <el-table-column
+            width="80px"
+            fixed
+            label="广告位"
+            align="center"
+            prop="adPlaceNum"
+          >
+            <template slot-scope="{ row }">
+              <div class="adPlaceNum" @click="linkToPlace(row)">
+                <!-- <router-link
+                :to="{ path: '/traffic/adplace', query: { appId: row.id } }"
+                ><i class="iconfont icon">&#xe61c;</i><span class="hoverNum">{{ row.adPlaceNum }}个</span></router-link
+              > -->
+                <div class="link">
+                  <span class="hoverNum">{{ row.adPlaceNum }}个</span>
+                  <!-- <i class="iconfont icon">&#xe642;</i> -->
+                </div>
+              </div>
+            </template>
+          </el-table-column>
+
+          <!-- 操作 -->
+          <el-table-column min-width="130px" fixed label="操作" align="center">
+            <template slot-scope="{ row }">
+              <div>
+                <!-- <el-tag
+                style="cursor: pointer; margin: 4px"
+                type="primary"
+                size="small"
+                @click="handleAppAccountLink(row)"
+                >账户绑定</el-tag
+              > -->
+                <el-tooltip content="编辑" placement="top" effect="light">
+                  <div class="doicon" @click="handleUpdate(row)">
+                    <svg-icon
+                      style="color: #3685df"
+                      class="svgicon"
+                      icon-class="edit"
+                    ></svg-icon>
+                  </div>
+                </el-tooltip>
+
+                <el-tooltip content="添加广告位" placement="top" effect="light">
+                  <div class="filter-item doicon" @click="handleAddplace(row)">
+                    <svg-icon
+                      style="color: #3685df"
+                      class="svgicon"
+                      icon-class="add"
+                    ></svg-icon>
+                  </div>
+                </el-tooltip>
+
+                <el-tooltip content="删除" placement="top" effect="light">
+                  <div
+                    class="doicon"
+                    v-if="
+                      $store.state.user.roles[0] == 'SUPER_ADMIN' ||
+                      $store.state.user.roles[0] == 'ADMIN'
+                    "
+                    @click="handleDelete(row)"
+                  >
+                    <svg-icon
+                      style="color: red"
+                      class="svgicon"
+                      icon-class="delete"
+                    ></svg-icon>
+                  </div>
+                </el-tooltip>
+              </div>
+            </template>
+          </el-table-column>
+          <!-- 收益 -->
+          <el-table-column
+            :render-header="renderHeader"
+            label="收益"
+            width="120px"
+            align="center"
+            prop="unitRevenue"
+          >
+            <template slot-scope="{ row }">
+              {{ row.reportData.unitRevenue }}
+            </template></el-table-column
+          >
+          <!-- 预估收益 -->
+
+          <el-table-column
+            :render-header="renderHeader"
+            label="预估收益"
+            align="center"
+            prop="income"
+            width="120"
+          >
+            <template slot-scope="{ row }">
+              {{ row.reportData.income }}
+            </template></el-table-column
+          >
+          <!-- DAU -->
+          <el-table-column
+            :render-header="renderHeader"
+            label="DAU"
+            align="center"
+            prop="dau"
+            width="120"
+          >
+            <template slot-scope="{ row }">
+              {{ row.reportData.dau }}
+            </template></el-table-column
+          >
+          <!-- 人均收益 -->
+          <el-table-column
+            :render-header="renderHeader"
+            label="人均收益
+"
+            align="center"
+            prop="arpu"
+            width="120"
+          >
+            <template slot-scope="{ row }">
+              {{ row.reportData.arpu }}
+            </template></el-table-column
+          >
+          <!-- 渗透率 -->
+          <el-table-column
+            :render-header="renderHeader"
+            label="渗透率"
+            align="center"
+            prop="permeability"
+            width="120"
+          >
+            <template slot-scope="{ row }">
+              {{ row.reportData.permeability + "%" }}
+            </template></el-table-column
+          >
+          <!-- 流量请求 -->
+          <el-table-column
+            label="流量请求"
+            align="center"
+            prop="request"
+            width="120"
+            :render-header="renderHeader"
+          >
+            <template slot-scope="{ row }">
+              {{ row.reportData.request }}
+            </template></el-table-column
+          >
+          <!-- 流量填充率 -->
+          <el-table-column
+            :render-header="renderHeader"
+            label="流量填充率"
+            align="center"
+            prop="requestFilledRate"
+            width="120"
+          >
+            <template slot-scope="{ row }">
+              {{ row.reportData.requestFilledRate + "%" }}
+            </template></el-table-column
+          >
+          <!-- 展示率 -->
+          <el-table-column
+            :render-header="renderHeader"
+            label="展示率"
+            align="center"
+            prop="impressRate"
+            width="120"
+          >
+            <template slot-scope="{ row }">
+              {{ row.reportData.impressRate + "%" }}
+            </template></el-table-column
+          >
+          <!-- 展示/DAU -->
+          <el-table-column
+            :render-header="renderHeader"
+            label="展示/DAU"
+            align="center"
+            prop="aipau"
+            width="120"
+          >
+            <template slot-scope="{ row }">
+              {{ row.reportData.aipau }}
+            </template></el-table-column
+          >
+        </el-table>
+
+        <pagination
+          v-show="total > 0"
+          :total="total"
+          :page.sync="query.page"
+          :limit.sync="query.limit"
+          @pagination="handleGetPager"
+        />
+      </div>
+      <Empty
+        class="empty"
+        v-else-if="(listLoading = false && list.length == 0)"
+      ></Empty>
+    </div>
+    <!-- 应用 -->
+    <el-dialog
+      ref="dialog"
+      :destroy-on-close="true"
+      :title="dialogType === 0 ? '新增应用' : '编辑应用'"
+      :visible.sync="dialogVisible"
+      :close-on-click-modal="false"
+    >
+      <el-form
+        ref="form"
+        :model="temp"
+        :rules="rules"
+        label-width="100px"
+        label-position="left"
+      >
+        <!-- <el-form-item v-if="dialogType === 1" label="应用ID">
+          <el-input v-model="temp.id" disabled />
+        </el-form-item> -->
+        <el-form-item label="操作系统">
+          <el-radio-group v-model="temp.os" :disabled="dialogType === 1">
+            <el-radio :label="1">Android</el-radio>
+            <el-radio :label="0">IOS</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="应用名称" prop="name">
+          <el-input v-model="temp.name" maxlength="30" show-word-limit />
+        </el-form-item>
+        <el-form-item label="包名" prop="bundle">
+          <el-input v-model="temp.bundle" />
+        </el-form-item>
+        <el-form-item v-if="isMedPro" label="下载地址" prop="downloadUrl">
+          <el-input v-model="temp.downloadUrl" placeholder="选填" />
+        </el-form-item>
+
+        <el-form-item label="行业">
+          <el-cascader
+            v-model="temp.tradeId"
+            :props="SetKesDept"
+            :options="industry"
+          />
+        </el-form-item>
+        <el-form-item label="状态" v-if="dialogType != 0">
+          <el-select v-model="temp.sts" placeholder="" @change="$forceUpdate()">
+            <el-option label="运行中" :value="'A'"></el-option>
+            <el-option label="已暂停" :value="'S'"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="接入方式">
+          <el-select
+            v-model="temp.accessType"
+            placeholder="请选择接入方式"
+            @change="$forceUpdate()"
+          >
+            <!-- <el-option
+              v-for="(item, index) in accessTypes"
+              :key="index"
+              :label="item.name"
+              :value="item.id"
+            >
+            </el-option> -->
+            <el-option label="SDK" :value="0"></el-option>
+            <el-option label="API" :value="1"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="图标">
+          <el-upload
+            ref="myUpload"
+            :action="uploadUrl"
+            :headers="header"
+            :multiple="false"
+            :on-success="handleLogoSuccess"
+            :on-remove="handleLogoRemove"
+            accept="image/*"
+            list-type="picture-card"
+            :limit="1"
+          >
+            <img v-if="temp.iconUrl" :src="temp.iconUrl" width="120%" />
+            <div v-else>
+              <i class="el-icon-upload" />
+            </div>
+          </el-upload>
+          <span style="color: red"
+            >请上传png/jpgjpeg图片，宽高比1:1，小于200KB</span
+          >
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer" v-if="allowOperate">
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSubmitForm">确定</el-button>
+      </span>
+    </el-dialog>
+    <!-- 广告位 -->
+    <el-dialog
+      ref="dialog"
+      :title="'新增'"
+      :destroy-on-close="true"
+      :visible.sync="addplacedialogVisible"
+    >
+      <el-form
+        ref="form"
+        :model="addplacetemp"
+        :rules="addplacerules"
+        label-width="100px"
+        label-position="left"
+      >
+        <el-form-item label="应用" prop="appId">
+          <el-select
+            v-model="addplacetemp.appId"
+            placeholder="请选择应用"
+            :disabled="addplacedialogType === 1"
+            filterable
+          >
+            <el-option
+              v-for="(item, index) in addplaceappOptionsAll"
+              :key="index"
+              :value="item.id"
+              :label="item.name"
+            >
+              <svg-icon :icon-class="item.os === 1 ? 'android' : 'ios'" />
+              <span>{{ item.name }}</span>
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="广告位名称" prop="name">
+          <el-input
+            v-model="addplacetemp.name"
+            maxlength="30"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="广告样式" prop="position">
+          <el-select v-model="addplacetemp.position" clearable filterable>
+            <el-option
+              v-for="(item, index) in positionOptions"
+              :key="index"
+              :value="item.id"
+              :label="item.name"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item
+          v-if="addplacetemp.position === 1 && $store.getters.skip === 1"
+          label="跳过"
+        >
+          <el-radio-group v-model="addplacetemp.skip">
+            <el-radio label="A">开启</el-radio>
+            <el-radio label="S">关闭</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item v-if="addplacedialogType === 1" label="启用">
+          <el-radio-group v-model="addplacetemp.sts">
+            <el-radio label="A">启用</el-radio>
+            <el-radio label="S">停止</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="素材模板" v-if="isShowCreativeTemplate != -1">
+          <!-- <el-input v-model="temp.templateIds" /> -->
+          <el-select
+            multiple
+            v-model="addplacetemp.templateIds"
+            placeholder="请选择素材模板"
+          >
+            <el-option
+              v-for="(item, index) in materialTempList"
+              :key="index"
+              :value="item.id"
+              :label="item.sizeName"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="addplacetemp.remark" />
+        </el-form-item>
+        <el-form-item label="审核状态" v-if="$store.getters.creative === 1">
+          <el-switch
+            v-model="addplacetemp.auditSts"
+            active-value="A"
+            inactive-value="S"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+          />
+        </el-form-item>
+        <el-form-item label="投放等级" v-if="$store.getters.creative === 1">
+          <el-select v-model="addplacetemp.level" placeholder="请选择">
+            <el-option
+              v-for="(item, index) in levelOptions"
+              :key="index"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item
+          label="分成比例"
+          v-if="
+            $store.getters.roles[0] == 'SUPER_ADMIN' ||
+            ($store.getters.roles[0] == 'ADMIN' &&
+              $store.state.user.mediaAccess == 1)
+          "
+        >
+          <el-input
+            v-model="addplacetemp.divideIntoProportions"
+            placeholder="请输入分成比例（0-100）"
+          >
+          </el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer" v-if="allowOperate">
+        <el-button @click="addplacedialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="addplacehandleSubmitForm"
+          >确定</el-button
+        >
+      </span>
+    </el-dialog>
+
+    <!-- 删除提示框 -->
+    <el-dialog title="账户绑定" :visible.sync="dialogPlatLinkVisible">
+      <app-platform :app-id="appId" :linked-show="true" />
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="dialogPlatLinkVisible = false"
+          >确认</el-button
+        >
+      </span>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import tips from "@/components/tips/HelpHint/HelpHint.vue";
+
+import waves from "@/directive/waves";
+import { getPositionList } from "@/api/common";
+import { addAdplace, updateAdplace } from "@/api/place";
+
+import Pagination from "@/components/Pagination";
+import { Message } from "element-ui";
+import { getToken } from "@/utils/auth";
+import { industrySelect } from "@/api/synthReport";
+import {
+  addApp,
+  getAppList,
+  getAppPager,
+  updateApp,
+  getadminList,
+  getApplistByUserIdAndOs,
+} from "@/api/app";
+import { copy } from "@/utils/string";
+import request from "@/utils/request";
+import CustSelectApp from "@/components/CustSelectApp";
+import CustSelectOne from "@/components/CustSelectOne";
+import { adminDateOotion } from "@/utils/options";
+import Empty from "@/components/empty";
+
+const HTTP_PREFIX = "http://creative.medproad.com/material/";
+export default {
+  name: "App",
+  components: {
+    Pagination,
+    CustSelectApp,
+    tips,
+    CustSelectOne,
+    Empty,
+  },
+  directives: { waves },
+  data() {
+    return {
+      pickerDate: [],
+
+      pickerOptions: adminDateOotion ? adminDateOotion : [],
+      query: {
+        beginDate: "2022-02-14",
+        endDate: "2022-02-14",
+        os: null,
+        appIds: null,
+        page: 0,
+        limit: 20,
+        userId: "",
+      },
+      appOptions: [],
+      appOptionsAll: [],
+      addplaceappOptionsAll: [],
+      positionOptions: [],
+      isShowCreativeTemplate: -1,
+      levelOptions: [
+        { id: 1, name: "一级" },
+        { id: 2, name: "二级" },
+        { id: 3, name: "三级" },
+        { id: 4, name: "四级" },
+      ],
+
+      tableKey: 0,
+      industry: [],
+      listLoading: false,
+      list: [],
+      SetKesDept: {
+        value: "id",
+        label: "name",
+        children: "children",
+        emitPath: false,
+      },
+      // accessTypes: [
+      //   { id: 1, name: "API" },
+      //   { id: 0, name: "SDK" },
+      // ],
+      total: 0,
+      // 添加应用
+      temp: {
+        os: 1,
+        // accessType: 0,
+        tradeId: "",
+        sts: "A",
+      },
+
+      dialogType: 0,
+      dialogVisible: false,
+      // delVisible: false,
+      // 添加广告位
+      addplacetemp: {
+        auditSts: "",
+        level: "",
+        skip: "S",
+        divideIntoProportions: 100,
+      },
+      addplacedialogType: 0,
+      addplacedialogVisible: false,
+
+      rules: {
+        name: [{ required: true, message: "请输入名称", trigger: "blur" }],
+        bundle: [{ required: true, message: "请输入包名", trigger: "blur" }],
+        // downloadUrl: [{ required: true, message: "请输入下载地址", trigger: "blur" }],
+      },
+      addplacerules: {
+        appId: [{ required: true, message: "请选择APP", trigger: "change" }],
+        name: [{ required: true, message: "请输入名称", trigger: "blur" }],
+        position: [
+          { required: true, message: "请选择位置", trigger: "change" },
+        ],
+      },
+      uploadUrl: process.env.VUE_APP_BASE_API + "/common/upload",
+      header: {
+        Authorization: getToken(),
+      },
+      dialogPlatLinkVisible: false,
+      appId: null,
+      adminList: [],
+    };
+  },
+  computed: {
+    title() {
+      return this.$store.getters.title;
+    },
+    isMedPro() {
+      return this.$store.getters.isMedPro;
+    },
+    allowOperate() {
+      return this.$store.getters.allowOperate;
+    },
+    allowDownload() {
+      return this.$store.getters.allowDownload;
+    },
+  },
+  watch: {
+    dialogVisible(newValue, oldValue) {
+      if (oldValue) {
+        this.$nextTick(() => {
+          this.$refs.myUpload.clearFiles();
+        });
+      }
+    },
+    pickerDate: {
+      handler(val) {
+        if (val.length > 0) {
+          this.query.beginDate = val[0];
+          this.query.endDate = val[1];
+        }
+      },
+    },
+    "query.os": {
+      handler() {
+        this.getApplistByUserIdAndOs();
+      },
+    },
+    "query.userId": {
+      handler() {
+        this.getApplistByUserIdAndOs();
+      },
+    },
+  },
+  async created() {
+    this.initpickerDate();
+    await this.initAppOptions();
+    this.getIndustrySelect();
+    this.initaddplaceAppOptions();
+    this.initPositionOptions();
+    this.getadminList();
+    this.handleGetPager();
+  },
+  methods: {
+    renderHeader(h, { column, $index }) {
+      // DAU
+      if (column.property === "dau") {
+        return this.$createElement("tips", {
+          props: {
+            content: `每天打开应用的独立用户数`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // DEU
+      if (column.property === "deu") {
+        return this.$createElement("tips", {
+          props: {
+            content: `每天观看过广告的独立用户数`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 渗透率
+      if (column.property === "permeability") {
+        return this.$createElement("tips", {
+          props: {
+            content: `每天观看过广告的用户占比，渗透率=DEU/DAU`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 人均收益
+      if (column.property === "arpu") {
+        return this.$createElement("tips", {
+          props: {
+            content: `人均收益，ARPU=收益/DAU`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 展示/DAU
+      if (column.property === "aipau") {
+        return this.$createElement("tips", {
+          props: {
+            content: `人均展示次数`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 展示/DEU
+      if (column.property === "aipu") {
+        return this.$createElement("tips", {
+          props: {
+            content: `观看过广告的用户人均展示次数`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 流量请求
+      if (column.property === "request") {
+        return this.$createElement("tips", {
+          props: {
+            content: `应用向${this.title}发送请求的次数，一次流量请求可能触发多次广告请求`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 流量填充率
+      if (column.property === "requestFilledRate") {
+        return this.$createElement("tips", {
+          props: {
+            content: `应用向${this.title}发送请求后，响应成功的占比`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 预估收益
+      if (column.property === "income") {
+        return this.$createElement("tips", {
+          props: {
+            content: `预估收益=SUM(代码位人工填写的eCPM价格*${this.title}统计的展示/1000)`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 预估eCPM
+      if (column.property === "estimatedRevenueEcpm") {
+        return this.$createElement("tips", {
+          props: {
+            content: `（预估收益/${this.title}统计的展示）*1000`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      //展示
+      if (column.property === "impress") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}统计的广告曝光次数，由于统计口径差异、网络丢包等因素，${this.title}统计的展示数据与广告平台展示数据可能存在差异`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 展示率
+      if (column.property === "impressRate") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}收到来自广告平台的广告返回后，展示成功的占比。公式为 展示率 = (展示/填充)`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 点击
+      if (column.property === "click") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}统计的广告点击数，由于部分广告平台不提供点击回调，${this.title}统计的点击数据与广告平台点击数据可能存在差异`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 点击率
+      if (column.property === "clickRate") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}统计的点击率，点击率=点击数/展示数`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 广告填充率
+      if (column.property === "advRequestFilledRate") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}向广告平台发送请求后，返回成功的占比`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 展示Gap
+      if (column.property === "impressionGap") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}统计展示与广告平台统计展示的差异，公式为 展示Gap=(展示-展示API)/展示API`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 点击Gap
+      if (column.property === "clickGap") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}统计点击与广告平台统计点击的差异，公式为 点击Gap=(点击-点击API)/点击API`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 收益
+      if (column.property === "unitRevenue") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}通过Reporting API向广告平台拉取到的收益`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 展示API
+      if (column.property === "unitImpression") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}通过Reporting API向广告平台拉取到的展示`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 点击API
+      if (column.property === "unitClick") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}通过Reporting API向广告平台拉取到的点击`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // eCPM
+      if (column.property === "unitEcpm") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}通过Reporting API向广告平台拉取到的收益和展示API计算出eCPM API，公式：（收益/展示API）*1000`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 点击率API
+      if (column.property === "unitCtr") {
+        return this.$createElement("tips", {
+          props: {
+            content: `点击API/展示API`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 请求API
+      if (column.property === "unitRequest") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}通过Reporting API向广告平台拉取到的广告请求数，部分平台不提供此数据`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 填充率API
+      if (column.property === "unitFilledRate") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}通过Reporting API向广告平台拉取到的填充率，部分平台不提供此数据`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 其他
+      return this.$createElement("tips", {
+        props: {
+          content: ``,
+          title: column.label,
+          isShow: false,
+        },
+      });
+    },
+
+    async getApplistByUserIdAndOs() {
+      let adminUser = this.query.userId;
+
+      let resp = await getApplistByUserIdAndOs({
+        adminUser,
+        os: this.query.os,
+      });
+      if (resp.code !== 200) return;
+      this.appOptions = resp.data;
+    },
+    selectListhandle(val) {
+      this.query.appIds = val;
+    },
+    handleSelectAdmin(val) {
+      this.query.userId = val;
+    },
+    async getadminList() {
+      let resp = await getadminList();
+      if (resp.code !== 200) return;
+
+      resp.data.forEach((item) => {
+        item.id = "" + item.id;
+        item.name = item.company;
+      });
+
+      this.adminList = resp.data;
+    },
+    // 默认昨天数据
+    initpickerDate() {
+      let time = new Date().getTime() - 1000 * 60 * 60 * 24;
+      let year = new Date(time).getFullYear();
+      let month = new Date(time).getMonth() + 1;
+      let day = new Date(time).getDate();
+
+      let str = `${year}-${month < 10 ? "0" + month : month}-${
+        day < 10 ? "0" + day : day
+      }`;
+      this.pickerDate = [str, str];
+      this.query.endDate = str;
+      this.query.beginDate = str;
+    },
+    linkToPlace(row) {
+      this.$router.push({ path: "/traffic/adplace", query: { appId: row.id } });
+    },
+    initPositionOptions() {
+      getPositionList().then((res) => {
+        this.positionOptions = res.data;
+      });
+    },
+    initaddplaceAppOptions() {
+      getAppList().then((res) => {
+        this.appOptionsAll = res.data;
+      });
+    },
+    initAppOptions() {
+      getAppList().then((res) => {
+        this.appOptions = this.addplaceappOptionsAll = res.data;
+      });
+    },
+    handleSearch() {
+      this.query.page = 1;
+      this.handleGetPager();
+    },
+    handleGetPager() {
+      let query = JSON.parse(JSON.stringify(this.query));
+      this.listLoading = true;
+      getAppPager(query).then((res) => {
+        this.total = res.data.total;
+        this.list = res.data.items;
+        this.listLoading = false;
+        this.$bus.$emit("totop");
+      });
+    },
+    async getIndustrySelect() {
+      const res = await industrySelect();
+      if (res.code != 200) return;
+      this.industry = res.data;
+    },
+    handleAdd() {
+      this.dialogType = 0;
+      this.temp = { os: 1 };
+      this.dialogVisible = true;
+      this.temp.sts = "A";
+      this.temp.accessType = 0;
+    },
+    handleAddplace(row) {
+      this.addplacedialogType = 0;
+      this.addplacetemp = {
+        skip: "S",
+        appId: row.id,
+        divideIntoProportions: row.divideIntoProportions,
+      };
+      this.addplacedialogVisible = true;
+    },
+    handleUpdate(row) {
+      this.dialogType = 1;
+      this.temp = JSON.parse(JSON.stringify(row));
+      if (row.iconUrl && row.iconUrl.includes(".")) {
+        this.temp.iconUrl = HTTP_PREFIX + row.iconUrl;
+      } else {
+        this.temp.iconUrl = null;
+      }
+      this.dialogVisible = true;
+    },
+    // 应用
+    handleSubmitForm() {
+      let _this = this;
+      this.$refs.form.validate(async (valid) => {
+        if (valid) {
+          if (_this.dialogType === 0) {
+            await addApp(_this.temp).then((res) => {
+              Message({
+                message: res.msg,
+                type: "success",
+                duration: 5 * 1000,
+              });
+            });
+          } else if (_this.dialogType === 1) {
+            await updateApp(_this.temp).then((res) => {
+              Message({
+                message: res.msg,
+                type: "success",
+                duration: 5 * 1000,
+              });
+            });
+          }
+          _this.dialogVisible = false;
+          _this.handleGetPager();
+          _this.temp = {};
+        }
+      });
+    },
+    addplacehandleSubmitForm() {
+      let _this = this;
+      this.$refs.form.validate(async (valid) => {
+        if (valid) {
+          if (_this.addplacedialogType === 0) {
+            await addAdplace(_this.addplacetemp).then((res) => {
+              Message({
+                message: res.msg,
+                type: "success",
+                duration: 5 * 1000,
+              });
+            });
+          } else if (_this.addplacedialogType === 1) {
+            await updateAdplace(_this.addplacetemp).then((res) => {
+              Message({
+                message: res.msg,
+                type: "success",
+                duration: 5 * 1000,
+              });
+            });
+          }
+          _this.addplacedialogVisible = false;
+          _this.handleGetPager();
+        }
+      });
+    },
+    handleLogoSuccess(res) {
+      this.temp.iconUrl = res.data;
+    },
+    handleLogoRemove() {
+      this.temp.iconUrl = undefined;
+    },
+    copyId(id) {
+      let result = copy(id);
+      if (result === false) {
+        Message({
+          message: "不支持复制",
+          type: "error",
+          duration: 2 * 1000,
+        });
+      } else {
+        Message({
+          message: "复制成功",
+          type: "success",
+          duration: 2 * 1000,
+        });
+      }
+    },
+    getCreativeUrl(url) {
+      if (url) {
+        return HTTP_PREFIX + url;
+      } else {
+        return null;
+      }
+    },
+    // 删除广告位
+    handleDelete(row) {
+      this.$confirm("确认删除该应用?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      }).then(async () => {
+        request.delete("/app?id=" + row.id).then((response) => {
+          if (response.msg) {
+            this.$message.success("删除成功");
+            this.handleGetPager();
+          }
+        });
+      });
+    },
+    handleAppAccountLink(row) {
+      this.appId = row.id;
+      this.dialogPlatLinkVisible = true;
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+//
+::v-deep .app-container .el-table th.is-leaf {
+  border-bottom: 1.5px solid #dfe6ec;
+  // margin-top: -100px;
+}
+.app-td-container {
+  display: flex;
+  padding-left: 20px;
+  text-align: left;
+  .app-icon {
+    flex: 40px 0 1;
+  }
+  .app-info-container {
+    flex: 1;
+    padding-left: 20px;
+    // text-align: center;
+  }
+}
+div.adPlaceNum {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  transition: all 0.3s;
+  color: rgb(31, 143, 196);
+  cursor: pointer;
+  i.icon {
+    transition: all 0.3s;
+    opacity: 0;
+    font-size: 14px;
+    display: none;
+  }
+  span {
+    line-height: 50px;
+  }
+}
+div.adPlaceNum:hover {
+  font-size: 18px;
+  color: rgb(31, 143, 196);
+  & span {
+    text-decoration: underline;
+  }
+  & i.icon {
+    opacity: 1;
+    font-size: 18px;
+    display: inline-block;
+  }
+}
+@font-face {
+  font-family: "iconfont"; /* project id 3185001 */
+  src: url("");
+  src: url("?#iefix") format("embedded-opentype"),
+    url("//at.alicdn.com/t/font_3185001_y84lcw8slnn.woff2") format("woff2"),
+    url("//at.alicdn.com/t/font_3185001_y84lcw8slnn.woff") format("woff"),
+    url("//at.alicdn.com/t/font_3185001_y84lcw8slnn.ttf") format("truetype"),
+    url("#iconfont") format("svg");
+}
+
+.doicon {
+  display: inline-block;
+  cursor: pointer;
+  padding-left: 10px;
+  .svgicon {
+    font-size: 18px;
+  }
+}
+::v-deep.app-container .el-table__fixed {
+  box-shadow: 0 0 10px rgb(0 0 0 / 12%);
+}
+::v-deep.app-container .filter-container .cust-select-container .osicon {
+  display: none;
+}
+.body-container {
+  .empty {
+    height: 70vh;
+  }
+}
+</style>

@@ -1,0 +1,23 @@
+import request from '@/utils/request'
+
+export function getWarningPage(data) {
+  return request({
+    url: '/earlyWarning/getWarningPage',
+    method: 'post',
+    data
+  })
+}
+
+export function updateWarning(data) {
+  return request({
+    url: '/earlyWarning/updateWarning',
+    method: 'post',
+    data
+  })
+}
+export function getSubList() {
+  return request({
+    url: '/user/getSubList',
+    method: 'get'
+  })
+}

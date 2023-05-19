@@ -1,0 +1,264 @@
+<template>
+  <div class="cust-select-container">
+    <el-popover
+      class="place_popover"
+      placement="bottom"
+      :width="width"
+      trigger="click"
+    >
+      <div class="downbox">
+        <div class="search-left">
+          <div class="btn">
+            <el-checkbox
+              :indeterminate="IsIndeterminate"
+              v-model="allcheked"
+              @change="selectAll"
+              >全选</el-checkbox
+            >
+            <el-checkbox v-model="adversechecked" @change="selectadverse"
+              >反选</el-checkbox
+            >
+          </div>
+          <div class="input">
+            <el-input
+              :autofocus="true"
+              clearable
+              prefix-icon="el-icon-search"
+              v-model="placesearch_word"
+            ></el-input>
+          </div>
+          <div class="scrollbox">
+            <el-checkbox-group
+              v-model="selectData"
+              v-if="selectList.length > 0"
+            >
+              <el-checkbox
+                v-for="item in selectList"
+                :value="item.id"
+                :label="item.id"
+                :key="item.id"
+              >
+                <div class="name">
+                  <span>{{ item.name }}{{item.os}}</span>
+                </div>
+                <div class="id">
+                  <i
+                    :class="{
+                      iconfont: true,
+                      ios: item.os == 0,
+                      ad: item.os == 1,
+                    }"
+                    >{{ item.os === 1 ? "&#xe64d;" : "&#xe60c;" }}
+                  </i>
+                  <span>{{ item.id }}</span>
+                </div>
+              </el-checkbox>
+            </el-checkbox-group>
+          </div>
+        </div>
+      </div>
+      <div class="placeselect" slot="reference" @click="changePlaceIcon">
+        <span class="word"
+          >{{
+            selectData.length === 0
+              ? "请选择广告位"
+              : "广告位：" + selectData.length + "项"
+          }}<i
+            :class="{
+              icon: true,
+              'el-icon-arrow-down': placeClose,
+              'el-icon-arrow-up': !placeClose,
+            }"
+          ></i
+        ></span>
+      </div>
+    </el-popover>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "CustSelectPlace",
+  props: {
+    allData: Array, // 全部数据
+    width: Number,
+  },
+  data() {
+    return {
+      allcheked: false, // 全选
+      adversechecked: false, // 反选
+      placesearch_word: "", // 下拉框中的搜索字段
+      placeClose: false, // 是否打开下拉框
+      IsIndeterminate: false, // 是否全选
+      selectData: [], //选中数据
+      selectList: [], // 显示列表数据
+    };
+  },
+
+  watch: {
+    allData: {
+      handler(val) {
+        let oldselectData = JSON.parse(JSON.stringify(this.selectData));
+        this.selectData = [];
+        this.selectList = JSON.parse(JSON.stringify(val));
+        this.selectList.forEach((item) => {
+          if (oldselectData.includes(item.id)) {
+            this.selectData.push(item.id);
+          }
+        });
+      },
+    },
+    placesearch_word: {
+      handler(val) {
+        if (val === "") {
+          this.selectList = this.allData;
+          return;
+        }
+        let arr = [];
+        this.allData.forEach((item) => {
+          if (item.name.includes(this.placesearch_word)) {
+            arr.push(item);
+          }
+        });
+        this.selectList = arr;
+      },
+    },
+    selectData: {
+      handler(val) {
+        this.$emit("selectListhandle", val);
+   
+      },
+    },
+  },
+
+  methods: {
+    removeitem(i) {
+      this.allcheked = false;
+      this.adversechecked = false;
+      this.selectData.splice(i, 1);
+      // this.selectData.forEach((item, i) => {
+      //   if (item === val) {
+      //     this.selectData.splice(i, 1);
+      //   }
+      // });
+    },
+    clearAll() {
+      this.selectData = [];
+      this.allcheked = false;
+      this.adversechecked = false;
+    },
+    // 全选按钮事件
+    selectAll(val) {
+      this.adversechecked = false;
+      if (val) {
+        this.selectData = this.allData.map((item) => {
+          return item.id;
+        });
+      } else {
+        this.selectData = [];
+      }
+    },
+    // 反选按钮事件
+    selectadverse() {
+      let arr = this.allData.filter((item) => {
+        return !this.selectData.includes(item.id);
+      });
+      this.selectData = arr.map((item) => {
+        return item.id;
+      });
+
+      if (this.selectData.length === this.allData.length) {
+        this.allcheked = true;
+      } else if (this.selectData.length === 0) {
+        this.allcheked = false;
+      }
+    },
+    // 选择框点击事件
+    changePlaceIcon() {
+      this.placeClose = !this.placeClose;
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@font-face {
+  font-family: "iconfont"; /* project id 3183855 */
+  src: url("");
+  src: url("?#iefix") format("embedded-opentype"),
+    url("//at.alicdn.com/t/font_3183855_sdoknrdb94.woff2") format("woff2"),
+    url("//at.alicdn.com/t/font_3183855_sdoknrdb94.woff") format("woff"),
+    url("//at.alicdn.com/t/font_3183855_sdoknrdb94.ttf") format("truetype"),
+    url("#iconfont") format("svg");
+}
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 14px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-stroke-width: 0.2px;
+  -moz-osx-font-smoothing: grayscale;
+}
+.iconfont.ad {
+  color: #68d740;
+}
+.iconfont.ios {
+  color: #6f99f8;
+}
+.place_popover {
+  position: relative;
+
+  .placeselect {
+    display: inline-block;
+    position: relative;
+    width: 80%;
+    height: 36px;
+    border: 1px solid #dcdfe6;
+    border-radius: 5px;
+    line-height: 36px;
+    padding: 0 8px 0 8px;
+    .word {
+      color: #c0c4cc;
+      font-size: 14px;
+    }
+    .icon {
+      position: absolute;
+      right: 0;
+      margin: 10px;
+    }
+  }
+}
+.downbox {
+  position: relative;
+  width: 100%;
+  float: left;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  .search-left {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+    margin-right: 5px;
+    box-sizing: border-box;
+    .btn {
+      margin: 10px;
+    }
+    .scrollbox {
+      margin: 5px 0 5px 0;
+      width: 100%;
+      height: 180px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      div.name,
+      div.id {
+        margin: 5px;
+        font-size: 12px;
+      }
+      div.name {
+        font-weight: 600;
+      }
+    }
+  }
+}
+</style>

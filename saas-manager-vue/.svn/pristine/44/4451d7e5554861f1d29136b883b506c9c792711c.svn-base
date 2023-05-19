@@ -1,0 +1,33 @@
+import user from './user'
+
+const role = user
+// console.log(user.state)
+
+const state = {
+    allowOperate: role == 'MANAGEMENT' ?
+        false : role == 'BUSINESS_DIRECTOR' ?
+        false : role == 'OPERATOR_DIRECTOR' ?
+        false : true,
+    allowDownload: role == 'MANAGEMENT' ?
+        false : role == 'BUSINESS_DIRECTOR' ?
+        false : role == 'OPERATOR_DIRECTOR' ?
+        false : true
+}
+
+const mutations = {
+    changeAllowOperate(state, role) {
+        state.allowOperate = 'MANAGEMENT' ?
+            false : role == 'BUSINESS_DIRECTOR' ?
+            false : role == 'OPERATOR_DIRECTOR' ?
+            false : true
+    }
+}
+
+const actions = {}
+
+export default {
+    namespaced: true,
+    state,
+    mutations,
+    actions
+}

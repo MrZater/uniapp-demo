@@ -1,0 +1,20 @@
+<template>
+<div class="abtest-container">
+<el-button type="primary" size="mini" @click="handleClick">A/B测试</el-button>
+</div>
+</template>
+
+<script>
+export default {
+
+}
+</script>
+
+<style>
+.abtest-container{
+    display: inline-block;
+    position: absolute;
+    right: 20px;
+    top: 25px;
+}
+</style>

@@ -1,0 +1,103 @@
+<template>
+  <div class="audit-message-container">
+    <div class="search">
+      <el-row :gutter="0">
+        <el-col :span="6">
+          <el-select v-model="query.ispublish" placeholder="请选择发布状态">
+            <el-option label="已发布" :value="1" />
+            <el-option label="未发布" :value="0" />
+          </el-select>
+        </el-col>
+      </el-row>
+    </div>
+    <div class="table">
+      <el-table
+        v-loading="isLoading"
+        ref="table"
+        :header-cell-style="{ background: '#f7f8fa' }"
+        :data="tableList"
+        border
+        style="width: 100%"
+      >
+        <el-table-column
+          align="center"
+          prop=""
+          label="消息类型"
+        ></el-table-column>
+        <el-table-column
+          align="center"
+          prop=""
+          label="消息标题"
+        ></el-table-column>
+        <el-table-column
+          align="center"
+          prop=""
+          label="发布时间"
+        ></el-table-column>
+        <el-table-column
+          align="center"
+          prop=""
+          label="发布状态"
+        ></el-table-column>
+        <el-table-column
+          align="center"
+          prop=""
+          label="接收群体"
+        ></el-table-column>
+        <!-- <el-table-column align="center" prop="" label="操作"
+          ><template slot-scope="{ row }"> 
+            
+            </template
+        ></el-table-column> -->
+      </el-table>
+      <el-pagination
+        style="margin-top: 20px"
+        :current-page="query.page"
+        :page-sizes="[5, 10, 15]"
+        :page-size="query.limit"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      query: {
+        ispublish: "",
+        page: 1,
+        limit: 10,
+      },
+      total: 0,
+      isLoading: false,
+      tableList: [],
+    };
+  },
+  methods: {
+    handleSizeChange(val) {
+      this.query.limit = val;
+    },
+    handleCurrentChange(val) {
+      this.query.page = val;
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.audit-message-container {
+  width: 100%;
+  padding: 20px 10px;
+  .search {
+    padding: 10px;
+  }
+  .table{
+    padding: 10px;
+  }
+}
+</style>

@@ -1,0 +1,67 @@
+    /* 主目录宽度 */
+    .sidebar {
+        width: 250px;
+        padding-left: 10px;
+        /* margin-top: 50px; */
+      }
+  
+      .sidebar-toggle {
+        width: 250px;
+      }
+  
+      /* 主区域位置 */
+      .content {
+        left: 220px;
+        padding-top: 10px;
+      }
+  
+      /* 主区域宽度 */
+      .markdown-section {
+        max-width: 90%;
+      }
+  
+      /* 子目录位置及宽度 */
+      aside.toc-nav {
+        margin-right: 0;
+        width: 200px;
+      }
+  
+      /* 子侧边栏文字样式 */
+      .toc-nav .page_toc [class^='lv'] a {
+        color: #000;
+        font-weight: bold;
+      }
+  
+      /* 选中的子目录边框色 */
+      .toc-nav .page_toc .active {
+        border-left-color: #36f;
+      }
+  
+      /* 子目录hover颜色 */
+      .page_toc div[class^="lv"] a:hover span {
+        color: #36f !important;
+        border-left-color: #36f;
+      }
+  
+      /* .mynav {
+        position: fixed;
+        height: 50px;
+        width: 100%;
+        z-index: 99999999;
+        background-color: #fff;
+        box-shadow: 3px 3px 3px #ccc;
+      }
+  
+  
+      .app-nav{
+        position: fixed;
+        z-index: 9999999999999999999;
+        margin-top: 10px;
+      } */
+  
+
+
+table th {
+	width: 100vw;
+    text-align: center;
+}

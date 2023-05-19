@@ -1,0 +1,134 @@
+<template>
+  <div>
+    <el-card>
+      <div class="container">
+        <div class="logbox" v-for="(item, index) in updateLogData" :key="index">
+          <div class="head">
+            <span
+              >更新时间 :{{ item.modifyTime | toDate }} 版本号:
+              {{ item.version }}
+            </span>
+          </div>
+          <div class="logbody" v-html="item.modifyLog"></div>
+        </div>
+      </div>
+      <el-pagination
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="logParams.page"
+        :page-sizes="[5, 20, 30, 40]"
+        :page-size="logParams.limit"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+      >
+      </el-pagination>
+    </el-card>
+  </div>
+</template>
+<script>
+import { updateLog } from "@/api/MedproVersion";
+export default {
+  data() {
+    return {
+      logParams: {
+        os: "",
+        page: 1,
+        limit: 5,
+      },
+      total: 0,
+      updateLogData: [],
+    };
+  },
+  created() {
+    this.logParams.os = this.$route.query.os;
+    this.getUpdateLog();
+  },
+  methods: {
+    async getUpdateLog() {
+      const res = await updateLog(this.logParams);
+      if (res.code == 200) {
+        this.total = res.data.total;
+        let arr = [];
+        res.data.items.forEach((e) => {
+          let obj = {};
+          obj["version"] = e.version;
+          obj["modifyTime"] = e.modifyTime;
+          // \n 替换成 换行
+          obj["modifyLog"] = e.modifyLog.split("\n").join("<nav></nav>");
+          arr.push(obj);
+        });
+        console.log(arr);
+        this.updateLogData = arr;
+      }
+    },
+    handleSizeChange(val) {
+      this.logParams.limit = val;
+      this.getUpdateLog();
+    },
+    handleCurrentChange(val) {
+      this.logParams.page = val;
+      this.getUpdateLog();
+    },
+  },
+};
+</script>
+
+<style scoped>
+.container {
+  width: 100%;
+  box-sizing: border-box;
+  height: 500px;
+  /* background-color: chocolate; */
+  overflow-y: scroll;
+}
+.logbox {
+  margin-bottom: 30px;
+}
+.logbox .head {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+  font-size: 14px;
+  height: 40px;
+  line-height: 40px;
+  /* background-color: cornflowerblue; */
+}
+.logbox .head .downloadSdk {
+  text-decoration: none;
+  color: #1684fc;
+}
+.logbox .logbody {
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  background-color: #f8f9fa;
+}
+.img {
+  width: 70px;
+  height: 70px;
+  /* background-color: chocolate; */
+  border-radius: 5px;
+  margin-left: 15px;
+}
+.sdk_text {
+  flex: 1;
+  padding-left: 10px;
+}
+.sdk_type {
+  font-weight: 700;
+  font-size: 14px;
+}
+.sdk_time {
+  color: #aaa8a7;
+  font-size: 13px;
+  margin: 5px 0;
+}
+.sdk_log {
+  font-size: 13px;
+}
+.sdk_log a {
+  text-decoration: none;
+  margin-right: 20px;
+  color: #1684fc;
+}
+</style>

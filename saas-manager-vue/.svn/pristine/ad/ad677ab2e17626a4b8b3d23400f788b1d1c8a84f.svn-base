@@ -1,0 +1,1306 @@
+<template>
+  <div>
+    <div class="topTab" v-if="false">
+      <!-- $store.getters.roles[0] != 'ADMIN' &&
+        $store.getters.roles[0] != 'BUSINESS' &&
+        $store.getters.roles[0] != 'ADVANCED_OPERATOR' -->
+      <el-radio-group
+        :disabled="isLoading"
+        v-model="subAccount.userType"
+        @change="handleChangeUser"
+      >
+        <el-radio-button :label="1">客户管理</el-radio-button>
+        <el-radio-button :label="0">公司员工管理</el-radio-button>
+      </el-radio-group>
+    </div>
+    <el-card>
+      <el-row class="box" :gutter="10">
+        <el-col :span="6">
+          <div class="grid-content bg-purple">
+            <el-input
+              v-model="subAccount.name"
+              clearable
+              :placeholder="
+                subAccount.userType == 1
+                  ? '请输入账号名称/登录邮箱/公司名称'
+                  : '请输入账号名称/登录邮箱'
+              "
+              @clear="clear"
+              @keyup.native="trimName('subAccount', 'name')"
+            />
+          </div>
+        </el-col>
+
+        <el-col
+          :span="4"
+          v-if="
+            (subAccount.userType == 1 && $store.getters.roles[0] == 'ADMIN') ||
+            (subAccount.userType == 0 &&
+              $store.getters.roles[0] != 'BUSINESS_DIRECTOR' &&
+              $store.getters.roles[0] != 'OPERATOR_DIRECTOR')
+          "
+        >
+          <div class="grid-content bg-purple">
+            <el-select
+              v-model="subAccount.role"
+              placeholder="选择权限"
+              clearable
+              @clear="clear"
+            >
+              <template v-for="(item, i) in options">
+                <el-option :key="i" :label="item.label" :value="item.value" />
+              </template>
+            </el-select>
+          </div>
+        </el-col>
+        <el-col :span="4">
+          <div class="grid-content bg-purple">
+            <el-select
+              v-model="subAccount.sts"
+              placeholder="状态"
+              clearable
+              @clear="clear"
+            >
+              <el-option
+                v-for="(item, i) in options1"
+                :key="i"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+          </div>
+        </el-col>
+        <el-col :span="4">
+          <div class="grid-content bg-purple">
+            <el-button type="primary" @click="searchAccount">搜索</el-button>
+          </div>
+        </el-col>
+      </el-row>
+    </el-card>
+    <el-card class="table">
+      <div class="top">
+        <div
+          class="show"
+          v-if="subAccount.userType === 1 && $store.getters.roles[0] != 'ADMIN'"
+        >
+          <p>维度</p>
+          <el-checkbox v-model="showArr.app"><span>应用</span></el-checkbox>
+          <el-checkbox v-model="showArr.subAccountVoList"
+            ><span>子账户</span></el-checkbox
+          >
+          <el-checkbox v-model="showArr.mainApp"
+            ><span>主营应用</span></el-checkbox
+          >
+          <el-checkbox v-model="showArr.learnWay"
+            ><span>了解途径</span></el-checkbox
+          >
+        </div>
+        <el-button
+          v-if="
+            ($store.getters.roles[0] != 'MANAGEMENT' &&
+              subAccount.userType != 1) ||
+            $store.getters.roles[0] == 'ADMIN'
+          "
+          type="primary"
+          class="addAccount"
+          @click="addAccount"
+          >新增账户</el-button
+        >
+      </div>
+
+      <el-table
+        :data="AccountTable"
+        :header-cell-style="{ background: '#f7f8fa', color: '#000' }"
+        v-loading="isLoading"
+        :key="tableKey"
+      >
+        <el-table-column
+          v-if="
+            $store.state.user.roles[0] !== 'ADMIN' && subAccount.userType != 0
+          "
+          align="center"
+          prop="company"
+          label="公司名称"
+          min-width="150px"
+        >
+          <template slot-scope="{ row }">
+            {{ row.company ? row.company : "-" }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          align="center"
+          prop="name"
+          label="账号名称"
+          min-width="150px"
+          ><template slot-scope="{ row }">
+            {{ row.name }}
+          </template></el-table-column
+        >
+
+        <el-table-column
+          align="center"
+          prop="loginId"
+          label="登陆邮箱"
+          width="180"
+        />
+
+        <el-table-column align="center" prop="role" label="角色">
+          <template slot-scope="{ row }">
+            {{
+              row.role == 2
+                ? "管理员"
+                : row.role == 3
+                ? "运营"
+                : row.role == 4
+                ? "报表"
+                : row.role == 5
+                ? "审核"
+                : row.role == 6
+                ? "商务"
+                : row.role == 7
+                ? "媒体"
+                : row.role == 8
+                ? "商务总监"
+                : row.role == 9
+                ? "运营总监"
+                : row.role == 10
+                ? "技术"
+                : row.role == 11
+                ? "财务"
+                : row.role == 12
+                ? "管理层"
+                : row.role == 13
+                ? "高级运营"
+                : ""
+            }}
+          </template>
+        </el-table-column>
+
+        <!-- 超管登陆时,显示管理员的子账户数量 -->
+        <el-table-column
+          v-if="
+            (showArr.subAccountVoList && subAccount.userType == 1) ||
+            (subAccount.userType == 0 &&
+              ($store.state.user.roles[0] == 'BUSINESS_DIRECTOR' ||
+                $store.state.user.roles[0] == 'OPERATOR_DIRECTOR' ||
+                $store.state.user.roles[0] == 'BUSINESS'))
+          "
+          align="center"
+          width="100px"
+          :label="
+            subAccount.userType == 1
+              ? '子账户'
+              : $store.getters.roles[0] == 'BUSINESS_DIRECTOR'
+              ? '客户数'
+              : $store.getters.roles[0] == 'OPERATOR_DIRECTOR'
+              ? '应用数'
+              : '客户数'
+          "
+        >
+          <template slot-scope="scope">
+            <span class="subaccountchild" @click="handleCheck(scope.row)">
+              {{ getsubAccountVoNum(scope.row) }}</span
+            >
+          </template>
+        </el-table-column>
+        <el-table-column
+          v-if="
+            $store.state.user.roles[0] !== 'ADMIN' && subAccount.userType != 0
+          "
+          align="center"
+          prop="contact"
+          label="联系人"
+        >
+          <template slot-scope="{ row }">
+            {{ row.contact ? row.contact : "-" }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          v-if="
+            $store.state.user.roles[0] != 'ADMIN' &&
+            $store.state.user.roles[0] != 'OPERATOR_DIRECTOR'
+          "
+          align="center"
+          prop="mobile"
+          :label="'手机号码'"
+          width="120px"
+        >
+          <template slot-scope="{ row }">
+            {{ row.mobile ? row.mobile : "-" }}
+          </template> </el-table-column
+        ><el-table-column
+          v-if="showArr.app"
+          align="center"
+          prop="appList"
+          width="60px"
+          label="应用"
+        >
+          <template slot-scope="{ row }">
+            {{ row.appList ? row.appList.length + "个" : "0个" }}
+          </template>
+        </el-table-column>
+
+        <el-table-column
+          v-if="$store.state.user.roles[0] !== 'ADMIN' && subAccount.role === 2"
+          align="center"
+          prop="businessName"
+          label="负责商务"
+        >
+          <template slot-scope="{ row }">
+            {{ row.businessName ? row.businessName : "-" }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          v-if="showArr.mainApp"
+          align="center"
+          prop="mainApp"
+          label="主营应用"
+        >
+          <template slot-scope="{ row }">
+            {{ row.mainApp ? row.mainApp : "-" }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          v-if="showArr.learnWay"
+          align="center"
+          prop="mainApp"
+          label="了解途径"
+        >
+          <template slot-scope="{ row }">
+            {{
+              row.learnWay == null
+                ? "-"
+                : row.learnWay == 0
+                ? "-"
+                : row.learnWay == 1
+                ? title + "官网"
+                : row.learnWay == 2
+                ? title + "公众号"
+                : row.learnWay == 3
+                ? title + "商务"
+                : row.learnWay == 4
+                ? "朋友推荐"
+                : row.learnWay == 5
+                ? "网络文章"
+                : row.learnWay == 6
+                ? "其他"
+                : ""
+            }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="sts" label="状态" align="center">
+          <template slot-scope="{ row }">
+            <div>
+              <el-tag v-if="row.sts === 'A'">启用</el-tag>
+              <el-tag v-if="row.sts === 'S'" type="danger">停用</el-tag>
+            </div>
+            <template />
+          </template>
+        </el-table-column>
+        <el-table-column
+          v-if="$store.getters.roles[0] != 'BUSINESS'"
+          prop="sts"
+          label="操作"
+          align="center"
+          width="150px"
+        >
+          <template slot-scope="{ row }">
+            <div class="tabledo">
+              <el-tooltip content="编辑" placement="top" effect="light">
+                <div class="doicon" @click="editAccount(row)">
+                  <svg-icon
+                    style="color: #3685df"
+                    class="svgicon"
+                    icon-class="edit"
+                  ></svg-icon>
+                </div>
+              </el-tooltip>
+              <el-tooltip content="设置权限" placement="top" effect="light">
+                <div
+                  v-if="
+                    row.role === 2 &&
+                    ($store.getters.roles[0] == 'SUPER_ADMIN' ||
+                      $store.getters.roles[0] == 'MANAGEMENT' ||
+                      $store.getters.roles[0] == 'TECHNOLOGY' ||
+                      $store.getters.roles[0] == 'OPERATOR_DIRECTOR' ||
+                      $store.getters.roles[0] == 'BUSINESS_DIRECTOR')
+                  "
+                  class="filter-item doicon"
+                  @click="setPermissions(row)"
+                >
+                  <svg-icon
+                    style="color: rgb(0, 47, 167)"
+                    class="svgicon power"
+                    icon-class="power"
+                  ></svg-icon>
+                </div>
+              </el-tooltip>
+              <el-tooltip content="删除" placement="top" effect="light">
+                <div
+                  v-if="$store.getters.roles[0] != 'MANAGEMENT'"
+                  class="filter-item doicon"
+                  @click="delAccount(row)"
+                >
+                  <svg-icon
+                    style="color: #ff0000"
+                    class="svgicon"
+                    icon-class="delete"
+                  ></svg-icon>
+                </div>
+              </el-tooltip>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        style="margin: 30px 0 0 0"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="subAccount.page"
+        :page-sizes="[5, 10, 20]"
+        :page-size="subAccount.limit"
+        layout="total,sizes,prev,pager,next,jumper"
+        :total="total"
+      />
+    </el-card>
+    <!-- 添加 -->
+    <el-dialog
+      :title="isAdd ? '添加账号' : '编辑账号'"
+      :visible.sync="accountDialogVisible"
+      width="50%"
+      @close="closeDialog"
+    >
+      <el-form
+        ref="ruleForm"
+        :rules="rules"
+        :model="accountForm"
+        label-width="130px"
+      >
+        <el-form-item :label="'账号名称'" prop="name">
+          <el-input
+            v-model="accountForm.name"
+            maxlength="30"
+            placeholder="请输入账号名称"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="登录邮箱" :prop="isAdd ? 'loginId' : ''">
+          <el-input
+            v-model="accountForm.loginId"
+            :disabled="!isAdd"
+            placeholder="请输入登录邮箱"
+          />
+        </el-form-item>
+        <el-form-item v-if="isAdd" label="密码" prop="password">
+          <el-input
+            v-model="accountForm.password"
+            placeholder="密码"
+            type="password"
+            show-password
+          />
+        </el-form-item>
+        <el-form-item label="手机号码" prop="mobile">
+          <el-input placeholder="请输入手机号码" v-model="accountForm.mobile" />
+        </el-form-item>
+        <el-form-item label="角色" prop="role">
+          <el-radio-group v-model="accountForm.role">
+            <el-radio
+              class="radio_item"
+              v-if="
+                $store.getters.roles[0] == 'SUPER_ADMIN' ||
+                $store.getters.roles[0] == 'TECHNOLOGY' ||
+                $store.getters.roles[0] == 'MANAGEMENT' ||
+                $store.getters.roles[0] == 'BUSINESS_DIRECTOR' ||
+                $store.getters.roles[0] == 'OPERATOR_DIRECTOR'
+              "
+              :disabled="disabled"
+              :label="2"
+              >管理员</el-radio
+            >
+            <el-radio
+              class="radio_item"
+              v-if="
+                isShow &&
+                $store.getters.roles[0] != 'BUSINESS_DIRECTOR' &&
+                $store.getters.roles[0] != 'OPERATOR_DIRECTOR'
+              "
+              :label="3"
+              >运营</el-radio
+            >
+            <el-radio
+              class="radio_item"
+              v-if="
+                isShow &&
+                $store.getters.roles[0] != 'BUSINESS_DIRECTOR' &&
+                $store.getters.roles[0] != 'OPERATOR_DIRECTOR'
+              "
+              :label="4"
+              >报表</el-radio
+            >
+            <el-radio
+              class="radio_item"
+              v-if="isShow && $store.getters.creative === 1"
+              :label="5"
+              >审核</el-radio
+            >
+            <el-radio
+              class="radio_item"
+              v-if="
+                $store.getters.roles[0] !== 'ADMIN' &&
+                $store.getters.roles[0] !== 'OPERATOR_DIRECTOR'
+              "
+              :disabled="disabled"
+              :label="6"
+              >商务</el-radio
+            >
+            <el-radio
+              class="radio_item"
+              v-if="$store.state.user.mediaAccess == 1"
+              :disabled="disabled"
+              :label="7"
+              >媒体</el-radio
+            >
+            <el-radio
+              class="radio_item"
+              v-if="
+                $store.getters.roles[0] == 'SUPER_ADMIN' ||
+                $store.getters.roles[0] == 'TECHNOLOGY' ||
+                $store.getters.roles[0] == 'MANAGEMENT'
+              "
+              :disabled="disabled"
+              :label="8"
+              >商务总监</el-radio
+            >
+            <el-radio
+              class="radio_item"
+              v-if="
+                $store.getters.roles[0] == 'SUPER_ADMIN' ||
+                $store.getters.roles[0] == 'TECHNOLOGY' ||
+                $store.getters.roles[0] == 'MANAGEMENT'
+              "
+              :disabled="disabled"
+              :label="9"
+              >运营总监</el-radio
+            >
+            <el-radio
+              class="radio_item"
+              v-if="
+                $store.getters.roles[0] == 'SUPER_ADMIN' ||
+                $store.getters.roles[0] == 'TECHNOLOGY' ||
+                $store.getters.roles[0] == 'MANAGEMENT'
+              "
+              :disabled="disabled"
+              :label="10"
+              >技术</el-radio
+            >
+            <el-radio
+              class="radio_item"
+              v-if="
+                $store.getters.roles[0] == 'SUPER_ADMIN' ||
+                $store.getters.roles[0] == 'TECHNOLOGY' ||
+                $store.getters.roles[0] == 'MANAGEMENT'
+              "
+              :disabled="disabled"
+              :label="11"
+              >财务</el-radio
+            >
+            <el-radio
+              class="radio_item"
+              v-if="
+                $store.getters.roles[0] == 'SUPER_ADMIN' ||
+                $store.getters.roles[0] == 'TECHNOLOGY' ||
+                $store.getters.roles[0] == 'MANAGEMENT'
+              "
+              :disabled="disabled"
+              :label="12"
+              >管理层</el-radio
+            >
+            <el-radio
+              class="radio_item"
+              v-if="
+                $store.getters.roles[0] == 'OPERATOR_DIRECTOR' ||
+                $store.getters.roles[0] == 'MANAGEMENT' ||
+                $store.getters.roles[0] == 'SUPER_ADMIN' ||
+                $store.getters.roles[0] == 'TECHNOLOGY'
+              "
+              :disabled="disabled"
+              :label="13"
+              >高级运营</el-radio
+            >
+          </el-radio-group>
+        </el-form-item>
+
+        <el-form-item
+          v-if="accountForm.role == 6"
+          label="管理员"
+          prop="adminIdList"
+        >
+          <el-select
+            v-model="accountForm.adminIdList"
+            placeholder="请选择管理员"
+            collapse-tags
+            multiple
+          >
+            <el-option
+              v-for="item in adminListForEdit"
+              :key="item.value"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item
+          label="应用范围"
+          prop=""
+          v-if="
+            accountForm.role == 2 ||
+            accountForm.role == 7 ||
+            accountForm.role == 3 ||
+            accountForm.role == 4 ||
+            accountForm.role == 13
+          "
+        >
+          <el-select
+            v-model="department"
+            placeholder="选择应用"
+            multiple
+            collapse-tags
+            @change="getSelectDep"
+          >
+            <div style="padding-left: 10px">
+              <el-checkbox
+                v-model="checkedThing"
+                :style="selfstyle"
+                @change="selectAllThing"
+                >全选</el-checkbox
+              >
+            </div>
+            <el-option
+              v-for="(item, index) in departments"
+              :key="index"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item
+          v-if="accountForm.role == 2"
+          label="商务"
+          prop="businessId"
+        >
+          <el-select v-model="accountForm.businessId" placeholder="请选择">
+            <el-option
+              v-for="(item, i) in businessIdOptions"
+              :key="i"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item v-if="!isAdd" label="状态" prop="sts">
+          <el-select v-model="accountForm.sts" placeholder="请选择">
+            <el-option
+              v-for="(item, i) in options1"
+              :key="i"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <span
+        slot="footer"
+        class="dialog-footer"
+        v-if="$store.getters.roles[0] != 'MANAGEMENT'"
+      >
+        <el-button @click="accountDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="handelAddAccount">确 定</el-button>
+      </span>
+    </el-dialog>
+
+    <!-- 设置权限-->
+    <el-dialog
+      title="设置权限"
+      :visible.sync="permissionsDialogVisible"
+      width="50%"
+      @close="closePermissionsDialog"
+    >
+      <el-form label-width="130px">
+        <el-form-item label="素材审核权限">
+          <el-switch
+            v-model="permissionsForm.creative"
+            :active-value="1"
+            :inactive-value="0"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+          />
+        </el-form-item>
+        <el-form-item label="跳过按钮统一">
+          <el-switch
+            v-model="permissionsForm.skip"
+            :active-value="1"
+            :inactive-value="0"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+          />
+        </el-form-item>
+        <el-form-item label="媒体权限">
+          <el-switch
+            v-model="permissionsForm.mediaAccess"
+            :active-value="1"
+            :inactive-value="0"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+          />
+        </el-form-item>
+
+        <el-form-item label="广告源">
+          <div>
+            <el-checkbox-group v-model="platNames" size="small">
+              <el-checkbox
+                v-for="(item, i) in platOptions"
+                :key="i"
+                :label="item.name"
+              ></el-checkbox>
+            </el-checkbox-group>
+          </div>
+        </el-form-item>
+      </el-form>
+      <span
+        slot="footer"
+        class="dialog-footer"
+        v-if="$store.getters.roles[0] != 'MANAGEMENT'"
+      >
+        <el-button @click="permissionsDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="handlePermissions">确 定</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog
+      :title="
+        subAccount.userType == 1
+          ? '子账户'
+          : $store.getters.roles[0] == 'BUSINESS_DIRECTOR'
+          ? '客户数'
+          : $store.getters.roles[0] == 'OPERATOR_DIRECTOR'
+          ? '应用数'
+          : $store.getters.roles[0] == 'ADMIN'
+          ? '子账户'
+          : ''
+      "
+      :visible.sync="subAccountChild"
+      width="50%"
+    >
+      <el-table :data="childRow" style="width: 100%">
+        <el-table-column
+          align="center"
+          prop="name"
+          label="账号名称"
+          min-width="150px"
+        />
+        <el-table-column
+          align="center"
+          prop="loginId"
+          label="登录邮箱"
+          min-width="150px"
+        />
+        <el-table-column
+          align="center"
+          prop="role"
+          label="角色"
+          min-width="150px"
+        >
+          <template slot-scope="{ row }">
+            <div>
+              <span v-if="row.role === 2">管理员</span>
+              <span v-if="row.role === 3">运营</span>
+              <span v-if="row.role === 4">报表</span>
+              <span v-if="row.role === 5">审核</span>
+              <span v-if="row.role === 6">商务</span>
+              <span v-if="row.role === 7">媒体</span>
+            </div>
+          </template></el-table-column
+        ></el-table
+      >
+    </el-dialog>
+  </div>
+</template>
+<script>
+import {
+  accountList,
+  addAccount,
+  delSonAccount,
+  updateAccount,
+  handlePermissions,
+  getBusinessIdOptions,
+  getAdminListForEdit,
+} from "@/api/advanced";
+import { getAppList, getAppListByRole } from "@/api/app";
+import { getPlatOptions } from "@/api/plat";
+import { addMessage } from "@/api/message.js";
+import { toDate } from "@/utils/toTimer";
+// import { Encrypt } from "@/utils/secret";
+import { Encrypt } from "@/utils/jsencrypt";
+
+// import { mapGetters} from 'vuex'
+export default {
+  computed: {
+    title() {
+      return this.$store.getters.title;
+    },
+  },
+  data() {
+    // 是否包含一位数字
+    const regNumber = /(?=.*[\d])/;
+    // 是否包含一位小写字母
+    const regLetter = /(?=.*[a-z])/;
+    // 是否包含一位大写字母
+    const regLetters = /(?=.*[A-Z])/;
+    // 是否包含一位特殊字符
+    const regCharacter =
+      /(?=.*[`~!@#$%^&*()_\-+=<>?:"{}|,.\/;'\\[\]·~！@#￥%……&*（）——\-+={}|《》？：“”【】、；‘’，。、])/;
+    // 校验新密码
+    const validatePass = (rule, value, callback) => {
+      if (value === "") {
+        callback(new Error("新密码不能为空！请重新输入"));
+      } else {
+        if (value.length > 16) {
+          callback(new Error("密码长度不超过16个字符。"));
+        } else if (value.length < 8) {
+          callback(new Error("密码不低于8位，包含大小字母、数字、特殊符号"));
+        } else {
+          if (!/^[a-zA-Z\d]{1}/.test(value)) {
+            callback(new Error("密码必须以英文大小写字母或数字开头！"));
+          } else {
+            if (!regNumber.test(value)) {
+              callback(
+                new Error("密码不低于8位，包含大小字母、数字、特殊符号!")
+              );
+              // callback(new Error("密码必须包含一位数字!"));
+            } else if (!regLetter.test(value)) {
+              callback(
+                new Error("密码不低于8位，包含大小字母、数字、特殊符号!")
+              );
+              // callback(new Error("密码必须包含一位小写字母!"));
+            } else if (!regLetters.test(value)) {
+              callback(
+                new Error("密码不低于8位，包含大小字母、数字、特殊符号!")
+              );
+              // callback(new Error("密码必须包含一位大写字母!"));
+            } else if (!regCharacter.test(value)) {
+              callback(
+                new Error("密码不低于8位，包含大小字母、数字、特殊符号!")
+              );
+              // callback(new Error("密码必须包含一位特殊字符!"));
+            } else {
+              callback();
+            }
+          }
+        }
+      }
+    };
+    return {
+      isLoading: false,
+      subAccount: {
+        name: "",
+        loginId: "",
+        role: 2,
+        sts: "",
+        businessId: null,
+        page: 1,
+        limit: 10,
+        userType: 1,
+      },
+      total: 0,
+      childRow: [],
+      showArr: {
+        app: false,
+        subAccountVoList: false,
+        mainApp: false,
+        learnWay: false,
+      },
+      subAccountChild: false,
+      accountDialogVisible: false,
+      permissionsDialogVisible: false,
+      AccountTable: [],
+      platOptions: [],
+      businessIdOptions: [],
+      platNames: [],
+      isAdd: true,
+      isShow: true,
+      disabled: false,
+
+      options: [
+        // {
+        //   value: "3",
+        //   label: "运营",
+        // },
+        // {
+        //   value: "4",
+        //   label: "报表",
+        // },
+      ],
+      editBeforeRow: {},
+      accountForm: {
+        name: "",
+        loginId: "",
+        password: "",
+        appList: [],
+        role: 2,
+        sts: "",
+        businessId: null,
+      },
+      permissionsForm: {
+        userId: null,
+        platIds: [],
+        skip: 0,
+        creative: 0,
+        mediaAccess: 0,
+      },
+      checkedThing: false,
+      department: [],
+      selfstyle: {
+        textAlign: "right",
+        paddingRight: "10px",
+      },
+      options1: [
+        {
+          value: "A",
+          label: "启用",
+        },
+        {
+          value: "S",
+          label: "暂停",
+        },
+      ],
+      tableData: [],
+      departments: [],
+      adminListForEdit: [],
+      rules: {
+        name: [{ required: true, message: "请输入账号名称", trigger: "blur" }],
+        loginId: [
+          {
+            required: true,
+            message: "请填写邮箱,作为登录账号名",
+            trigger: "blur",
+          },
+          {
+            message: "邮箱无效",
+            trigger: "blur",
+            pattern: /^\w+@[a-z0-9]+\.[a-z]{2,4}$/,
+          },
+        ],
+        role: [{ required: true, message: "请选择权限", trigger: "blur" }],
+        sts: [{ required: true, message: "请选择状态", trigger: "blur" }],
+        password: [
+          { required: true, trigger: "blur", validator: validatePass },
+        ],
+      },
+      // 动态切换table数据时防止table元素不更新，出现数据渲染混乱
+      tableKey: "" + new Date(),
+    };
+  },
+  watch: {
+    "accountForm.role": {
+      handler(val, oldval) {
+        if (val == 7 || val == 2) {
+          this.getAppListByRole();
+        } else if (oldval == 7 || oldval == 2) {
+          this.getAppList();
+        }
+      },
+    },
+  },
+
+  mounted() {
+    if (this.$store.getters.roles[0] == "BUSINESS") {
+      this.subAccount.userType = 1;
+    }
+    this.subAccount.loginId = this.$store.state.user.loginId;
+    if (
+      this.$store.getters.roles[0] === "SUPER_ADMIN" ||
+      this.$store.getters.roles[0] === "TECHNOLOGY" ||
+      this.$store.getters.roles[0] === "MANAGEMENT"
+    ) {
+      this.options.unshift({ value: 3, label: "运营" });
+      this.options.unshift({ value: 4, label: "报表" });
+
+      this.options.unshift({ value: 6, label: "商务" });
+      this.options.unshift({ value: 11, label: "财务" });
+      this.options.unshift({ value: 8, label: "商务总监" });
+      this.options.unshift({ value: 9, label: "运营总监" });
+      this.options.unshift({ value: 10, label: "技术" });
+      this.options.unshift({ value: 12, label: "管理层" });
+    }
+    if (this.$store.getters.roles[0] == "ADMIN") {
+      this.options.unshift({ value: 3, label: "运营" });
+      this.options.unshift({ value: 4, label: "报表" });
+      if (this.$store.state.user.mediaAccess == 1) {
+        this.options.unshift({ value: 7, label: "媒体" });
+      }
+      if (this.$store.state.user.creative == 1) {
+        this.options.unshift({ value: 5, label: "审核" });
+      }
+      this.subAccount.role = "";
+      this.accountForm.role = "";
+    }
+    // if (this.$store.getters.roles[0] == "BUSINESS_DIRECTOR") {
+    //   this.subAccount.role = 6;
+    // }
+    // if (this.$store.getters.roles[0] == "OPERATOR_DIRECTOR") {
+    //   this.subAccount.role = 13;
+    // }
+
+    this.getAccountList();
+    this.getAppList();
+    this.initPlatOptions();
+    this.initBusinessIdOptions();
+  },
+  methods: {
+    async getAdminListForEdit(row) {
+      let resp;
+      if (row.subAccountVoList && row.subAccountVoList.length > 0) {
+        resp = await getAdminListForEdit({ role: 2, businessId: row.id });
+      } else {
+        resp = await getAdminListForEdit({ role: 2, businessId: "" });
+      }
+      this.adminListForEdit = resp.data;
+    },
+    // 根据用户类别  获取用户列表数据
+    handleChangeUser(val) {
+      for (let key in this.showArr) {
+        this.showArr[key] = false;
+      }
+      if (!val) {
+        this.subAccount.role = "";
+      } else {
+        this.subAccount.role = 2;
+      }
+      // if (val && this.$store.getters.roles[0] == "BUSINESS_DIRECTOR") {
+      //   this.subAccount.role = 6;
+      // }
+      // if (val && this.$store.getters.roles[0] == "OPERATOR_DIRECTOR") {
+      //   this.subAccount.role = 13;
+      // }
+      this.getAccountList();
+    },
+
+    clear() {
+      // this.getAccountList();
+    },
+    // 去中间空格
+    trimName(val, value) {
+      this[val][value] = this[val][value].replace(/\s+/g, "");
+    },
+    getAccountList() {
+      this.isLoading = true;
+      this.tableKey = "" + new Date();
+      accountList(this.subAccount).then((res) => {
+        if (res.code != 200) return;
+
+        this.AccountTable = res.data.items;
+        this.total = res.data.total;
+      });
+      setTimeout(() => {
+        this.isLoading = false;
+      }, 1000);
+    },
+    getAppList() {
+      getAppList().then((res) => {
+        this.departments = res.data;
+      });
+    },
+    getAppListByRole() {
+      let id = null;
+      if (this.accountForm.id) {
+        id = this.accountForm.id;
+      }
+      getAppListByRole({ role: this.accountForm.role, id }).then((res) => {
+        this.departments = res.data;
+      });
+    },
+    addAccount() {
+      this.isShow = true;
+      this.disabled = false;
+      this.accountDialogVisible = true;
+      this.isAdd = true;
+      // this.getAdminListForEdit({});
+    },
+    // 编辑 数据回显
+    editAccount(row) {
+      if (row.subAccountVoList && row.subAccountVoList.length > 0) {
+        row.adminIdList = row.subAccountVoList.map((item) => {
+          return item.id;
+        });
+      }
+      // this.getAdminListForEdit(row);
+      this.isAdd = false;
+      this.accountDialogVisible = true;
+      row = JSON.parse(JSON.stringify(row));
+      if (row.role == 2) {
+        this.disabled = true;
+        this.isShow = false;
+      } else {
+        this.disabled = false;
+        this.isShow = true;
+      }
+      this.accountForm = JSON.parse(JSON.stringify(row));
+      this.editBeforeRow = JSON.parse(JSON.stringify(row));
+      this.department = row.appList;
+    },
+    searchAccount() {
+      if (this.$store.getters.roles[0] !== "SUPER_ADMIN") {
+        this.subAccount.loginId = this.$store.state.user.loginId;
+      }
+      this.subAccount.page = 1;
+
+      this.getAccountList();
+    },
+    // 删除
+    delAccount(row) {
+      this.$confirm("你确定要删除这条子账户吗？", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then(() => {
+          delSonAccount({ id: row.id }).then((res) => {
+            if (res.code != 200) return;
+            this.getAccountList();
+            this.$message.success("删除成功");
+          });
+        })
+        .catch(() => {});
+    },
+    handelAddAccount() {
+      this.$refs.ruleForm.validate((val) => {
+        if (!val) return;
+        // 添加
+        if (this.isAdd) {
+          let password = Encrypt(this.accountForm.password);
+          let accountForm = JSON.parse(JSON.stringify(this.accountForm));
+          accountForm.password = password;
+          addAccount(accountForm).then(async (res) => {
+            if (res.code != 200) return this.$message.error(res.msg);
+            this.$message.success("添加成功");
+            this.getAccountList();
+            this.initBusinessIdOptions();
+            this.accountDialogVisible = false;
+            let userId = res.data.id;
+            if (this.accountForm.businessId) {
+              let time = toDate(Date.now(), "YYYY-MM-DD hh:mm:ss");
+              // 发消息
+              // to 商务
+              await addMessage({
+                type: 1,
+                content: `<p>亲爱的媒介同学：<br/><br/></p><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;新入驻${this.title}平台的开发者，注册邮箱为：${this.accountForm.loginId}，已经分配给您，请在24内与开发者联系。</p><p><br></p><p>${this.title}团队</p>`,
+                title: "【重要！重要！重要！】",
+                publishType: 0,
+                publishTime: time,
+                userIdList: [this.accountForm.businessId],
+              });
+              // to 管理员
+              await addMessage({
+                type: 1,
+                content: `<p>尊敬的开发者：<br/><br/></p><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;感谢您注册使用${this.title}媒体服务平台，24小时内我们商务将通过您预留的信息与您联系，帮助您快速上手使用${this.title}平台。</p><p><br></p><p><br></p><p>${this.title}团队</p>`,
+                title: "【重要】欢迎开发者入驻MadPro媒体服",
+                publishType: 0,
+                publishTime: time,
+                userIdList: [userId],
+              });
+            }
+          });
+        } else {
+          this.accountForm.password = "";
+          updateAccount(this.accountForm).then(async (res) => {
+            if (res.code != 200) return this.$message.error(res.msg);
+            this.$message.success("编辑成功");
+            this.getAccountList();
+            this.initBusinessIdOptions();
+            this.accountDialogVisible = false;
+
+            if (this.editBeforeRow.businessId != this.accountForm.businessId) {
+              let time = toDate(Date.now(), "YYYY-MM-DD hh:mm:ss");
+              // 发消息
+              // to 商务
+              let userId = this.accountForm.id;
+              let resp = await addMessage({
+                type: 1,
+                content: `<p>亲爱的媒介同学：<br/><br/></p><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;注册邮箱为：${this.accountForm.loginId}的开发者，已经分配给您，请在24内与开发者联系。</p><p><br></p><p>${this.title}团队</p>`,
+                title: "【重要！重要！重要！】",
+                publishType: 0,
+                publishTime: time,
+                userIdList: [this.accountForm.businessId],
+              });
+              // to 管理员
+              // let res = await addMessage({
+              //   type: 1,
+              //   content: `<p>尊敬的开发者：<br/><br/></p><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;感谢您注册使用${this.title}媒体服务平台，24小时内我们商务将通过您预留的信息与您联系，帮助您快速上手使用${this.title}平台。</p><p><br></p><p><br></p><p>${this.title}团队</p>`,
+              //   title: "【重要】欢迎开发者入驻MadPro媒体服",
+              //   publishType: 0,
+              //   publishTime: time,
+              //   userIdList: [userId],
+              // });
+            }
+          });
+        }
+      });
+    },
+    setPermissions(row) {
+      this.permissionsDialogVisible = true;
+      this.platNames = [];
+      row = JSON.parse(JSON.stringify(row));
+      this.permissionsForm.userId = row.id;
+      this.permissionsForm.skip = row.skip;
+      this.permissionsForm.creative = row.creative;
+      this.permissionsForm.mediaAccess = row.mediaAccess;
+
+      row.platIds.forEach((item) => {
+        this.platNames.push(
+          this.platOptions.find((plat) => plat.id === item).name
+        );
+      });
+    },
+    getSelectDep(department) {
+      if (department.length === this.departments.length) {
+        this.checkedThing = true;
+      } else {
+        this.checkedThing = false;
+      }
+      this.accountForm.appList = department;
+    },
+    // 应用全选
+    selectAllThing() {
+      this.department = [];
+      if (this.checkedThing) {
+        this.departments.map((item) => {
+          this.department.push(item.id);
+        });
+      } else {
+        this.department = [];
+      }
+      this.accountForm.appList = this.department;
+    },
+    closeDialog() {
+      this.$refs.ruleForm.resetFields();
+      this.accountForm = {
+        name: "",
+        loginId: "",
+        password: "",
+        appList: [],
+        role: "",
+        sts: "",
+      };
+      this.department = [];
+      this.checkedThing = false;
+    },
+    closePermissionsDialog() {
+      this.permissionsDialogVisible = false;
+    },
+    initPlatOptions() {
+      getPlatOptions().then((res) => {
+        this.platOptions = res.data;
+      });
+    },
+    initBusinessIdOptions() {
+      getBusinessIdOptions().then((res) => {
+        this.businessIdOptions = res.data;
+      });
+    },
+    //设置权限
+    handlePermissions() {
+      let platIds = [];
+      this.platNames.forEach((item) => {
+        platIds.push(this.platOptions.find((plat) => plat.name === item).id);
+      });
+      this.permissionsForm.platIds = platIds;
+      handlePermissions(this.permissionsForm).then((res) => {
+        if (res.code != 200) return this.$message.error(res.msg);
+        this.$message.success("编辑成功");
+        this.getAccountList();
+        this.permissionsDialogVisible = false;
+      });
+    },
+    handleSizeChange(val) {
+      this.subAccount.limit = val;
+      this.getAccountList();
+    },
+    handleCurrentChange(val) {
+      this.subAccount.page = val;
+      this.getAccountList();
+    },
+    handleCheck(row) {
+      if (row.role == 3 || row.role == 5 || row.role == 13) return;
+      this.childRow = row.subAccountVoList;
+      this.subAccountChild = true;
+    },
+    getsubAccountVoNum(row) {
+      if (row.role === 3 || row.role === 13) {
+        return row.appList ? row.appList.length + "个" : "0个";
+      } else if (row.role === 6 || row.role === 2) {
+        return row.subAccountVoList
+          ? row.subAccountVoList.length + "个"
+          : "0个";
+      } else {
+        return "0个";
+      }
+    },
+  },
+};
+</script>
+<style lang="scss" scoped>
+.topTab {
+  padding: 10px;
+  background-color: #fff;
+  width: 100%;
+  margin-bottom: 10px;
+}
+.box {
+  display: flex;
+  // justify-content: space-between;
+  // align-items: center;
+  height: 60px;
+}
+.addAccount {
+  margin-bottom: 20px;
+}
+.tabledo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  .doicon {
+    margin: 0 5px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+}
+.top {
+  display: flex;
+  line-height: 35px;
+  justify-content: space-between;
+  .show {
+    margin-left: 30px;
+    display: flex;
+    p {
+      margin-right: 20px;
+      color: #000;
+    }
+    span {
+      color: #000;
+    }
+  }
+}
+.subaccountchild {
+  &:hover {
+    color: blue;
+    cursor: pointer;
+  }
+}
+.table {
+  margin-top: 10px;
+}
+.radio_item {
+  width: 120px;
+  margin: 5px 0 5px 0;
+}
+</style>

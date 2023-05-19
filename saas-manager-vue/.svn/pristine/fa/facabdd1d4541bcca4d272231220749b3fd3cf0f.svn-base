@@ -1,0 +1,174 @@
+<template>
+  <div class="navbar">
+    <div class="collapseBtn" @click="changeOpened">
+      <i
+        :class="{
+          'el-icon-s-fold': $store.state.app.sidebar.opened,
+          'el-icon-s-unfold': !$store.state.app.sidebar.opened,
+          icon: true,
+        }"
+      />
+    </div>
+    <breadcrumb id="breadcrumb-container" class="breadcrumb-container" />
+
+    <div class="right-menu">
+      <template v-if="device !== 'mobile'">
+        <!-- <search id="header-search" class="right-menu-item" />
+        <screenfull id="screenfull" class="right-menu-item hover-effect" />
+        <el-tooltip content="Global Size" effect="dark" placement="bottom">
+          <size-select id="size-select" class="right-menu-item hover-effect" />
+        </el-tooltip> -->
+      </template>
+      <el-dropdown
+        class="avatar-container right-menu-item hover-effect"
+        trigger="hover"
+      >
+        <span style="font-size: 16px">
+          <svg-icon icon-class="user" style="margin-right: 5px" />{{ username
+          }}<i
+            style="margin-left: 3px; font-size: 12px"
+            class="el-icon-caret-bottom"
+          ></i
+        ></span>
+        <el-dropdown-menu slot="dropdown">
+          <el-dropdown-item
+            v-if="$store.state.user.roles[0] === 'SUPER_ADMIN'||$store.state.user.roles[0] === 'ADMIN'"
+            style="border-bottom: 1px solid #ccc"
+          >
+            <router-link to="/advanced/sonAccount">账户管理</router-link>
+          </el-dropdown-item>
+          <el-dropdown-item style="border-bottom: 1px solid #ccc">
+            <router-link to="/advanced/loginMsg">用户信息</router-link>
+          </el-dropdown-item>
+          <el-dropdown-item @click.native="logout">
+            <span style="display: block; margin-left: 12px">退出</span>
+          </el-dropdown-item>
+        </el-dropdown-menu>
+      </el-dropdown>
+    </div>
+  </div>
+</template>
+
+<script>
+import { mapGetters } from "vuex";
+import Breadcrumb from "@/components/Breadcrumb";
+import Hamburger from "@/components/Hamburger";
+import Screenfull from "@/components/Screenfull";
+import SizeSelect from "@/components/SizeSelect";
+import Search from "@/components/HeaderSearch";
+
+export default {
+  components: {
+    Breadcrumb,
+    Hamburger,
+    Screenfull,
+    SizeSelect,
+    Search,
+  },
+  computed: {
+    ...mapGetters(["sidebar", "name", "username", "device"]),
+  },
+  methods: {
+    changeOpened() {
+      // this.$store.state.app.sidebar.opened = !this.$store.state.app.sidebar.opened
+      this.$store.commit("app/TOGGLE_SIDEBAR");
+    },
+    toggleSideBar() {
+      this.$store.dispatch("app/toggleSideBar");
+    },
+    async logout() {
+      await this.$store.dispatch("user/logout");
+      // this.$router.push(`/login?redirect=${this.$route.fullPath}`);
+      this.$router.push(`/login`);
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.navbar {
+  height: 50px;
+  overflow: hidden;
+  position: relative;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+
+  .hamburger-container {
+    line-height: 46px;
+    height: 100%;
+    float: left;
+    cursor: pointer;
+    transition: all 0.3s;
+    -webkit-tap-highlight-color: transparent;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.025);
+    }
+  }
+  .collapseBtn {
+    position: relative;
+    margin: 8px 0 0 15px;
+    width: 40px;
+    height: 35px;
+    border-radius: 5px;
+    background-color: rgb(54, 133, 223);
+    cursor: pointer;
+    .icon {
+      font-size: 16px;
+      line-height: 35px;
+      color: #fff;
+      margin-left: 12px;
+    }
+  }
+  // .collapseBtn:hover {
+  // }
+  .breadcrumb-container {
+    margin-left: 80px;
+    position: absolute;
+    top: 0;
+    float: left;
+  }
+
+  .errLog-container {
+    display: inline-block;
+    vertical-align: top;
+  }
+
+  .right-menu {
+    margin-top: -42px;
+    float: right;
+    height: 150%;
+    line-height: 50px;
+
+    &:focus {
+      outline: none;
+    }
+
+    .right-menu-item {
+      display: inline-block;
+      padding: 0 8px;
+      // height: 100%;
+      font-size: 18px;
+      color: #5a5e66;
+      vertical-align: text-bottom;
+
+      &.hover-effect {
+        cursor: pointer;
+        transition: all 0.3s;
+        color: #999;
+
+        &:hover {
+          color: #555;
+        }
+      }
+    }
+
+    .avatar-container {
+      margin-right: 40px;
+    }
+  }
+}
+::v-deep.avatar-container .el-dropdown-menu--medium .el-dropdown-menu__item {
+  color: red;
+}
+</style>

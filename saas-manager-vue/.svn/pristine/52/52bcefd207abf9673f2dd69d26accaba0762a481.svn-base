@@ -1,0 +1,44 @@
+const path = require('path')
+//打包结果分析工具  打包后进入资源页面，但在开发环境也会打开资源页面
+let BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
+const {
+    CleanWebpackPlugin
+} = require('clean-webpack-plugin')
+const name = process.env.VUE_APP_TITLE || '' // page title
+function resolve(dir) {
+    return path.join(__dirname, dir)
+}
+if (process.env.NODE_ENV === "production") {
+    module.exports = {
+        name: name,
+        resolve: {
+            // extensions: ['.js', '.vue', '.json'],
+            alias: {
+                '@': resolve('src')
+            }
+        },
+        devtool: "none",
+        plugins: [new BundleAnalyzerPlugin(), new CleanWebpackPlugin()],
+        // 生产环境下，使用cdn引入这些全局变量
+        externals: {
+            vue: "Vue",
+            vuex: "Vuex",
+            "vue-router": "VueRouter",
+            axios: "axios",
+            echarts: 'echarts',
+            '@wangeditor/editor': 'wangEditor',
+            // xlsx: 'xlsx',
+            'element-ui': 'ELEMENT'
+        }
+    }
+} else {
+    module.exports = {
+        name: name,
+        resolve: {
+            // extensions: ['.js', '.vue', '.json'],
+            alias: {
+                '@': resolve('src')
+            }
+        }
+    }
+}

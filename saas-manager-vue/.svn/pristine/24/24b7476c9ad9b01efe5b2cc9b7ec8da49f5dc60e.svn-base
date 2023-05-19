@@ -1,0 +1,181 @@
+<template>
+  <div :class="classObj" class="app-wrapper">
+    <div class="heard">
+      <div class="header_left">
+        <el-image
+          style="height: 35px;width:170px; margin-left: 10px; margin-top: 10px"
+          :src="'https://creative.bxsnews.com/medpro/imgs/header1_logo.png'"
+        ></el-image>
+      </div>
+      <div class="header_right">
+        <el-dropdown
+          class="avatar-container right-menu-item hover-effect"
+          trigger="hover"
+        >
+          <span style="font-size: 16px">
+            <svg-icon icon-class="user" style="margin-right: 5px" />{{
+              $store.state.user.username
+            }}<i
+              style="margin-left: 3px; font-size: 12px"
+              class="el-icon-caret-bottom"
+            ></i
+          ></span>
+          <el-dropdown-menu slot="dropdown">
+            <el-dropdown-item
+              v-if="
+                $store.state.user.roles[0] === 'SUPER_ADMIN' ||
+                $store.state.user.roles[0] === 'ADMIN'
+              "
+              style="border-bottom: 1px solid #ccc"
+            >
+              <router-link to="/advanced/sonAccount">账户管理</router-link>
+            </el-dropdown-item>
+            <el-dropdown-item style="border-bottom: 1px solid #ccc">
+              <router-link to="/advanced/loginMsg">用户信息</router-link>
+            </el-dropdown-item>
+            <el-dropdown-item @click.native="logout">
+              <span style="display: block; margin-left: 12px">退出</span>
+            </el-dropdown-item>
+          </el-dropdown-menu>
+        </el-dropdown>
+      </div>
+    </div>
+    <!-- 朦层 -->
+    <div
+      v-if="device === 'mobile' && sidebar.opened"
+      class="drawer-bg"
+      @click="handleClickOutside"
+    />
+    <!-- 边栏菜单 -->
+    <sidebar style="margin-top: 50px" class="sidebar-container" />
+
+    <div
+      style="
+        margin-top: 50px;
+        border-left: 10px solid #eee;
+        border-top: 10px solid #eee;
+      "
+      :class="{ hasTagsView: needTagsView }"
+      class="main-container"
+    >
+      <div :class="{ 'fixed-header': fixedHeader }">
+        <!-- 面包屑 -->
+        <navbar />
+        <!-- <tags-view v-if="needTagsView" /> -->
+      </div>
+      <!-- 主区域 -->
+      <app-main />
+    </div>
+  </div>
+</template>
+
+<script>
+import { AppMain, Navbar, Sidebar, TagsView } from "./components";
+import ResizeMixin from "./mixin/ResizeHandler";
+import { mapState } from "vuex";
+
+export default {
+  name: "Layout",
+  components: {
+    AppMain,
+    Navbar,
+    Sidebar,
+    TagsView,
+  },
+  data() {
+    return {};
+  },
+
+  mixins: [ResizeMixin],
+  computed: {
+    ...mapState({
+      sidebar: (state) => state.app.sidebar,
+      device: (state) => state.app.device,
+      needTagsView: (state) => state.settings.tagsView,
+      fixedHeader: (state) => state.settings.fixedHeader,
+    }),
+    classObj() {
+      return {
+        hideSidebar: !this.sidebar.opened,
+        openSidebar: this.sidebar.opened,
+        withoutAnimation: this.sidebar.withoutAnimation,
+        mobile: this.device === "mobile",
+      };
+    },
+  },
+  methods: {
+    handleClickOutside() {
+      this.$store.dispatch("app/closeSideBar", { withoutAnimation: false });
+    },
+    async logout() {
+      await this.$store.dispatch("user/logout");
+      // this.$router.push(`/login?redirect=${this.$route.fullPath}`);
+      this.$router.push(`/login`);
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@import "~@/styles/mixin.scss";
+@import "~@/styles/variables.scss";
+
+.app-wrapper {
+  .heard {
+    height: 50px;
+    width: 100%;
+    // border-bottom: 1px solid #ccc;
+    box-shadow: 1px 1px 5px #ccc;
+
+    background-color: rgba(250, 250,250, 1.0);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 999;
+    .header_right {
+      position: absolute;
+      right: 20px;
+      top: 15px;
+    }
+  }
+  @include clearfix;
+  position: relative;
+  height: 100%;
+  width: 100%;
+
+  &.mobile.openSidebar {
+    position: fixed;
+    top: 0;
+  }
+}
+
+.drawer-bg {
+  background: #000;
+  opacity: 0.3;
+  width: 100%;
+  top: 0;
+  height: 100%;
+  position: absolute;
+  z-index: 999;
+}
+// ::v-deep.app-wrapper .sidebar-container{
+//   width: 100px;
+// }
+
+.fixed-header {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 9;
+  width: calc(100% - #{$sideBarWidth});
+  transition: width 0.28s;
+}
+
+.hideSidebar .fixed-header {
+  width: calc(100% - 54px);
+}
+
+.mobile .fixed-header {
+  width: 100%;
+}
+</style>

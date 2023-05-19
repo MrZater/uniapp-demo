@@ -1,0 +1,35 @@
+// The Vue build version to load with the `import` command
+// (runtime-only or standalone) has been set in webpack.base.conf with an alias.
+import Vue from 'vue'
+import Cookies from 'js-cookie'
+import 'normalize.css/normalize.css'
+import Element from 'element-ui'
+import './styles/element-variables.scss'
+import './config/global.js'
+import '@/styles/index.scss'
+// 阿里矢量图标
+import './assets/fonts/iconfont.css'
+import App from './App'
+import store from './store'
+import router from './router'
+import './icons' // icon
+import './permission' // permission control
+import * as filters from './filters'
+Vue.use(Element, {
+  size: Cookies.get('size') || 'medium' // set element-ui default size
+})
+Object.keys(filters).forEach(key => {
+  Vue.filter(key, filters[key])
+})
+
+Vue.config.devtools = true
+Vue.config.productionTip = false
+
+/* eslint-disable no-new */
+new Vue({
+  el: '#app',
+  store,
+  router,
+
+  render: h => h(App)
+})

@@ -1,0 +1,8 @@
+
+$selectWidth:90px;// 聚合管理添加流量管理中子分组的选择框宽度
+$selectHeight:30px;// 聚合管理添加流量管理中子分组的选择框高低度
+
+:export {
+  sideBarWidth: $sideBarWidth;
+  selectWidth:$selectWidth;
+}

@@ -1,0 +1,426 @@
+<template>
+  <div class="app-container">
+    <div class="filter-container">
+      <el-select v-model="query.os" placeholder="操作系统" class="filter-item" clearable>
+        <el-option label="全部" value="" />
+        <el-option label="Android" :value="1" />
+        <el-option label="iOS" :value="0" />
+      </el-select>
+      <el-select v-model="query.appIds" placeholder="应用" class="filter-item" filterable :filter-method="filterAppIds" clearable multiple
+        @change="changePlaceOptions">
+        <el-option v-for="item in appOptions" :key="item.id" :label="item.name" :value="item.id" />
+      </el-select>
+      <el-select v-model="query.adplaceIds" placeholder="广告位" class="filter-item" filterable :filter-method="filterPlaceIds" clearable multiple>
+        <el-option v-for="item in placeOptions" :key="item.id" :label="item.name" :value="item.id" />
+      </el-select>
+      <el-select v-model="query.position" placeholder="广告样式" class="filter-item" clearable>
+        <el-option label="全部" value="" />
+        <el-option v-for="item in positionOptions" :key="item.id" :label="item.name" :value="item.id" />
+      </el-select>
+      <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="searchBtn">查询</el-button>
+    </div>
+
+    <div class="body-container">
+      <div class="filter-container">
+        <el-button v-waves type="primary" icon="el-icon-plus" class="filter-item" @click="handleAdd">广告位</el-button>
+      </div>
+      <el-table :key="tableKey" v-loading="listLoading" :data="list" border fit highlight-current-row>
+        <el-table-column label="应用" align="center" width="300">
+          <template slot-scope="{ row }">
+            <div class="app-td-container">
+              <div class="app-icon">
+                <el-image fit="fill" style="width: 40px; height: 40px; border-radius: 10px" :src="
+                    row.iconUrl
+                      ? getCreativeUrl(row.iconUrl)
+                      : 'https://creative.bxsnews.com/medpro/imgs/app-none.png'
+                  " />
+              </div>
+              <div class="app-info-container">
+                <div class="app-name">
+                  <svg-icon :icon-class="row.os === 1 ? 'android' : 'ios'" />
+                  <span>{{ row.appName }}</span>
+                </div>
+                <div class="app-id">
+                  <span>ID:{{ row.appId }}</span>
+                  <el-popover trigger="hover" content="复制ID">
+                    <i slot="reference" class="el-icon-copy-document" style="cursor: pointer" @click="copyId(row.appId)" />
+                  </el-popover>
+                </div>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="广告位" align="center" width="250">
+          <template slot-scope="{ row }">
+            <div class="app-info-container">
+              <div class="app-name">
+                <span>{{ row.name }}</span>
+              </div>
+              <div class="app-id">
+                <span>ID:{{ row.id }}</span>
+                <el-popover trigger="hover" content="复制ID">
+                  <i slot="reference" class="el-icon-copy-document" style="cursor: pointer" @click="copyId(row.id)" />
+                </el-popover>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="广告样式" align="center">
+          <template slot-scope="{ row }">
+            <span>{{ getPositionNameById(row.position) }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" align="center" width="400">
+          <template slot-scope="{ row }">
+            <el-button type="primary" size="mini">
+              <router-link :to="{
+                  path: '/traffic/aggregate',
+                  query: { appId: row.appId, placeId: row.id },
+                }">聚合管理
+              </router-link>
+            </el-button>
+            <el-button type="primary" size="mini" @click="handleUpdate(row)">
+              编辑
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <!-- <pagination
+        v-show="total > 0"
+        :total="total"
+        :page.sync="query.page"
+        :limit.sync="query.limit"
+        @pagination="handleGetPager"
+      /> -->
+      <el-pagination style="margin-top: 20px" :current-page="Query.page" :page-sizes="[5, 20, 50, 100, 300, 500]" :page-size="Query.limit"
+        layout="total, sizes, prev, pager, next, jumper" :total="total" @size-change="handleSizeChange" @current-change="handleCurrentChange" />
+    </div>
+    <el-dialog ref="dialog" :title="dialogType === 0 ? '新增' : '编辑'" :visible.sync="dialogVisible">
+      <el-form ref="form" :model="temp" :rules="rules" label-width="100px" label-position="left">
+        <el-form-item label="应用" prop="appId">
+          <el-select v-model="temp.appId" placeholder="请选择应用" :disabled="dialogType === 1" filterable>
+            <el-option v-for="item in appOptionsAll" :key="item.id" :value="item.id" :label="item.name">
+              <svg-icon :icon-class="item.os === 1 ? 'android' : 'ios'" />
+              <span>{{ item.name }}</span>
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="广告位名称" prop="name">
+          <el-input v-model="temp.name" maxlength="30" show-word-limit />
+        </el-form-item>
+        <el-form-item label="广告样式" prop="position">
+          <el-select v-model="temp.position" clearable filterable>
+            <el-option v-for="item in positionOptions" :key="item.id" :value="item.id" :label="item.name" />
+          </el-select>
+        </el-form-item>
+        <el-form-item v-if="temp.position === 1 && $store.getters.skip === 1" label="跳过">
+          <el-radio-group v-model="temp.skip">
+            <el-radio label="A">开启</el-radio>
+            <el-radio label="S">关闭</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item v-if="dialogType === 1" label="启用">
+          <el-radio-group v-model="temp.sts">
+            <el-radio label="A">启用</el-radio>
+            <el-radio label="S">停止</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="素材模板" v-if="isShowCreativeTemplate != -1">
+          <!-- <el-input v-model="temp.templateIds" /> -->
+          <el-select multiple v-model="temp.templateIds" placeholder="请选择素材模板">
+            <el-option v-for="item in materialTempList" :key="item.id" :value="item.id" :label="item.sizeName">
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="temp.remark" />
+        </el-form-item>
+        <el-form-item label="审核状态" v-if=" $store.getters.creative === 1">
+          <el-switch v-model="temp.auditSts" active-value="A" inactive-value="S" active-color="#13ce66" inactive-color="#ff4949" />
+        </el-form-item>
+        <el-form-item label="投放等级" v-if=" $store.getters.creative === 1">
+          <el-select v-model="temp.level" placeholder="请选择">
+            <el-option v-for="item in levelOptions" :key="item.id" :label="item.name" :value="item.id" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSubmitForm">确定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import waves from "@/directive/waves";
+// import Pagination from '@/components/Pagination'
+import { Message } from "element-ui";
+import { getAppList } from "@/api/app";
+import { editAudit } from "@/api/synthReport";
+import { materialTemp } from "@/api/MedproVersion";
+import {
+  addAdplace,
+  getPlaceList,
+  getPlacePager,
+  updateAdplace,
+} from "@/api/place";
+import { getPositionList } from "@/api/common";
+import { copy } from "@/utils/string";
+import { getPlatOptions } from "@/api/plat";
+const HTTP_PREFIX = "http://creative.bxsnews.com/material/";
+export default {
+  name: "Adplace",
+  // components: { Pagination },
+  directives: { waves },
+  data () {
+    return {
+      query: {
+        os: null,
+        appIds: [],
+        adplaceIds: null,
+        position: null,
+        page: 1,
+        limit: 20,
+      },
+      Query: {
+        os: null,
+        appIds: [],
+        adplaceIds: null,
+        position: null,
+        page: 1,
+        limit: 20,
+      },
+      appOptions: [],
+      appOptionsAll: [],
+      placeOptions: [],
+      placeOptionsAll: [],
+      positionOptions: [],
+      platOptions: [],
+      tableKey: 0,
+      listLoading: false,
+      isShowCreativeTemplate: -1,
+      list: [],
+      total: 0,
+      temp: {
+        auditSts: "",
+        level: "",
+        skip: "S",
+      },
+      materialTempList: [],
+      dialogType: 0,
+      dialogVisible: false,
+      levelOptions: [
+        { id: 1, name: "一级" },
+        { id: 2, name: "二级" },
+        { id: 3, name: "三级" },
+        { id: 4, name: "四级" },
+      ],
+      rules: {
+        appId: [{ required: true, message: "请选择APP", trigger: "change" }],
+        name: [{ required: true, message: "请输入名称", trigger: "blur" }],
+        position: [
+          { required: true, message: "请选择位置", trigger: "change" },
+        ],
+      },
+    };
+  },
+  created () {
+    this.initAppOptions();
+    this.initPlaceOptions();
+    this.initPositionOptions();
+    this.getMaterialTemp();
+    this.initPlatOptions();
+    let appId = this.$route.query.appId;
+    if (appId && appId.trim().length > 0) {
+      this.Query.appIds.push(appId);
+      this.query.appIds.push(appId);
+    }
+    this.handleGetPager();
+  },
+  methods: {
+    async getMaterialTemp () {
+      const res = await materialTemp();
+      if (res.code == 200) {
+        this.materialTempList = res.data;
+      }
+    },
+    initAppOptions () {
+      getAppList().then((res) => {
+        this.appOptions = this.appOptionsAll = res.data;
+      });
+    },
+    initPlaceOptions () {
+      getPlaceList().then((res) => {
+        this.placeOptions = this.placeOptionsAll = res.data;
+      });
+    },
+    // 位置
+    initPositionOptions () {
+      getPositionList().then((res) => {
+        this.positionOptions = res.data;
+      });
+    },
+    initPlatOptions () {
+      getPlatOptions().then(res => {
+        this.platOptions = res.data
+        this.isShowCreativeTemplate = this.platOptions.findIndex((item) => item.accessType === "1")
+      })
+    },
+    filterAppIds (val) {
+      if (val) {
+        this.appOptions = this.appOptionsAll.filter((item) => {
+          return (
+            !!~item.id.toUpperCase().indexOf(val.toUpperCase()) ||
+            !!~item.name.toUpperCase().indexOf(val.toUpperCase())
+          );
+        });
+      } else {
+        this.appOptions = this.appOptionsAll;
+      }
+    },
+    filterPlaceIds (val) {
+      if (val) {
+        this.placeOptions = this.placeOptionsAll.filter((item) => {
+          return (
+            !!~item.id.toUpperCase().indexOf(val.toUpperCase()) ||
+            !!~item.name.toUpperCase().indexOf(val.toUpperCase())
+          );
+        });
+      } else {
+        this.placeOptions = this.placeOptionsAll;
+      }
+    },
+    changePlaceOptions (val) {
+      this.query.appIds = val;
+      if (val && val.length > 0) {
+        this.placeOptions = this.placeOptionsAll.filter((item) => {
+          return !!~val.indexOf(item.appId);
+        });
+        if (this.query.placeIds && this.query.placeIds.length > 0) {
+          this.query.placeIds = this.query.placeIds.filter((id) => {
+            let flag = false;
+            this.placeOptions.forEach((place) => {
+              if (place.id === id) {
+                flag = true;
+              }
+            });
+            return flag;
+          });
+        }
+      } else {
+        this.placeOptions = this.placeOptionsAll;
+      }
+    },
+    handleGetPager () {
+      // console.log(this.Query);
+      // return
+      getPlacePager(this.Query).then((res) => {
+        this.total = res.data.total;
+        this.list = res.data.items;
+      });
+    },
+    // async levelChange(row) {
+    //   this.rowEdit.id = row.id;
+    //   this.rowEdit.level = row.level;
+    //   this.rowEdit.auditSts = row.auditSts;
+    //   const res = await editAudit(this.rowEdit);
+    //   if (res.code != 200) return this.$message.error(res.msg);
+    //   this.$message.success(res.msg);
+    //   this.handleGetPager();
+    // },
+    handleAdd () {
+      this.dialogType = 0;
+      this.temp = { skip: "S" };
+      this.dialogVisible = true;
+    },
+    handleUpdate (row) {
+      this.temp.auditSts = row.auditSts;
+      this.temp.level = row.level;
+      this.dialogType = 1;
+      this.temp = JSON.parse(JSON.stringify(row));
+      this.dialogVisible = true;
+    },
+    handleSubmitForm () {
+      let _this = this;
+      this.$refs.form.validate(async (valid) => {
+        if (valid) {
+          if (_this.dialogType === 0) {
+            await addAdplace(_this.temp).then((res) => {
+              Message({
+                message: res.msg,
+                type: "success",
+                duration: 5 * 1000,
+              });
+            });
+          } else if (_this.dialogType === 1) {
+            await updateAdplace(_this.temp).then((res) => {
+              Message({
+                message: res.msg,
+                type: "success",
+                duration: 5 * 1000,
+              });
+            });
+          }
+          _this.dialogVisible = false;
+          _this.handleGetPager();
+        }
+      });
+    },
+    copyId (id) {
+      let result = copy(id);
+      if (result === false) {
+        Message({
+          message: "不支持复制",
+          type: "error",
+          duration: 2 * 1000,
+        });
+      } else {
+        Message({
+          message: "复制成功",
+          type: "success",
+          duration: 2 * 1000,
+        });
+      }
+    },
+    getCreativeUrl (url) {
+      if (url) {
+        return HTTP_PREFIX + url;
+      } else {
+        return null;
+      }
+    },
+    getPositionNameById (id) {
+      let target = this.positionOptions.find((item) => item.id === id);
+      return target ? target.name : "-";
+    },
+    handleSizeChange (val) {
+      this.Query.limit = val;
+      this.handleGetPager();
+    },
+    handleCurrentChange (val) {
+      this.Query.page = val;
+      this.handleGetPager();
+    },
+    searchBtn () {
+      this.Query = Object.assign({}, this.query);
+      this.handleGetPager();
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.app-td-container {
+  display: flex;
+  padding-left: 20px;
+  .app-icon {
+    flex: 40px 0 1;
+  }
+  .app-info-container {
+    flex: 1;
+    padding-left: 20px;
+    text-align: left;
+  }
+}
+</style>

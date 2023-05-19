@@ -1,0 +1,348 @@
+<template>
+  <div class="report-container">
+    <div class="search">
+      <div class="item">
+        <el-date-picker
+          v-model="date"
+          :clearable="false"
+          class="item"
+          type="daterange"
+          value-format="yyyy-MM-dd"
+          align="right"
+          unlink-panels
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          :picker-options="pickerOptions"
+          @change="getSTimeChange"
+        />
+      </div>
+      <div class="item">
+        <el-select
+          v-model="query.createUser"
+          placeholder="请选择账户"
+          v-if="$store.getters.roles[0] == 'SUPER_ADMIN'"
+          clearable
+          @change="changeCreateUser"
+        >
+          <el-option
+            v-for="(item, index) in adminList"
+            :key="index"
+            :value="item.id"
+            :label="item.company"
+          ></el-option>
+        </el-select>
+      </div>
+      <div class="item">
+        <el-select v-model="query.name" placeholder="请选择预警" clearable>
+          <el-option
+            v-for="(item, index) in warningList"
+            :key="index"
+            :value="item.id"
+            :label="item.name"
+          ></el-option>
+        </el-select>
+      </div>
+      <div class="item">
+        <el-select
+          v-model="query.target"
+          placeholder="请选择预警对象"
+          clearable
+        >
+          <el-option :value="1" :label="'应用'"></el-option>
+          <el-option :value="2" :label="'广告位'"></el-option>
+        </el-select>
+      </div>
+      <div class="item">
+        <el-select v-model="query.sts" placeholder="请选择预警状态" clearable>
+          <el-option :label="'开启'" :value="'A'" />
+          <el-option :label="'关闭'" :value="'S'" />
+        </el-select>
+      </div>
+      <div class="item btn">
+        <el-button type="primary" @click="handleSearch" icon="el-icon-search"
+          >查询</el-button
+        >
+      </div>
+    </div>
+    <div class="table">
+      <el-table
+        v-loading="isLoading"
+        ref="table"
+        :data="tableList"
+        :header-cell-style="{ 'background-color': '#f7f8fa', color: '#000' }"
+        stripe
+      >
+        <el-table-column align="center" label="数据时间" prop="date">
+        </el-table-column>
+        <el-table-column align="center" label="预警名称" prop="name">
+        </el-table-column>
+        <el-table-column align="center" label="预警状态" prop="sts"
+          ><template slot-scope="{ row }">
+            <el-tag :type="row.sts == 'A' ? 'success' : 'danger'">
+              {{ row.sts == "A" ? "开启" : "关闭" }}
+            </el-tag></template
+          >
+        </el-table-column>
+        <el-table-column align="center" label="预警对象" prop="target">
+          <template slot-scope="{ row }">
+            {{ row.target == 1 ? "应用" : "广告位" }}
+          </template>
+        </el-table-column>
+        <el-table-column align="center" label="预警频率" prop="frequency">
+          <template slot-scope="{ row }">
+            {{ row.frequency == 1 ? "天级" : "小时级" }}
+          </template>
+        </el-table-column>
+        <el-table-column align="center" label="预警通知时间" prop="noticeDate">
+        </el-table-column>
+        <el-table-column align="center" label="操作">
+          <template slot-scope="scope">
+            <el-link type="success" @click="toogleExpand(scope.row)"
+              >查看预警详情</el-link
+            >
+          </template>
+        </el-table-column>
+        <el-table-column type="expand" width="1">
+          <template slot-scope="{ row }">
+            <el-table
+              :data="row.children ? row.children : []"
+              style="min-width: 60%; max-width: 70%"
+              border
+            >
+              <el-table-column align="center" label="应用" prop="appName"
+                ><template slot-scope="{ row }">
+                  <div>{{ row.appName }}</div>
+                  <div>ID：{{ row.appId }}</div>
+                </template></el-table-column
+              >
+              <el-table-column
+                align="center"
+                label="广告位"
+                prop="placeName"
+                v-if="row.target == 2"
+                ><template slot-scope="{ row }">
+                  <div>{{ row.placeName }}</div>
+                  <div>ID：{{ row.placeId }}</div>
+                </template></el-table-column
+              >
+              <el-table-column
+                align="center"
+                width="400px"
+                label="预警实际触发值"
+                prop="date"
+                ><template slot-scope="{ row }">
+                  {{
+                    `${dealRuleId(row.ruleId)}昨天比前一天下跌${
+                      row.floatValue
+                    }${dealSuffix(row.ruleId)}；昨天：${
+                      row.newValue
+                    }${dealSuffix(row.ruleId)}；前一天：${
+                      row.oldValue
+                    }${dealSuffix(row.ruleId)}`
+                  }}
+                </template></el-table-column
+              >
+              <el-table-column align="center" label="操作">
+                <template slot-scope="scope">
+                  <el-link @click="handleDetails(scope.row, row)" type="primary"
+                    >查看更多数据</el-link
+                  >
+                </template></el-table-column
+              >
+            </el-table>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        style="margin: 30px 0 0 0"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="query.page"
+        :page-sizes="[5, 10, 20, 50]"
+        :page-size="query.limit"
+        layout="total,sizes,prev,pager,next,jumper"
+        :total="total"
+      ></el-pagination>
+    </div>
+  </div>
+</template>
+
+<script>
+import { adminDateOotion } from "@/utils/options";
+
+import { getadminList } from "@/api/app.js";
+import { getWarningByUser, getWarningReportPage } from "@/api/warning.js";
+
+export default {
+  data() {
+    return {
+      // 日期选择器参数
+      pickerOptions: adminDateOotion ? adminDateOotion : [],
+      date: [],
+      query: {
+        startDate: "",
+        endDate: "",
+        createUser: "",
+        name: "",
+        target: "",
+        sts: "",
+        page: 1,
+        limit: 10,
+      },
+      total: 0,
+      adminList: [],
+      warningList: [],
+      tableList: [],
+      isLoading: false,
+    };
+  },
+  mounted() {
+    this.initDate();
+    this.getadminList();
+    this.getWarningByUser();
+    this.getTableList();
+  },
+  methods: {
+    // 选择时间
+    getSTimeChange() {
+      this.query.endDate = this.date[1];
+      this.query.startDate = this.date[0];
+    },
+    // 初始化时间
+    initDate() {
+      let time1 = new Date().getTime() - 1000 * 60 * 60 * 24;
+      let year1 = new Date(time1).getFullYear();
+      let month1 = new Date(time1).getMonth() + 1;
+      let day1 = new Date(time1).getDate();
+      let time2 = new Date().getTime() - 1000 * 60 * 60 * 24 * 8;
+      let year2 = new Date(time2).getFullYear();
+      let month2 = new Date(time2).getMonth() + 1;
+      let day2 = new Date(time2).getDate();
+      let str1 = `${year1}-${month1 < 10 ? "0" + month1 : month1}-${
+        day1 < 10 ? "0" + day1 : day1
+      }`;
+      let str2 = `${year2}-${month2 < 10 ? "0" + month2 : month2}-${
+        day2 < 10 ? "0" + day2 : day2
+      }`;
+      this.date = [str2, str1];
+      this.query.endDate = str1;
+      this.query.startDate = str2;
+    },
+    // 获取账户列表
+    async getadminList() {
+      let resp = await getadminList();
+      this.adminList = resp.data ? resp.data : [];
+    },
+    // 改变账户重新获预警列表
+    changeCreateUser() {
+      this.getWarningByUser();
+    },
+    // 通过账户获取预警列表
+    async getWarningByUser() {
+      let resp = await getWarningByUser({ createUser: this.query.createUser });
+      this.warningList = resp.data ? resp.data : [];
+    },
+    // 点击搜索
+    handleSearch() {
+      this.query.page = 1;
+      this.getTableList();
+    },
+    // 获取列表数据
+    async getTableList() {
+      this.isLoading = true;
+      let resp = await getWarningReportPage(this.query);
+      this.tableList = resp.data.items ? resp.data.items : [];
+      this.total = resp.data.total ? resp.data.total : 0;
+      this.isLoading = false;
+    },
+    handleDetails(crow, row) {
+      console.log(crow, row);
+      if (row.frequency == 1) {
+        this.$router.push({
+          // path: "synthReport",
+          name: "synthReport",
+          params: { query: this.query, crow, row },
+        });
+      } else if (row.frequency == 2) {
+        this.$router.push({
+          // path: "hoursReport",
+          name: "hoursReport",
+          params: { query: this.query, crow, row },
+        });
+      }
+    },
+    dealRuleId(id) {
+      switch (id) {
+        case 1:
+          return "DAU";
+        case 2:
+          return "人均收益";
+        case 3:
+          return "流量请求";
+        case 4:
+          return "流量填充率";
+        case 5:
+          return "展示";
+        case 6:
+          return "预估收益";
+        case 7:
+          return "展示率";
+        case 8:
+          return "预估eCPM";
+      }
+    },
+    dealSuffix(id) {
+      switch (id) {
+        case 1:
+          return "";
+        case 2:
+          return "";
+        case 3:
+          return "";
+        case 4:
+          return "%";
+        case 5:
+          return "";
+        case 6:
+          return "";
+        case 7:
+          return "%";
+        case 8:
+          return "";
+      }
+    },
+    handleSizeChange(limit) {
+      this.query.page = 1;
+      this.query.limit = limit;
+      this.getTableList();
+    },
+    handleCurrentChange(page) {
+      this.query.page = page;
+      this.getTableList();
+    },
+    toogleExpand(row) {
+      let $table = this.$refs.table;
+      $table.toggleRowExpansion(row);
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.report-container {
+  background-color: #fff;
+  .search {
+    width: 100%;
+    display: flex;
+    margin: 20px 20px 30px 20px;
+    .item {
+      margin-right: 20px;
+    }
+  }
+}
+// 取出子表单padding
+::v-deep.report-container .el-table__expanded-cell {
+  padding: 0;
+}
+</style>

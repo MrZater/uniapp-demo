@@ -1,0 +1,342 @@
+<template>
+  <div class="cust-select-container">
+    <el-popover
+      class="apppopover"
+      placement="bottom"
+      :width="width"
+      trigger="click"
+    >
+      <div class="downbox">
+        <div class="search-left">
+          <div class="btn">
+            <el-checkbox
+              :indeterminate="appIsIndeterminate"
+              v-model="allcheked"
+              @change="selectAll"
+              >全选</el-checkbox
+            >
+            <el-checkbox v-model="adversechecked" @change="selectadverse"
+              >反选</el-checkbox
+            >
+          </div>
+          <div class="input">
+            <el-input
+              :autofocus="true"
+              clearable
+              prefix-icon="el-icon-search"
+              v-model="appsearch_word"
+            ></el-input>
+          </div>
+          <div class="scrollbox">
+            <el-checkbox-group
+              v-model="selectData"
+              v-if="selectList.length > 0"
+            >
+              <el-checkbox
+                v-for="item in selectList"
+                :value="item.id"
+                :label="item.id"
+                :key="item.id"
+              >
+                <div class="name">
+                  <span>{{ item.name }}</span>
+                </div>
+                <div class="id">
+                  <i
+                    :class="{
+                      iconfont: true,
+                      ios: item.os == 0,
+                      ad: item.os == 1,
+                    }"
+                    >{{ item.os === 1 ? "&#xe64d;" : "&#xe60c;" }}
+                  </i>
+                  <span>{{ item.id }}</span>
+                </div>
+              </el-checkbox>
+            </el-checkbox-group>
+          </div>
+        </div>
+        <div class="search-right">
+          <div class="top">
+            <span class="selectnum">已选{{ selectData.length }}项</span>
+            <span class="clearAll" @click="clearAll">清空全部</span>
+          </div>
+          <div class="bottom">
+            <div class="option" v-for="item in showList" :key="item.id">
+              <div class="title">
+                <div class="name">
+                  <span>{{ item.name }}</span>
+                </div>
+                <div class="id" v-if="item.id">
+                  <i
+                    :class="{
+                      iconfont: true,
+                      ios: item.os == 0,
+                      ad: item.os == 1,
+                    }"
+                    >{{ item.os === 1 ? "&#xe64d;" : "&#xe60c;" }}</i
+                  >
+                  <span>{{ item.id }}</span>
+                </div>
+              </div>
+              <div class="close" @click="removeitem(item.id)">
+                <i class="el-icon-close"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="appselect" slot="reference" @click="changeAppIcon">
+        <span class="word"
+          >{{
+            selectData.length === 0
+              ? "请选择应用"
+              : "应用：" + selectData.length + "项"
+          }}<i
+            :class="{
+              icon: true,
+              'el-icon-arrow-down': appClose,
+              'el-icon-arrow-up': !appClose,
+            }"
+          ></i
+        ></span>
+      </div>
+    </el-popover>
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+    allData: Array, // 全部数据
+    width: Number,
+  },
+  data() {
+    return {
+      allcheked: false, // 全选
+      adversechecked: false, // 反选
+      appsearch_word: "", // 下拉框中的搜索字段
+      appClose: false, // 是否打开下拉框
+      appIsIndeterminate: false, // 是否全选
+      selectData: [], //选中数据
+      selectList: [], // 显示列表数据
+      showList: [], // 右侧显示数据
+    };
+  },
+
+  watch: {
+    allData: {
+      handler(val) {
+        this.selectList = [...val];
+      },
+    },
+    appsearch_word: {
+      handler(val) {
+        if (val === "") {
+          console.log(1);
+          this.selectList = this.allData;
+          return;
+        }
+        let arr = [];
+        this.allData.forEach((item) => {
+          if (item.name.includes(this.appsearch_word)) {
+            arr.push(item);
+          }
+        });
+        this.selectList = arr;
+      },
+    },
+    selectData: {
+      handler(val) {
+        this.$emit("selectListhandle", val);
+        this.showList = this.allData.filter((item) => {
+          return this.selectData.includes(item.id);
+        });
+        console.log(this.showList);
+      },
+    },
+  },
+
+  methods: {
+    removeitem(val) {
+      this.selectData.forEach((item, i) => {
+        if (item === val) {
+          this.selectData.splice(i, 1);
+        }
+      });
+    },
+    clearAll() {
+      this.selectData = [];
+      this.allcheked = false;
+    },
+    // 全选按钮事件
+    selectAll(val) {
+      this.adversechecked = false;
+      if (val) {
+        this.selectData = this.selectList.map((item) => {
+          return item.id;
+        });
+      } else {
+        this.selectData = [];
+      }
+    },
+    // 反选按钮事件
+    selectadverse() {
+      let arr = this.allData.filter((item) => {
+        return !this.selectData.includes(item.id);
+      });
+      this.selectData = arr.map((item) => {
+        return item.id;
+      });
+
+      if (this.selectData.length === this.allData.length) {
+        this.allcheked = true;
+      } else if (this.selectData.length === 0) {
+        this.allcheked = false;
+      }
+    },
+    // 选择框点击事件
+    changeAppIcon() {
+      this.appClose = !this.appClose;
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+@font-face {
+  font-family: "iconfont"; /* project id 3183855 */
+  src: url("");
+  src: url("?#iefix") format("embedded-opentype"),
+    url("//at.alicdn.com/t/font_3183855_sdoknrdb94.woff2") format("woff2"),
+    url("//at.alicdn.com/t/font_3183855_sdoknrdb94.woff") format("woff"),
+    url("//at.alicdn.com/t/font_3183855_sdoknrdb94.ttf") format("truetype"),
+    url("#iconfont") format("svg");
+}
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 14px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-stroke-width: 0.2px;
+  -moz-osx-font-smoothing: grayscale;
+}
+.iconfont.ad{
+  color: #68d740;
+}
+.iconfont.ios{
+  color: #6f99f8;
+}
+.apppopover {
+  position: relative;
+
+  .appselect {
+    display: inline-block;
+    position: relative;
+    width: 80%;
+    height: 36px;
+    border: 1px solid #dcdfe6;
+    border-radius: 5px;
+    line-height: 36px;
+    padding: 0 8px 0 8px;
+    .word {
+      color: #c0c4cc;
+      font-size: 14px;
+    }
+    .icon {
+      position: absolute;
+      right: 0;
+      margin: 10px;
+    }
+  }
+}
+.downbox {
+  position: relative;
+  width: 100%;
+  float: left;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  .search-left {
+    display: inline-block;
+    position: relative;
+    width: 50%;
+    margin-right: 5px;
+    box-sizing: border-box;
+    .btn {
+      margin: 10px;
+    }
+    .scrollbox {
+      margin: 5px 0 5px 0;
+      width: 100%;
+      height: 180px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      div.name,
+      div.id {
+        margin: 5px;
+        font-size: 12px;
+      }
+      div.name {
+        font-weight: 600;
+      }
+    }
+  }
+  .search-right {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 48%;
+    height: 100%;
+    border-left: 1px solid #ccc;
+    padding: 5px;
+
+    .top {
+      .selectnum {
+        position: absolute;
+        left: 10px;
+      }
+      .clearAll {
+        position: absolute;
+        right: 10px;
+        color: #286bcf;
+        cursor: pointer;
+      }
+    }
+    .bottom {
+      height: 90%;
+      overflow: auto;
+
+      margin-top: 30px;
+      .option {
+        border-radius: 5px;
+
+        position: relative;
+        padding: 5px;
+        margin: 3px 6px 3px 6px;
+        background-color: #eee;
+        .title {
+          .name {
+            font-size: 12px;
+            font-weight: 600;
+            margin: 5px;
+          }
+          .id {
+            margin: 5px;
+            font-size: 12px;
+          }
+        }
+        .close {
+          position: absolute;
+          line-height: 30px;
+          font-size: 20px;
+          top: calc(50% - 15px);
+          right: 10px;
+          cursor: pointer;
+        }
+      }
+    }
+  }
+}
+</style>

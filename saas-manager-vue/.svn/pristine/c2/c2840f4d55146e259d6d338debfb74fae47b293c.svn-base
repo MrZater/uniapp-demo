@@ -1,0 +1,517 @@
+<template>
+  <div>
+    <el-card>
+      <el-row :gutter="20">
+        <el-col :span="6">
+          <span class="item">广告源：</span>
+          <el-select
+            clearable
+            v-model="medproVparams.platId"
+            placeholder="请选择广告源"
+          >
+            <el-option
+              v-for="item in advertSources"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            >
+            </el-option>
+          </el-select>
+        </el-col>
+        <el-col :span="7">
+          <span class="item">操作系统：</span>
+          <el-select
+            clearable
+            v-model="medproVparams.os"
+            placeholder="请选择操作系统"
+          >
+            <el-option
+              v-for="item in versionOption"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            >
+            </el-option>
+          </el-select>
+        </el-col>
+        <el-col :span="7">
+          <span class="item">版本号：</span>
+          <el-input
+            class="sdkV"
+            clearable
+            v-model="medproVparams.version"
+            placeholder="请输入版本号"
+          ></el-input>
+        </el-col>
+        <el-col :span="1">
+          <el-button type="primary" @click="searchBtn">查询</el-button>
+        </el-col>
+        <el-col :span="1">
+          <el-button type="primary" @click="uploadSDkpackage()">上传</el-button>
+        </el-col>
+      </el-row>
+    </el-card>
+    <el-card>
+      <!-- 表格 -->
+      <el-table :data="versionTableData" stripe style="width: 100%" :header-cell-style="{ background: '#f7f8fa' ,color:'#000'}">
+        <el-table-column prop="name" label="广告源" align="center" width="180">
+        </el-table-column>
+        <el-table-column prop="os" label="系统" align="center" width="180">
+          <template slot-scope="{ row }">
+            <div>
+              <span v-if="row.os == 1">Android</span>
+              <span v-if="row.os == 0">IOS</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="version" align="center" label="版本号">
+        </el-table-column>
+        <el-table-column prop="modifyTime" align="center" label="更新时间">
+        </el-table-column>
+        <el-table-column align="center" label="操作">
+          <template slot-scope="{ row }">
+            <!-- <el-link type="primary" @click="editAdvertVertion(row)">编辑</el-link> -->
+            <el-tooltip content="编辑" placement="top" effect="light">
+              <div class="doicon" @click="editAdvertVertion(row)">
+                <svg-icon class="svgicon" icon-class="edit"></svg-icon>
+              </div>
+            </el-tooltip>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="MedproVparams.page"
+        :page-sizes="[10, 20, 30, 40]"
+        :page-size="MedproVparams.limit"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+      >
+      </el-pagination>
+    </el-card>
+
+    <el-dialog
+      :title="isAdd ? '上传广告源SDK包' : '编辑广告源SDK包'"
+      :visible.sync="uploadSDKdialog"
+      width="50%"
+      @close="closeUploadialog"
+    >
+      <el-form
+        :model="uploadSDKform"
+        :rules="uploadSDKrules"
+        ref="ruleForm"
+        label-width="140px"
+      >
+        <el-form-item label="操作系统" prop="os">
+          <el-select
+            :disabled="disabled"
+            v-model="uploadSDKform.os"
+            @change="systemChange"
+            placeholder="请选择操作系统"
+          >
+            <el-option
+              v-for="item in versionOption"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="广告源" prop="platId">
+          <el-select
+            :disabled="disabled"
+            v-model="uploadSDKform.platId"
+            placeholder="请选择操作系统"
+          >
+            <el-option
+              v-for="item in advertSources"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="SDK版本号" prop="version">
+          <el-input
+            :disabled="disabled"
+            placeholder="请输入SDK版本号"
+            v-model="uploadSDKform.version"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="广告样式" prop="sourcePositions">
+          <el-checkbox-group v-model="uploadSDKform.sourcePositions">
+            <el-checkbox
+              :label="e.id"
+              v-for="(e, i) in advertSourceList"
+              :key="i"
+              >{{ e.name }}</el-checkbox
+            >
+            <!-- <el-checkbox :label="2">插屏</el-checkbox>
+            <el-checkbox :label="3">原生模板</el-checkbox> -->
+          </el-checkbox-group>
+        </el-form-item>
+
+        <el-form-item label="上传SDK包">
+          <el-upload
+            :action="url + 'accessCenter/upload'"
+            :file-list="fileListSDK"
+            :on-success="sdkPackageSuccess"
+            :headers="headers"
+            :on-remove="removeSdkPackage"
+          >
+            <el-button size="small" type="primary">点击上传</el-button>
+            <span class="uploadsuccess">{{
+              sdkPercentage == 0
+                ? ""
+                : 100 > sdkPercentage
+                ? "上传中请不要关闭浏览器"
+                : sdkPercentage >= 100
+                ? "上传成功"
+                : ""
+            }}</span>
+          </el-upload>
+          <el-progress
+            v-if="sdkProgressShow"
+            :percentage="sdkPercentage"
+          ></el-progress>
+        </el-form-item>
+        <el-form-item v-if="isShow" label="上传广告源适配包">
+          <el-upload
+            :action="url + 'accessCenter/upload'"
+            :file-list="fileListAdvert"
+            :on-success="advertSuccess"
+            :headers="headers"
+            :on-remove="removeAdvertPackage"
+          >
+            <el-button size="small" type="primary">点击上传</el-button>
+            <span class="uploadsuccess">{{
+              adapterPercentage == 0
+                ? ""
+                : 100 > adapterPercentage
+                ? "上传中请不要关闭浏览器"
+                : adapterPercentage >= 100
+                ? "上传成功"
+                : ""
+            }}</span>
+          </el-upload>
+          <el-progress
+            v-if="adapterProgressShow"
+            :percentage="adapterPercentage"
+          ></el-progress>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="uploadSDKdialog = false">取 消</el-button>
+        <el-button type="primary" @click="handleuploadSDK">确 定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+<script>
+import {
+  advertSource,
+  addadvertSource,
+  editadvertSource,
+  progessLine,
+} from "@/api/MedproVersion";
+import { getPlatOptions } from "@/api/plat";
+import { getPositionList } from "@/api/common";
+export default {
+  data() {
+    return {
+      medproVparams: {
+        page: 1,
+        limit: 10,
+        platId: "",
+        os: "",
+        version: "",
+      },
+      MedproVparams: {
+        page: 1,
+        limit: 10,
+        platId: "",
+        os: "",
+        version: "",
+      },
+      headers: {
+        Authorization: "",
+      },
+      isAdd: true,
+      versionOption: [
+        { id: 0, name: "IOS" },
+        { id: 1, name: "Android" },
+      ],
+      disabled: false,
+      advertOption: [],
+      fileListSDK: [],
+      fileListAdvert: [],
+      advertSourceList: [],
+      uploadSDKform: {
+        os: "",
+        platId: "",
+        version: "",
+        sourcePositions: [],
+        sdkDownloadUrl: "",
+        adapterDownloadUrl: "",
+      },
+      url: "",
+      total: 0,
+      advertSources: [],
+      fileListSDK: [],
+      isShow: true,
+      uploadSDKdialog: false,
+      versionTableData: [],
+      uploadSDKrules: {
+        os: [{ required: true, message: "请选择操作系统", trigger: "blur" }],
+        platId: [{ required: true, message: "请选择广告源", trigger: "blur" }],
+        sourcePositions: [
+          { required: true, message: "请选择广告样式", trigger: "blur" },
+        ],
+        version: [
+          { required: true, message: "请输入SDK版本号", trigger: "blur" },
+        ],
+      },
+      sdkPercentage: 0,
+      sdkProgressShow: false,
+      sdkTimer: null,
+      adapterPercentage: 0,
+      adapterProgressShow: false,
+      adapterTimer: null,
+    };
+  },
+  created() {
+    this.headers.Authorization = this.$store.getters.token;
+    this.url = process.env.VUE_APP_BASE_API;
+    this.getAdvertSource();
+    this.getPlat();
+    this.PositionList();
+  },
+  methods: {
+    async PositionList() {
+      const res = await getPositionList();
+      if (res.code == 200) {
+        this.advertSourceList = res.data;
+      }
+    },
+    async getPlat() {
+      const res = await getPlatOptions();
+      if (res.code == 200) {
+        this.advertSources = res.data;
+      }
+    },
+    //   列表
+    async getAdvertSource() {
+      const res = await advertSource(this.MedproVparams);
+      if (res.code != 200) return this.$message.error(res.msg);
+      this.versionTableData = res.data.items;
+      this.total = res.data.total;
+    },
+    editAdvertVertion(row) {
+      row = JSON.parse(JSON.stringify(row));
+      if (row.os == 0) {
+        // 编辑的系统是ios
+        this.isShow = false;
+      } else {
+        this.isShow = true;
+      }
+      this.uploadSDKform.sdkDownloadUrl = row.sdkDownloadUrl;
+      this.uploadSDKform.adapterDownloadUrl = row.adapterDownloadUrl;
+      this.fileListSDK = [{ url: this.url + row.sdkDownloadUrl }];
+      this.fileListAdvert = [{ url: this.url + row.adapterDownloadUrl }];
+
+      this.uploadSDKform = row;
+      // this.uploadSDKform.os = row.os;
+      // this.uploadSDKform.platId = row.platId;
+      // this.uploadSDKform.version = row.version;
+      // this.uploadSDKform.sourcePositions = row.sourcePositions;
+      // this.uploadSDKform.id = row.id;
+      this.disabled = true;
+      this.isAdd = false;
+      this.uploadSDKdialog = true;
+    },
+    removeSdkPackage() {
+      clearInterval(this.sdkTimer);
+      this.sdkTimer = null;
+      this.sdkPercentage = 0;
+      this.sdkProgressShow = false;
+      this.uploadSDKform.sdkDownloadUrl = "";
+      this.fileListSDK = [];
+    },
+    removeAdvertPackage() {
+      clearInterval(this.adapterTimer);
+      this.adapterTimer = null;
+      this.adapterPercentage = 0;
+      this.adapterProgressShow = false;
+      this.uploadSDKform.adapterDownloadUrl = "";
+      this.fileListAdvert = [];
+    },
+    handleuploadSDK() {
+      this.$refs["ruleForm"].validate(async (val) => {
+        if (!val) return;
+        // 验证文件上传
+        if (this.uploadSDKform.os == 0) {
+          // ios
+          if (this.fileListSDK.length == 0)
+            return this.$message.warning("上传文件为必填项！");
+        } else if (this.uploadSDKform.os == 1) {
+          if (this.fileListSDK.length == 0 || this.fileListAdvert.length == 0)
+            return this.$message.warning("上传文件为必填项！");
+        }
+
+        if (this.isAdd) {
+          const res = await addadvertSource(this.uploadSDKform);
+          if (res.code != 200) return this.$message.error(res.msg);
+          this.getAdvertSource();
+          this.$message.success(res.msg);
+          this.uploadSDKdialog = false;
+        } else {
+          let obj = {
+            id: this.uploadSDKform.id,
+            sourcePositions: this.uploadSDKform.sourcePositions,
+            sdkDownloadUrl: this.uploadSDKform.sdkDownloadUrl,
+            adapterDownloadUrl: this.uploadSDKform.adapterDownloadUrl,
+          };
+          const res = await editadvertSource(obj);
+          if (res.code != 200) return this.$message.error(res.msg);
+          this.getAdvertSource();
+          this.$message.success(res.msg);
+          this.uploadSDKdialog = false;
+        }
+      });
+    },
+    uploadSDkpackage() {
+      this.disabled = false;
+      this.isAdd = true;
+      this.uploadSDKdialog = true;
+    },
+    searchBtn() {
+      this.MedproVparams = Object.assign({}, this.medproVparams);
+      this.getAdvertSource();
+    },
+    systemChange() {
+      //  IOS不上传广告源适配包
+      if (this.uploadSDKform.os == 0) {
+        this.isShow = false;
+      } else {
+        this.isShow = true;
+      }
+    },
+    closeUploadialog() {
+      clearInterval(this.sdkTimer);
+      clearInterval(this.adapterTimer);
+      this.sdkPercentage = 0;
+      this.sdkProgressShow = false;
+      this.adapterPercentage = 0;
+      this.adapterProgressShow = false;
+      this.isShow = true;
+      this.$refs["ruleForm"].resetFields();
+      this.fileListSDK = [];
+      this.fileListAdvert = [];
+      this.uploadSDKform = {
+        os: "",
+        platId: "",
+        version: "",
+        sourcePositions: [],
+        sdkDownloadUrl: "",
+        adapterDownloadUrl: "",
+      };
+    },
+    handleSizeChange(val) {
+      this.MedproVparams.limit = val;
+      this.getAdvertSource();
+    },
+    handleCurrentChange(val) {
+      this.MedproVparams.page = val;
+      this.getAdvertSource();
+    },
+    sdkPackageSuccess(response) {
+      this.sdkProgressShow = true;
+      if (response.code == 200) {
+        this.uploadSDKform.sdkDownloadUrl = response.data;
+        this.fileListSDK = [{ url: this.url + response.data }];
+        this.sdkfileName = response.data;
+        this.sdkTimer = setInterval(async () => {
+          const res = await progessLine(this.sdkfileName);
+          if (res.code == 200 && res.data === null) {
+            this.sdkPercentage = 1;
+          } else {
+            this.sdkPercentage = res.data;
+            if (res.data >= 100) {
+              this.sdkPercentage = 100;
+              clearInterval(this.sdkTimer);
+              this.sdkTimer = null;
+            }
+          }
+        }, 1000);
+      }
+    },
+    advertSuccess(response) {
+      this.adapterProgressShow = true;
+      if (response.code == 200) {
+        this.uploadSDKform.adapterDownloadUrl = response.data;
+        this.fileListAdvert = [{ url: this.url + response.data }];
+        this.adapterfileName = response.data;
+        this.adapterTimer = setInterval(async () => {
+          const res = await progessLine(this.adapterfileName);
+          if (res.code == 200 && res.data === null) {
+            this.adapterPercentage = 1;
+          } else {
+            this.adapterPercentage = res.data;
+            if (res.data >= 100) {
+              this.adapterPercentage = 100;
+              clearInterval(this.adapterTimer);
+              this.adapterTimer = null;
+            }
+          }
+        }, 1000);
+      }
+    },
+  },
+};
+</script>
+<style lang="scss" scoped>
+.sdkV {
+  width: 250px;
+}
+.item {
+  color: #1f1f1f;
+  font-size: 14px;
+}
+.advertItem {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 90px;
+  padding-left: 30px;
+  //   background-color: crimson;
+}
+
+.advert_top,
+.advert_bottom {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.advert_name {
+  display: flex;
+  // width: 200px;
+  margin-right: 50px;
+  font-size: 16px;
+}
+.uploadsuccess {
+  margin-left: 20px;
+  color: #67c23a;
+}
+.svgicon {
+  color: #3685df;
+  font-size: 16px;
+  margin-left: 5px;
+  &:hover {
+    color: #034ca0;
+  }
+}
+</style>

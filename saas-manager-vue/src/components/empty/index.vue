@@ -1,0 +1,35 @@
+<template>
+  <div class="box">
+    <img
+      :style="styleObj"
+      src="../../assets/no-data.png"
+      alt=""
+    >
+    <span class="empty_text">暂无数据</span>
+  </div>
+</template>
+<script>
+export default {
+  props: ['styleObj'],
+  data() {
+    return {}
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+.box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+
+  .empty_text {
+    font-size: 14px;
+    color: #999;
+    margin-top: 10px;
+  }
+}
+</style>

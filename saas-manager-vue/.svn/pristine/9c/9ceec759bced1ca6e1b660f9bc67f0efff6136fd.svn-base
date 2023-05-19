@@ -1,0 +1,40 @@
+import request from '@/utils/request'
+
+export function getPlatPager(data) {
+  return request({
+    url: '/plat/pager',
+    method: 'post',
+    data
+  })
+}
+
+export function addPlatform(data) {
+  return request({
+    url: '/plat/add',
+    method: 'post',
+    data
+  })
+}
+
+export function updatePlatform(data) {
+  return request({
+    url: '/plat/update',
+    method: 'post',
+    data
+  })
+}
+
+export function getPlatOptions() {
+  return request({
+    url: '/plat/list',
+    method: 'get'
+  })
+}
+
+export function getAccounts(id) {
+  return request({
+    url: `/plat/accounts/` + id,
+    method: 'post'
+  })
+}
+

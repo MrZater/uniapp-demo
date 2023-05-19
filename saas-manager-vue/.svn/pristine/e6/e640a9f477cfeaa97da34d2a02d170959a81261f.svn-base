@@ -1,0 +1,303 @@
+<template>
+  <div class="funnel-report-container">
+    <div class="search">
+      <el-row class="searchRow" :gutter="0">
+        <el-col :span="6" class="search_item"
+          ><el-date-picker
+            style="width: 90%"
+            v-model="date"
+            :clearable="false"
+            class="item"
+            type="daterange"
+            value-format="yyyy-MM-dd"
+            align="right"
+            unlink-panels
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            :picker-options="pickerOptions"
+            @change="getSTimeChange"
+        /></el-col>
+        <el-col :span="6" class="search_item">
+          <CustSelectApp
+            style="width: 90%"
+            :word="'应用'"
+            :width="450"
+            :allData="appList"
+            @selectListhandle="selectListhandleApp"
+            searchById
+          />
+        </el-col>
+        <el-col :span="6" class="search_item">
+          <CustSelectApp
+            style="width: 90%"
+            :word="'广告位'"
+            :width="450"
+            :allData="placeList"
+            @selectListhandle="selectListhandlePlace"
+            searchById
+          />
+        </el-col>
+        <el-col :span="6" class="search_item">
+          <CustSelectApp
+            style="width: 90%"
+            :word="'广告样式'"
+            :width="450"
+            :allData="positionList"
+            @selectListhandle="selectListhandlePosition"
+          />
+        </el-col>
+
+        <el-col :span="6" class="search_item">
+          <CustSelectApp
+            style="width: 90%"
+            :word="'流量分组'"
+            :width="450"
+            :allData="groupList"
+            @selectListhandle="selectListhandleGroup"
+          />
+        </el-col>
+        <el-col :span="6" class="search_item">
+          <CustSelectApp
+            style="width: 90%"
+            :word="'渠道'"
+            :width="450"
+            :allData="channelList"
+            @selectListhandle="selectListhandleChannel"
+        /></el-col>
+
+        <el-col :span="6" class="search_item">
+          <el-input
+            style="width: 90%"
+            placeholder="请输入SDK版本号"
+            v-model="query.sdkVersion"
+          />
+        </el-col>
+      </el-row>
+      <div class="searchBtn">
+        <el-button
+          style="float: right"
+          type="primary"
+          size="small"
+          icon="el-icon-search"
+          @click="searchBtn"
+          >搜索</el-button
+        >
+      </div>
+    </div>
+    <Funnel :funnelData='funnelData' class="funnel"></Funnel>
+  </div>
+</template>
+
+<script>
+import { adminDateOotion } from "@/utils/options";
+import Funnel from "./funnel/index.vue";
+import CustSelectApp from "@/components/CustSelectApp";
+
+import { getAppList } from "@/api/app";
+import { getPlaceList } from "@/api/place";
+import { getPositionList } from "@/api/common";
+import { flowGroups, getChannel } from "@/api/synthReport";
+import { funnelReport } from "@/api/funnelReport";
+
+export default {
+  name: "funnelReport",
+  components: { Funnel, CustSelectApp },
+  data() {
+    return {
+      // 日期选择器参数
+      pickerOptions: adminDateOotion ? adminDateOotion : [],
+      // 日期
+      date: [],
+
+      query: {
+        page: 1, // 页数
+        limit: 10, // 页容量
+        dateStart: "", // 开始日期
+        dateEnd: "", // 结束日期
+        appIdList: [], // 应用id数组
+        appIdListExclude: 1,
+        placeIdList: [], // 广告位id数组
+        placeIdListExclude: 1,
+        positionIdList: [], // 广告样式数组
+        positionIdListExclude: 1,
+        groupIdList: [], // 流量分组
+        groupIdListExclude: 1,
+        channelIdList: [], // 渠道分组
+        channelIdListExclude: 1,
+        platIdList: [], // 广告源id数组
+        platIdListExclude: 1,
+        sourceIdList: [], // 代码位数组
+        sourceIdListExclude: 1,
+        groupByList: ["date"], // 维度
+        sdkVersion: "", // sdk版本号
+        adminUserIds: [], // 用户id数组
+        groupBy: "", // 图标维度对比必填
+      },
+      total: 0,
+      appList: [], // 应用列表
+      placeList: [], // 广告位列表
+      // 广告样式列表
+      positionList: [],
+      // 流量分组
+      groupList: [],
+      //  渠道列表
+      channelList: [],
+      funnelData:{}
+    };
+  },
+  mounted() {
+    this.initDate();
+    this.getApp();
+    this.getPlace();
+    this.getPosition();
+    this.getFlowGroups();
+    this.getChannelData();
+  },
+  methods: {
+    // 初始化时间
+    initDate() {
+      let time1 = new Date().getTime() - 1000 * 60 * 60 * 24;
+      let year1 = new Date(time1).getFullYear();
+      let month1 = new Date(time1).getMonth() + 1;
+      let day1 = new Date(time1).getDate();
+      let time2 = new Date().getTime() - 1000 * 60 * 60 * 24 * 8;
+      let year2 = new Date(time2).getFullYear();
+      let month2 = new Date(time2).getMonth() + 1;
+      let day2 = new Date(time2).getDate();
+      let str1 = `${year1}-${month1 < 10 ? "0" + month1 : month1}-${
+        day1 < 10 ? "0" + day1 : day1
+      }`;
+      let str2 = `${year2}-${month2 < 10 ? "0" + month2 : month2}-${
+        day2 < 10 ? "0" + day2 : day2
+      }`;
+      this.date = [str2, str1];
+      this.query.dateEnd = str1;
+      this.query.dateStart = str2;
+    },
+    // 日期改变事件
+    getSTimeChange() {
+      this.query.dateEnd = this.date[1];
+      this.query.dateStart = this.date[0];
+    },
+    // 获取应用列表
+    getApp() {
+      getAppList().then((res) => {
+        if (res.code !== 200) return;
+        if (!res.data) {
+          res.data = [];
+        }
+        this.appList = res.data;
+      });
+    },
+    // 应用列表改变事件
+    selectListhandleApp(val) {
+      if (this.query.appIdList.length !== val.length) {
+        this.query.appIdList = val;
+      }
+    },
+    // 获取广告位列表
+    getPlace() {
+      getPlaceList().then((res) => {
+        if (res.code !== 200) return;
+        if (!res.data) {
+          res.data = [];
+        }
+        this.placeList = res.data;
+      });
+    },
+    // 广告位列表改变事件
+    selectListhandlePlace(val) {
+      if (this.query.placeIdList.length !== val.length) {
+        this.query.placeIdList = val;
+      }
+    },
+    // 获取广告样式列表
+    getPosition() {
+      getPositionList().then((res) => {
+        if (res.code !== 200) return;
+        if (!res.data) {
+          res.data = [];
+        }
+        this.positionList = res.data;
+      });
+    },
+    // 广告样式改变事件
+    selectListhandlePosition(val) {
+      this.query.positionIdList = val;
+    },
+    // 获取流量分组
+    getFlowGroups() {
+      flowGroups().then((res) => {
+        if (res.code !== 200) return;
+        if (!res.data) {
+          res.data = [];
+        }
+        this.groupList = res.data;
+      });
+    },
+    // 流量分组列表改变事件
+    selectListhandleGroup(val) {
+      this.query.groupIdList = val;
+    },
+    // 获取渠道列表
+    getChannelData() {
+      getChannel().then((res) => {
+        if (res.code !== 200) return;
+        if (!res.data) {
+          res.data = [];
+        }
+        this.channelList = res.data.map((item) => {
+          return { id: item, name: item };
+        });
+      });
+    },
+    // 渠道改变事件
+    selectListhandleChannel(val) {
+      this.query.channelIdList = val;
+    },
+
+    // 搜索按钮事件
+    searchBtn() {
+      this.query.page = 1;
+      this.getTableList();
+    },
+    async getTableList() {
+      let resp = await funnelReport(this.query);
+      console.log(resp);
+      this.funnelData = resp.data ? resp.data.aggregate : {};
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.funnel-report-container {
+  position: relative;
+  width: 100%;
+
+  .search {
+    padding: 30px;
+    background-color: #fff;
+    .searchRow {
+      margin-top: 10px;
+      margin-bottom: 10px;
+      .search_item {
+        margin-top: 10px;
+      }
+    }
+    .searchBtn {
+      margin-top: 20px;
+      width: 100%;
+      display: flex;
+      flex-direction: row-reverse;
+      padding-right: 60px;
+    }
+  }
+  .funnel {
+    background-color: #fff;
+    margin-top: 15px;
+    width: 100%;
+  }
+}
+</style>

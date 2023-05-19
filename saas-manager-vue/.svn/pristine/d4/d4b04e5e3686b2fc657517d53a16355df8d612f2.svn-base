@@ -1,0 +1,388 @@
+<template>
+  <div class="cust-tag-container">
+    <el-button
+      v-waves
+      type="primary"
+      size="mini"
+      class="filter-item"
+      @click="handleChangeTag"
+      >自定义指标</el-button
+    >
+    <el-dialog
+      title="指标"
+      :visible.sync="customDialog"
+      width="50%"
+      @close="closeCustomDialog"
+    >
+      <div class="container_box" :style="{ height: boxHeight + 'px' }">
+        <div class="left" :style="{ height: boxHeight + 'px' }">
+          <div class="head_top">1.勾选需要显示的指标</div>
+          <div class="head_bottom" :style="{ height: boxHeight - 40 + 'px' }">
+            <div class="checkAll_">
+              <span @click="checkAll">全选</span> /
+              <span @click="InvertSelect">反选</span> /
+              <span @click="customSelect">默认</span>
+            </div>
+            <!-- style=" position:relative,color:red,width:300px,height:30px" -->
+
+            <div><h3>Medpro统计数据</h3></div>
+
+            <div class="medpro_box checkbox_1">
+              <template v-for="(e, i) in newTargetArr">
+                <div v-if="e.type == 'Medpro'" :key="i" class="item_">
+                  <label :class="e.checked ? 'active' : ''" :for="i"
+                    ><input
+                      :id="i"
+                      type="checkbox"
+                      :checked="e.checked"
+                      :label="e.label"
+                      @change="handelChecked(e, i)"
+                    />{{ e.label }}</label
+                  >
+                </div>
+              </template>
+            </div>
+            <div><h3>API数据</h3></div>
+
+            <div class="api_box checkbox_1">
+              <template v-for="(e, i) in newTargetArr">
+                <div v-if="e.type == 'API'" :key="i" class="item_">
+                  <label :class="e.checked ? 'active' : ''" :for="i"
+                    ><input
+                      :id="i"
+                      type="checkbox"
+                      :checked="e.checked"
+                      :label="e.label"
+                      @change="handelChecked(e, i)"
+                    />{{ e.label }}</label
+                  >
+                </div>
+              </template>
+            </div>
+            <div><h3>数据GAP</h3></div>
+
+            <div class="gap_box checkbox_1">
+              <template v-for="(e, i) in newTargetArr">
+                <div v-if="e.type == 'GAP'" :key="i" class="item_">
+                  <label :class="e.checked ? 'active' : ''" :for="i"
+                    ><input
+                      :id="i"
+                      type="checkbox"
+                      :checked="e.checked"
+                      :label="e.label"
+                      @change="handelChecked(e, i)"
+                    />{{ e.label }}</label
+                  >
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+        <div class="right" :style="{ height: boxHeight - 100 + 'px' }">
+          <div class="head_top_">2. 拖动调整指标显示顺序</div>
+          <div class="head_bottom_" :style="{ height: boxHeight - 40 + 'px' }">
+            <vuedraggable
+              v-model="dragArr"
+              animation="350"
+              chosen-class="chosen"
+            >
+              <transition-group>
+                <div v-for="(e, i) in dragArr" :key="i" class="drag_item">
+                  <span class="el-icon-rank" />
+                  <span class="drag_text">{{ e.label }}</span>
+                  <span class="el-icon-close" @click="closeChecked(e, i)" />
+                </div>
+              </transition-group>
+            </vuedraggable>
+          </div>
+        </div>
+      </div>
+      <span slot="footer">
+        <el-button @click="customDialog = false">取 消</el-button>
+        <el-button type="primary" @click="handelConfirmDialog">确 定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import vuedraggable from "vuedraggable";
+import waves from "@/directive/waves";
+
+export default {
+  name: "CustTag",
+  directives: { waves },
+
+  components: {
+    vuedraggable,
+  },
+  props: {
+    FarTargetArr: {
+      type: Array,
+      default: [],
+    },
+    storageName: {
+      type: String,
+      default: "",
+    },
+    boxHeight: {
+      type: Number,
+      default: "0px",
+    },
+  },
+
+  data() {
+    return {
+      // 自定义指标
+      customDialog: false, // 弹框打开标志
+      targetArr: [], // 标志数组（不变）
+      dragArr: [], // 拖拽数组
+      sureArr: [], // 最终展示数组
+      newTargetArr: [], // 标志数组（可变）
+    };
+  },
+  create() {},
+  mounted() {
+    this.targetArr = JSON.parse(JSON.stringify(this.FarTargetArr));
+    this.initDialog();
+  },
+  watch: {
+    FarTargetArr: {
+      handler(val) {
+        this.targetArr = JSON.parse(JSON.stringify(val));
+      },
+      deep: true,
+    },
+  },
+
+  methods: {
+    // 自定义指标
+
+    // 自定义质变按钮
+    // 初始化弹框
+    initDialog() {
+      this.dragArr = [];
+      this.targetArr.forEach((item, i) => {
+        if (item.checked) {
+          this.dragArr.push(JSON.parse(JSON.stringify(item)));
+        }
+      });
+    },
+    // 打开
+    handleChangeTag() {
+      this.customDialog = true;
+      this.newTargetArr = JSON.parse(JSON.stringify(this.targetArr));
+      this.dragArr = [];
+      this.newTargetArr.forEach((item) => {
+        if (item.checked) {
+          this.dragArr.push(item);
+        }
+      });
+    },
+    // 关闭弹框
+    closeCustomDialog() {
+      this.newTargetArr = [];
+    },
+    // 全选
+    checkAll() {
+      this.dragArr = [];
+      let isAll = true;
+      let first = false;
+      this.newTargetArr.forEach((item, i) => {
+        if (i === 0) {
+          first = item.checked;
+        } else {
+          if (item.checked !== first) {
+            return (isAll = false);
+          }
+        }
+      });
+      this.newTargetArr.forEach((item) => {
+        if (isAll && !first) {
+          item.checked = true;
+          // item.default = true;
+        } else if (isAll && first) {
+          item.checked = false;
+          // item.default = false;
+        } else {
+          item.checked = true;
+          // item.default = true;
+        }
+      });
+      if (first && isAll) {
+        this.dragArr = [];
+      } else {
+        this.dragArr = JSON.parse(JSON.stringify(this.newTargetArr));
+      }
+    },
+    // 反选
+    InvertSelect() {
+      this.dragArr = [];
+      this.newTargetArr.forEach((item, i) => {
+        item.checked = !item.checked;
+        // item.default = false;
+        if (item.checked) {
+          // item.default = true;
+          this.dragArr.push(JSON.parse(JSON.stringify(item)));
+        }
+      });
+    },
+    // 默认
+    customSelect() {
+      this.dragArr = [];
+      this.dragArr = [];
+      this.newTargetArr.forEach((item) => {
+        item.checked = false;
+        if (item.default) {
+          item.checked = true;
+          this.dragArr.push(item);
+        }
+      });
+    },
+    // 选择函数
+    handelChecked(val, i) {
+      let index = this.dragArr.findIndex((e) => {
+        return val.prop === e.prop;
+      });
+      if (!val.checked || index === -1) {
+        this.$set(this.newTargetArr[i], "checked", true);
+        this.dragArr.push(val);
+      } else if (val.checked && index !== -1) {
+        this.$set(this.newTargetArr[i], "checked", false);
+        this.dragArr.splice(index, 1);
+      }
+    },
+    // 删除拖拽项
+    closeChecked(e, i) {
+      this.newTargetArr.forEach((item) => {
+        if (e.prop === item.prop) {
+          item.checked = false;
+        }
+      });
+      this.dragArr.splice(i, 1);
+    },
+    // 确定按钮
+    handelConfirmDialog() {
+      this.customDialog = false;
+      this.targetArr = JSON.parse(JSON.stringify(this.newTargetArr));
+      localStorage.setItem(this.storageName, JSON.stringify(this.newTargetArr));
+      this.sureArr = JSON.parse(JSON.stringify(this.dragArr));
+      this.newTargetArr = [];
+      this.$emit("handelConfirmDialog", this.sureArr, this.targetArr);
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.cust-tag-container {
+  display: inline-block;
+}
+.container_box {
+  width: 100%;
+  border: 1px solid #dddfe6;
+  .left {
+    float: left;
+    width: 70%;
+    .head_top {
+      width: 100%;
+      height: 40px;
+      line-height: 40px;
+      color: #333;
+      border: 1px solid #dddfe6;
+      padding-left: 20px;
+      border-top: none;
+      border-right: none;
+    }
+    .head_bottom {
+      width: 100%;
+      padding: 15px 10px;
+      box-sizing: border-box;
+      .checkAll_ {
+        text-align: right;
+        height: 30px;
+        font-size: 14px;
+        line-height: 30px;
+        color: #0075ff;
+        cursor: pointer;
+      }
+      .checkbox_1 {
+        display: flex;
+        flex-wrap: wrap;
+        width: 100%;
+        margin-top: 20px;
+        .item_ {
+          // display: flex;
+          // justify-content: space-between;
+          width: 33.33%;
+          height: 20px;
+          margin-bottom: 16px;
+          font-size: 15px;
+          label {
+            font-weight: 400;
+            input {
+              width: 18px;
+              height: 18px;
+              vertical-align: middle;
+              margin-right: 10px;
+            }
+          }
+          .active {
+            color: #0075ff;
+          }
+        }
+      }
+    }
+  }
+  .right {
+    float: left;
+    width: 30%;
+    .chosen {
+      background-color: #f5f5f5 !important;
+    }
+    .head_top_ {
+      width: 100%;
+      height: 40px;
+      line-height: 40px;
+      color: #333;
+      border: 1px solid #dddfe6;
+      padding-left: 20px;
+      border-top: none;
+      border-right: none;
+      border-bottom: none;
+    }
+    .head_bottom_ {
+      overflow-y: scroll;
+      width: 100%;
+      border: 1px solid #dddfe6;
+      .drag_item {
+        display: flex;
+        align-items: center;
+        width: 92%;
+        height: 35px;
+        margin: 0 auto;
+        background-color: #fff;
+        border: 1px solid #dddfe6;
+        box-shadow: 0 2px 2px 0 #dddfe6;
+        margin-top: 9px;
+        .el-icon-rank {
+          width: 50px;
+          text-align: center;
+          font-size: 22px;
+          cursor: move;
+        }
+        .drag_text {
+          flex: 1;
+          text-align: center;
+        }
+        .el-icon-close {
+          font-size: 18px;
+          width: 42px;
+          text-align: center;
+          cursor: pointer;
+        }
+      }
+    }
+  }
+}
+</style>

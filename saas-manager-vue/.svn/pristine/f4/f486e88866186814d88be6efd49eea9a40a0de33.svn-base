@@ -1,0 +1,37 @@
+<template>
+  <div class="dashboard-container">
+    <component :is="currentRole" />
+  </div>
+</template>
+
+<script>
+
+import { mapGetters } from 'vuex'
+import dashboardAdmin from './admin'
+import dashboardUser from './user'
+export default {
+  name: 'Dashboard',
+  components: { dashboardAdmin, dashboardUser },
+  data() {
+    return {
+      currentRole: 'dashboardAdmin'
+    }
+  },
+  computed: {
+    ...mapGetters([
+      'roles'
+    ])
+  },
+  created() {
+    // if (this.roles.includes('SUPER_ADMIN')) {
+    this.currentRole = 'dashboardAdmin'
+    // } else {
+    //   this.currentRole = 'dashboardUser'
+    // }
+  }
+}
+</script>
+
+<style scoped>
+
+</style>

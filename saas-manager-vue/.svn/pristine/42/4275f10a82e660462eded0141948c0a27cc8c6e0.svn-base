@@ -1,0 +1,38 @@
+import user from './user'
+
+const role = user.state.roles[0]
+
+const state = {
+       allowOperate: role == 'MANAGEMENT' ?
+        false : role == 'BUSINESS_DIRECTOR' ?
+        false : role == 'OPERATOR_DIRECTOR' ?
+        false : true,
+    // allowOperate:false,
+    // allowAdd: role == 'MANAGEMENT' ?
+    //     false : role == 'BUSINESS_DIRECTOR' ?
+    //     false : role == 'OPERATOR_DIRECTOR' ?
+    //     false : true,
+    // allowEdit: role == 'MANAGEMENT' ?
+    //     false : role == 'BUSINESS_DIRECTOR' ?
+    //     false : role == 'OPERATOR_DIRECTOR' ?
+    //     false : true,
+    // allowDelete: role == 'MANAGEMENT' ?
+    //     false : role == 'BUSINESS_DIRECTOR' ?
+    //     false : role == 'OPERATOR_DIRECTOR' ?
+    //     false : true,
+    allowDownload: role == 'MANAGEMENT' ?
+        false : role == 'BUSINESS_DIRECTOR' ?
+        false : role == 'OPERATOR_DIRECTOR' ?
+        false : true
+}
+
+const mutations = {}
+
+const actions = {}
+
+export default {
+    namespaced: true,
+    state,
+    mutations,
+    actions
+}

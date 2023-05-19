@@ -1,0 +1,120 @@
+import {
+  asyncRoutes,
+  constantRoutes
+} from '@/router'
+import user from './user'
+import autoweb from './autoweb'
+
+
+/**
+ * Use meta.role to determine if the current user has permission
+ * @param roles
+ * @param route
+ */
+function hasPermission(roles, route) {
+  if (route.meta && route.meta.roles) {
+    return roles.some(role => route.meta.roles.includes(role))
+  } else {
+    return true
+  }
+}
+
+/**
+ * Filter asynchronous routing tables by recursion
+ * @param routes asyncRoutes
+ * @param roles
+ */
+export function filterAsyncRoutes(routes, roles) {
+  const res = []
+
+  routes.forEach(route => {
+    const tmp = {
+      ...route
+    }
+    if (hasPermission(roles, tmp)) {
+      if (tmp.children) {
+        tmp.children = filterAsyncRoutes(tmp.children, roles)
+      }
+      res.push(tmp)
+    }
+  })
+
+  return res
+}
+
+const state = {
+  routes: [],
+  addRoutes: []
+}
+
+const mutations = {
+  SET_ROUTES: (state, routes) => {
+    state.addRoutes = routes
+    state.routes = constantRoutes.concat(routes)
+  }
+}
+
+const actions = {
+  generateRoutes({
+    commit
+  }, roles) {
+    return new Promise(resolve => {
+      let accessedRoutes
+      if (user.state.roles[0] === "ADMIN" && user.state.mediaAccess == 1) {
+        asyncRoutes.forEach(item => {
+          if (item.path === '/reportData') {
+            item.children.forEach(c => {
+              if (c.path === 'mediaReport') {
+                c.meta.roles.push('ADMIN')
+
+              }
+            })
+          }
+        })
+      }
+      if (user.state.roles[0] === "ADMIN" && user.state.creative == 1) {
+        asyncRoutes.forEach(item => {
+          if (item.path === '/material') {
+            item.meta.roles.push('ADMIN')
+            item.children.forEach(c => {
+              c.meta.roles.push('ADMIN')
+
+            })
+          }
+        })
+      }
+      asyncRoutes.forEach(item => {
+        if (item.path == '/Accesscenter') {
+          item.children.forEach(c => {
+            if (c.path == 'VersionAdmin') {
+              c.meta.title = autoweb.state.title + '版本'
+
+            }
+          })
+        }
+      })
+      if (user.state.roles[0] != "SUPER_ADMIN") {
+        asyncRoutes.forEach(item => {
+          if (item.path == '/messages') {
+            item.hidden = true
+          }
+        })
+      }
+      if (roles.includes('super_admin')) {
+        accessedRoutes = asyncRoutes || []
+      } else {
+        accessedRoutes = filterAsyncRoutes(asyncRoutes, roles)
+      }
+
+      commit('SET_ROUTES', accessedRoutes)
+      resolve(accessedRoutes)
+    })
+  }
+}
+
+export default {
+  namespaced: true,
+  state,
+  mutations,
+  actions
+}

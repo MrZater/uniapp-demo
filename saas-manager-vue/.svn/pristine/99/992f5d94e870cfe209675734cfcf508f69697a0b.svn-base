@@ -1,0 +1,417 @@
+<template>
+  <div class="cust-select-container">
+    <el-popover
+      v-model="isShow"
+      class="popover"
+      placement="bottom-end"
+      :width="width"
+      trigger="click"
+      @hide="closePopover"
+    >
+      <div
+        slot="reference"
+        class="oneselect"
+        @click="handleClickSelectBox"
+      >
+        <div
+          v-if="word === '流量分组' && (priority || priority == 0)"
+          class="priority"
+        >
+          {{ priority }}
+        </div>
+
+        <span
+          class="word"
+          :style="{ marginLeft: word === '流量分组' ? '20px' : '0' }"
+        >
+          <svg-icon
+            v-if="model !== ' ' && model !== ''"
+            class="osicon"
+            :icon-class="os === 1 ? 'android' : os === 0 ? 'ios' : ''"
+          />
+          <span
+            v-if="model == ' ' || model == '' || !model"
+            style="color: #c0c4cc"
+          >{{ "请选择" + word }}</span>
+          <span v-else>{{ modelName }}</span>
+          <span
+            v-if="clear && selectData"
+            class="allowclear"
+          >
+            <i
+              :class="{
+                icon: true,
+                'el-icon-arrow-down': !isShow,
+                'el-icon-arrow-up': isShow,
+                down: true,
+              }"
+            />
+
+            <i
+              class="el-icon-circle-close close"
+              @click.self="clearData"
+            />
+          </span>
+          <span v-if="!clear || !selectData">
+            <i
+              :class="{
+                icon: true,
+                noclear: true,
+                'el-icon-arrow-down': !isShow,
+                'el-icon-arrow-up': isShow,
+              }"
+            />
+          </span>
+        </span>
+      </div>
+
+      <div
+        v-if="isShow"
+        class="downbox"
+      >
+        <div class="searchbox">
+          <el-input
+            v-model="search_word"
+            :placeholder="
+              searchById
+                ? '请输入' + word + '名称或ID'
+                : '请输入' + word + '名称'
+            "
+          >
+            <i
+              slot="prefix"
+              class="el-input__icon el-icon-search"
+            />
+          </el-input>
+        </div>
+        <div class="selectbox">
+          <el-radio-group
+            v-if="selectList.length > 0"
+            v-model="selectData"
+          >
+            <div class="checkbox" />
+            <el-radio
+              v-for="(item, index) in selectList"
+              :key="index"
+              class="radioitem"
+              :style="{ width: width + 'px' }"
+              :value="item.id"
+              :label="item.id"
+            >
+              <el-tooltip
+                class="item"
+                effect="dark"
+                :content="item.name"
+                placement="left-start"
+                :hide-after="0"
+              >
+                <div style="display: inline-block; font-size: 13px">
+                  <svg-icon
+                    v-if="item.os || item.os == 0"
+                    :icon-class="item.os === 1 ? 'android' : 'ios'"
+                  />
+
+                  <!-- <i
+                  v-if="item.os || item.os === 0"
+                  :class="{
+                    iconfont: true,
+                    ios: item.os == 0,
+                    ad: item.os == 1,
+                  }"
+                  >{{ item.os === 1 ? "&#xe64d;" : "&#xe60c;" }}</i
+                > -->
+                  <div
+                    v-if="item.priority || item.priority == 0"
+                    class="priority"
+                  >
+                    {{ item.priority }}
+                  </div>
+                  {{ item.name }}
+                </div>
+              </el-tooltip>
+            </el-radio>
+          </el-radio-group>
+        </div>
+      </div>
+    </el-popover>
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+    allData: Array, // 全部数据
+    width: Number,
+    word: String,
+    model: String,
+    clear: {
+      type: Boolean,
+      default: false
+    },
+    searchById: {
+      type: Boolean,
+      default: false
+    }
+  },
+  data() {
+    return {
+      search_word: '', // 下拉框中的搜索字段
+      selectData: {}, // 选中数据
+      selectList: [], // 显示列表数据
+      modelName: '',
+      isShow: false,
+      priority: '',
+      os: ''
+    }
+  },
+  watch: {
+    allData: {
+      handler(val) {
+        if (val.length === 0) {
+          this.modelName = ''
+        }
+        this.selectList = this.allData
+        val.forEach((item) => {
+          if (item.id === this.model) {
+            this.modelName = item.name
+            this.selectData = item.id
+            this.priority = item.priority
+            this.os = item.os
+          }
+        })
+      }
+    },
+    search_word: {
+      handler(val) {
+        if (val === '') {
+          this.selectList = this.allData
+        }
+        let arr = []
+        this.allData.forEach((item) => {
+          let hasName = false
+          if (item.name && item.name.includes(this.search_word)) {
+            arr.push(item)
+            hasName = true
+          }
+          if (!hasName && this.searchById) {
+            if (item.searchId && item.searchId.includes(this.search_word)) {
+              arr.push(item)
+            }
+          }
+        })
+        this.selectList = arr
+      }
+    },
+    model: {
+      handler(val) {
+        if (!val) {
+          this.modelName = ''
+        }
+        this.selectData = val
+        this.allData.forEach((item) => {
+          if (item.id === val) {
+            this.modelName = item.name
+            this.selectData = item.id
+            this.priority = item.priority
+            this.os = item.os
+          }
+        })
+      }
+    },
+    selectData: {
+      handler(val) {
+        if (!val) {
+          this.modelName = ''
+        }
+        this.$emit('handleSelect', val)
+        this.isShow = false
+      }
+    },
+    selectList: {
+      handler(val) {
+        if (val.length > 0) {
+          if (!val[0].searchId) {
+            val.forEach((item) => {
+              item.searchId = item.id
+            })
+          }
+        }
+      }
+    }
+  },
+  mounted() {
+    this.selectList = this.allData
+    this.selectData = this.model
+    this.allData.forEach((item) => {
+      if (item.id === this.model) {
+        this.modelName = item.name
+        this.selectData = item.id
+        this.priority = item.priority
+        this.os = item.os
+      }
+    })
+  },
+  methods: {
+    // 隐藏下拉框
+    closePopover() {
+      this.search_word = ''
+    },
+    // 选择框点击打开下拉框
+    handleClickSelectBox() {},
+    clearData() {
+      this.isShow = false
+
+      this.$emit('handleSelect', '')
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+@font-face {
+  font-family: "iconfont"; /* project id 3183855 */
+  src: url("?#iefix") format("embedded-opentype"),
+    url("//at.alicdn.com/t/font_3183855_sdoknrdb94.woff2") format("woff2"),
+    url("//at.alicdn.com/t/font_3183855_sdoknrdb94.woff") format("woff"),
+    url("//at.alicdn.com/t/font_3183855_sdoknrdb94.ttf") format("truetype"),
+    url("#iconfont") format("svg");
+}
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 14px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-stroke-width: 0.2px;
+  -moz-osx-font-smoothing: grayscale;
+}
+.iconfont.ad {
+  color: #68d740;
+}
+.iconfont.ios {
+  color: #6f99f8;
+}
+.cust-select-container {
+  cursor: pointer;
+  position: relative;
+  width: 100%;
+  height: 36px;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  // border: 1px solid #000;
+
+  .popover {
+    .oneselect {
+      text-align: left;
+      display: inline-block;
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border: 1px solid #dcdfe6;
+      border-radius: 5px;
+      line-height: 36px;
+      padding: 0 8px 0 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      .priority {
+        font-size: 12.3px;
+        position: absolute;
+        top: 12px;
+      }
+
+      .word {
+        padding-left: 3px;
+        color: #333;
+        font-size: 13px;
+        display: inline-block;
+        width: 90%;
+        height: 100%;
+        margin-left: 0px !important;
+        text-overflow: ellipsis;
+        text-align: left;
+        overflow: hidden;
+        .osicon {
+          margin-bottom: 5px;
+          margin-right: 3px;
+        }
+      }
+
+      .icon {
+        margin: 10px;
+        color: #c0c4cc;
+        font-size: 16px;
+        &.noclear {
+          position: absolute;
+          right: 0;
+        }
+      }
+      .allowclear {
+        width: 30px;
+        position: absolute;
+        right: 5px;
+        .close {
+          margin-left: 10px;
+          border-radius: 50%;
+          // border: 1px solid #ccc;
+          color: #ccc;
+          line-height: 100%;
+        }
+      }
+    }
+  }
+}
+.cust-select-container:hover .icon.down {
+  display: none;
+}
+::v-deep.downbox .el-radio__inner {
+  display: none;
+}
+.downbox {
+  min-height: 160px;
+  box-sizing: border-box;
+
+  .searchbox {
+    height: 55px;
+    line-height: 55px;
+  }
+  .selectbox {
+    position: relative;
+    width: 100%;
+    min-height: 120px;
+    max-height: 180px;
+    overflow: auto;
+    overflow-x: hidden;
+    .radioitem {
+      display: inline-block;
+      width: 90%;
+      height: 40px;
+      line-height: 40px;
+      font-size: 20px;
+      font-weight: 500;
+      padding-left: 5px;
+      &:hover {
+        background-color: #eee;
+      }
+    }
+  }
+}
+.priority {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  background-color: #1890ff;
+  color: #fff;
+  font-size: 12.3px;
+  line-height: 20px;
+  padding-left: 6px;
+  font-weight: 200;
+  border-radius: 50%;
+  margin-top: -3px;
+}
+::v-deep.searchbox .el-input--medium .el-input__inner {
+  font-size: 12px;
+}
+::v-deep.searchbox .el-input--mini .el-input__inner {
+  font-size: 12px;
+}
+</style>

@@ -1,0 +1,141 @@
+<template>
+  <div class="audit-message-container">
+    <div class="audit" v-if="isAudit">
+      <div class="search">
+        <el-row :gutter="0">
+          <el-col :span="6">
+            <el-select
+              v-model="query.publishType"
+              placeholder="请选择发布状态"
+              @change="handleChangePublishType"
+            >
+              <el-option label="已发布" :value="1" />
+              <el-option label="未发布" :value="0" />
+            </el-select>
+          </el-col>
+          <el-col :span="2" :offset="16">
+            <el-button type="primary" size="small" @click="addMessage"
+              >新增信息</el-button
+            >
+          </el-col>
+        </el-row>
+      </div>
+      <div class="table">
+        <el-table
+          v-loading="isLoading"
+          ref="table"
+          :header-cell-style="{ background: '#f7f8fa' }"
+          :data="tableList"
+          border
+          style="width: 100%"
+        >
+          <el-table-column
+            align="center"
+            prop=""
+            label="消息类型"
+          ></el-table-column>
+          <el-table-column
+            align="center"
+            prop=""
+            label="消息标题"
+          ></el-table-column>
+          <el-table-column
+            align="center"
+            prop=""
+            label="发布时间"
+          ></el-table-column>
+          <el-table-column
+            align="center"
+            prop=""
+            label="发布状态"
+          ></el-table-column>
+          <el-table-column
+            align="center"
+            prop=""
+            label="接收群体"
+          ></el-table-column>
+          <!-- <el-table-column align="center" prop="" label="操作"
+          ><template slot-scope="{ row }"> 
+            
+            </template
+        ></el-table-column> -->
+        </el-table>
+        <el-pagination
+          style="margin-top: 20px"
+          :current-page="query.page"
+          :page-sizes="[5, 10, 15]"
+          :page-size="query.limit"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
+    </div>
+    <div class="edit_add" v-else>
+      <EditMessage :row="row" :model="model" @goback="isAudit = true" />
+    </div>
+  </div>
+</template>
+
+<script>
+import EditMessage from "../EditMessage";
+import { messagePage } from "@/api/message.js";
+export default {
+  components: { EditMessage },
+  data() {
+    return {
+      model: "",
+      isAudit: true,
+      query: {
+        publishType: 0,
+        page: 1,
+        limit: 10,
+      },
+      total: 0,
+      isLoading: false,
+      tableList: [],
+      row: {},
+    };
+  },
+  mounted() {
+    this.getMessagePage();
+  },
+  methods: {
+    isPub(date) {
+      let timestamp = new Date(date).getTime();
+      let now = new Date().getTime();
+      return timestamp < now ? true : false;
+    },
+    handleChangePublishType() {
+      this.getMessagePage();
+    },
+    async getMessagePage() {
+      let resp = await messagePage(this.query);
+      console.log(resp);
+    },
+    handleSizeChange(val) {
+      this.query.limit = val;
+    },
+    handleCurrentChange(val) {
+      this.query.page = val;
+    },
+    addMessage() {
+      this.isAudit = false;
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.audit-message-container {
+  width: 100%;
+  padding: 20px 10px;
+  .search {
+    padding: 10px;
+  }
+  .table {
+    padding: 10px;
+  }
+}
+</style>

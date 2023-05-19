@@ -1,0 +1,379 @@
+<template>
+  <div class="app-container">
+    <div class="filter-container">
+      <el-dropdown
+        v-waves
+        class="filter-item"
+        type="primary"
+        split-button
+        @click="handleMultiAudit('A')"
+      >
+        批量通过
+        <el-dropdown-menu slot="dropdown">
+          <el-dropdown-item>
+            <el-button
+              v-waves
+              class="filter-item"
+              type="primary"
+              @click="handleMultiAudit('D')"
+            >
+              批量拒绝
+            </el-button>
+          </el-dropdown-item>
+          <el-dropdown-item>
+            <el-button
+              v-waves
+              class="filter-item"
+              type="primary"
+              @click="handleMultiPutOff('A')"
+            >
+              批量上架
+            </el-button>
+          </el-dropdown-item>
+          <el-dropdown-item>
+            <el-button
+              v-waves
+              class="filter-item"
+              type="primary"
+              @click="handleMultiPutOff('D')"
+            >
+              批量下架
+            </el-button>
+          </el-dropdown-item>
+        </el-dropdown-menu>
+      </el-dropdown>
+      <el-select
+        v-model="query.appIds"
+        class="filter-item"
+        placeholder="选择应用"
+        filterable
+        multiple
+        collapse-tags
+      >
+        <el-option
+          v-for="item in appOptions"
+          :key="item.id"
+          :label="item.name"
+          :value="item.id"
+        />
+      </el-select>
+      <el-select
+        v-model="query.sts"
+        placeholder="上架状态"
+        class="filter-item"
+      >
+        <el-option
+          label="已上架"
+          value="A"
+        />
+        <el-option
+          label="已下架"
+          value="D"
+        />
+      </el-select>
+      <el-select
+        v-model="query.auditSts"
+        placeholder="审核状态"
+        class="filter-item"
+      >
+        <el-option
+          label="全部"
+          value=""
+        />
+        <el-option
+          label="待审核"
+          value="W"
+        />
+        <el-option
+          label="审核通过"
+          value="A"
+        />
+        <el-option
+          label="审核拒绝"
+          value="D"
+        />
+      </el-select>
+      <el-select
+        v-model="query.position"
+        class="filter-item"
+      >
+        <el-option
+          label="全部"
+          value=""
+        />
+        <el-option
+          v-for="item in positionOptions"
+          :key="item.id"
+          :label="item.name"
+          :value="item.id"
+        />
+      </el-select>
+      <el-input
+        v-model="query.keyword"
+        class="filter-item filter-item-input"
+        placeholder="请输入关键词"
+      />
+      <el-button
+        v-waves
+        class="filter-item"
+        type="primary"
+        icon="el-icon-search"
+        @click="handleGetPager"
+      >
+        查询
+      </el-button>
+    </div>
+    <div class="body-container">
+      <el-table
+        ref="creativeTable"
+        :key="tableKey"
+        v-loading="listLoading"
+        :data="list"
+        fit
+        highlight-current-row
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="selection" />
+        <el-table-column
+          label="预览"
+          align="center"
+          width="140px"
+        >
+          <template slot-scope="{row}">
+            <creative
+              :creative="row"
+              :width="120"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="广告主"
+          align="center"
+          prop="advertiserName"
+        />
+        <el-table-column
+          label="投放应用"
+          align="center"
+          prop="appName"
+        />
+        <el-table-column
+          label="落地页"
+          align="center"
+          show-overflow-tooltip
+        >
+          <template slot-scope="{row}">
+            <el-link
+              target="_blank"
+              :href="row.landingPage"
+            >
+              {{ row.landingPage }}
+            </el-link>
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="关键词"
+          align="center"
+          prop="keywords"
+          show-overflow-tooltip
+        />
+        <el-table-column
+          label="状态"
+          align="center"
+        >
+          <template slot-scope="{row}">
+            <el-switch
+              v-model="row.sts"
+              active-text="上架"
+              inactive-text="下架"
+              active-value="A"
+              inactive-value="D"
+              inactive-color="#ff4949"
+              inline-prompt
+              @change="handlePutOff($event, row)"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="审核"
+          align="center"
+        >
+          <template slot-scope="{row}">
+            <el-switch
+              v-if="row.auditSts!=='W'"
+              v-model="row.auditSts"
+              active-text="通过"
+              inactive-text="拒绝"
+              active-value="A"
+              inactive-value="D"
+              inactive-color="#ff4949"
+              inline-prompt
+              @change="handleAudit($event, row)"
+            />
+            <div v-else>
+              <el-button
+                v-waves
+                size="small"
+                type="primary"
+                @click="handleAudit('A', row)"
+              >
+                通过
+              </el-button>
+              <el-button
+                v-waves
+                size="small"
+                type="danger"
+                @click="handleAudit('D', row)"
+              >
+                拒绝
+              </el-button>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+      <pagination
+        v-show="total>0"
+        :total="total"
+        :page.sync="query.page"
+        :limit.sync="query.limit"
+        @pagination="handleGetPager"
+      />
+    </div>
+  </div>
+</template>
+
+<script>
+import { getPositionList } from '@/api/common'
+import { getCreativePager, updateCreativeAuditSts, updateCreativePutOffSts } from '@/api/creative'
+import { Message } from 'element-ui'
+import waves from '@/directive/waves'
+import Pagination from '@/components/Pagination'
+import Creative from '@/components/Creative'
+import { getAppList } from '@/api/app'
+export default {
+  name: 'UserCreativeReview',
+  components: { Creative, Pagination },
+  directives: { waves },
+  data() {
+    return {
+      query: {
+        sts: null,
+        appIds: null,
+        auditSts: null,
+        position: null,
+        keyword: null,
+        page: 1,
+        limit: 50
+      },
+      total: 0,
+      selectedCreativeIds: [],
+      positionOptions: [],
+      appOptions: [],
+      tableKey: 0,
+      listLoading: false,
+      list: []
+    }
+  },
+  watch: {
+    list: {
+      handler(newValue) {
+        this.list = newValue
+      },
+      deep: true
+    }
+  },
+  created() {
+    this.initPositionOptions()
+    this.initAppOptions()
+    this.handleGetPager()
+  },
+  methods: {
+    initAppOptions() {
+      getAppList().then(res => {
+        this.appOptions = res.data
+      })
+    },
+    initPositionOptions() {
+      getPositionList().then(res => {
+        this.positionOptions = res.data
+      })
+    },
+    handleGetPager() {
+      this.listLoading = true
+      getCreativePager(this.query).then(res => {
+        this.total = res.data.total
+        this.list = res.data.items
+        this.listLoading = false
+      })
+    },
+    handleMultiAudit(sts) {
+      if (this.selectedCreativeIds.length === 0) {
+        Message({
+          message: '请选择素材',
+          type: 'error',
+          duration: 1000
+        })
+        return
+      }
+      updateCreativeAuditSts({ creatives: this.selectedCreativeIds, auditSts: sts }).then(() => {
+        Message({
+          message: '审核成功',
+          type: 'success',
+          duration: 1000
+        })
+        this.handleGetPager()
+      })
+    },
+    handleMultiPutOff(sts) {
+      if (this.selectedCreativeIds.length === 0) {
+        Message({
+          message: '请选择素材',
+          type: 'error',
+          duration: 1000
+        })
+        return
+      }
+      updateCreativePutOffSts({ creatives: this.selectedCreativeIds, auditSts: sts }).then(() => {
+        Message({
+          message: sts === 'A' ? '上架成功' : '下架成功',
+          type: 'success',
+          duration: 1000
+        })
+        this.handleGetPager()
+      })
+    },
+    handleAudit($event, row) {
+      updateCreativeAuditSts({ creatives: [{ creativeId: row.id, appId: row.appId }], auditSts: $event }).then(() => {
+        row.auditSts = $event
+        Message({
+          message: '审核成功',
+          type: 'success',
+          duration: 1000
+        })
+      })
+    },
+    handlePutOff($event, row) {
+      updateCreativePutOffSts({ creatives: [{ creativeId: row.id, appId: row.appId }], sts: $event }).then(() => {
+        row.sts = $event
+        Message({
+          message: $event === 'A' ? '上架成功' : '下架成功',
+          type: 'success',
+          duration: 1000
+        })
+      })
+    },
+    handleSelectionChange(val) {
+      let ids = []
+      if (val) {
+        val.forEach(v => {
+          ids.push({ creativeId: v.id, appId: v.appId })
+        })
+      }
+      this.selectedCreativeIds = ids
+    }
+  }
+}
+</script>
+
+<style scoped>
+
+</style>

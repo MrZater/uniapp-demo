@@ -1,0 +1,1452 @@
+<template>
+  <div>
+    <div v-if="vueType" class="app-container">
+      <div class="filter-container">
+        <el-select v-model="query.appId" placeholder="应用" @change="initPlaceOptions">
+          <el-option v-for="item in appOptions" :key="item.id" :value="item.id" :label="item.name" />
+        </el-select>
+        <el-select v-model="query.placeId" placeholder="广告位" @change="handleGetGroup">
+          <el-option v-for="item in placeOptions" :key="item.id" :value="item.id" :label="item.name" />
+        </el-select>
+        <el-button v-if="query.placeId != ' '" v-waves type="primary" icon="el-icon-setting" class="height filter-item"
+          @click="handleAggregateSetting">
+          高级设置
+        </el-button>
+      </div>
+      <div v-if="query.placeId != ' '" class="body-container">
+        <div v-if="config !== null" class="group-container">
+          <div class="filter-container">
+            <el-row>
+              <el-col :span="3">
+                <el-button v-waves type="primary" icon="el-icon-plus" @click="addFlowGroups">流量分组
+                </el-button>
+              </el-col>
+              <el-col :span="21">
+                <div class="tabsbox">
+                  <el-tabs v-if="config.groups.length > 0" v-model="activeGroup" class="tabs" type="border-card" @tab-click="handleGroupTabClick">
+                    <el-tab-pane v-for="(item, index) in config.groups" :key="index">
+                      <div slot="label" style="
+                          width: 100px;
+                          display: flex;
+                          justify-content: space-around;
+                        ">
+                        <span>{{ item.name }}</span>
+                        <div v-if="item.id !== 'default' && index == activeGroup">
+                          <el-dropdown>
+                            <span class="el-dropdown-link">
+                              <i class="el-icon-arrow-down" />
+                            </span>
+                            <el-dropdown-menu slot="dropdown">
+                              <el-dropdown-item>
+                                <template>
+                                  <div @click="handleCommand(item, 1)">
+                                    编辑
+                                  </div>
+                                </template>
+                              </el-dropdown-item>
+                              <el-dropdown-item>
+                                <template>
+                                  <div @click="handleCommand(item, 0)">
+                                    删除
+                                  </div>
+                                </template>
+                              </el-dropdown-item>
+                            </el-dropdown-menu>
+                          </el-dropdown>
+                        </div>
+                      </div>
+                      <el-row v-if="item.id !== 'default'" :gutter="20" class="tabsStyle">
+                        <el-col :span="6">分组ID：{{ item.id }}</el-col>
+                        <el-col :span="6">分组优先级：{{ item.priority }}</el-col>
+                        <el-col :span="12">
+                          <span>规则:{{ groupRuleStr }}</span>
+                        </el-col>
+                      </el-row>
+                    </el-tab-pane>
+                  </el-tabs>
+                </div>
+              </el-col>
+            </el-row>
+          </div>
+        </div>
+        <!-- <el-table :key="tableKey" v-loading="listLoading" :data="list" :span-method="closeExpand" empty-text="-" border fit highlight-current-row> -->
+        <div class="filter-container">
+          <el-button v-waves type="primary" icon="el-icon-plus" class="filter-item" @click="handleAdd">代码位
+          </el-button>
+        </div>
+        <el-table :key="tableKey" v-loading="listLoading" :data="list" empty-text="-" border fit highlight-current-row>
+          <el-table-column label="优先级" align="center">
+            <template slot-scope="{ row }">
+              <span v-if="row.type === 'selectSource'">{{
+                row.index + 1
+              }}</span>
+              <span v-else-if="row.type === 'all'">汇总</span>
+              <span v-else-if="row.type === 'unSelectSource'">-</span>
+              <span v-else>{{ row.text }}
+                <el-button type="info" size="mini" round @click="expandTable(row)">{{ expand ? "折叠" : "展开" }}
+                  <i :class="
+                      expand
+                        ? 'el-icon-arrow-up el-icon--right'
+                        : 'el-icon-arrow-down el-icon--right'
+                    " />
+                </el-button>
+              </span>
+            </template>
+          </el-table-column>
+          <el-table-column label="广告源" prop="name" align="center">
+            <template slot-scope="{ row }">
+              <div>
+                <!-- <span v-if="row.platId == 1">穿山甲</span>
+                <span v-if="row.platId == 2">优量汇</span>
+                <span v-if="row.platId == 3">快手</span>
+                <span v-if="row.platId == 4">精准通</span>
+                <span v-if="row.platId == 5">直投</span>
+                <span v-if="row.platId == 6">百度联盟</span>
+                <span v-if="row.platId == 7">Sigmob</span> -->
+                <span>{{getPlatName(row)}}</span>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="代码位" prop="name" align="center" />
+          <el-table-column label="状态" align="center">
+            <template slot-scope="{ row }">
+              <el-switch v-if="
+                  row.type === 'selectSource' || row.type === 'unSelectSource'
+                " v-model="row.sts" active-value="A" inactive-value="S" @change="handleUpdateSourceSts(row, $event)" />
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" align="center">
+            <template slot-scope="{ row }">
+              <el-button v-if="
+                  row.type === 'selectSource' || row.type === 'unSelectSource'
+                " type="primary" size="mini" @click="handleUpdate(row)">
+                编辑
+              </el-button>
+              <el-button v-if="
+                  row.type === 'selectSource' || row.type === 'unSelectSource'
+                " type="danger" size="mini" @click="Adver(row)">
+                删除
+              </el-button>
+            </template>
+          </el-table-column>
+          <el-table-column label="价格" align="center">
+            <template slot-scope="{ row }">
+              <div v-if="row.type === 'selectSource'" @mouseover="row.hover = true" @mouseleave="row.hover = false">
+                <span>￥</span>
+                <template v-if="row.edit">
+                  <el-input v-model.trim="row.bidfloor" size="small" style="padding-right: 55px" />
+                  <el-button type="success" size="small" icon="el-icon-check" style="position: absolute; right: 40px" @click="confirmEdit(row)" />
+                  <el-button v-if="row.edit" size="small" icon="el-icon-close" type="warning" style="position: absolute; right: 15px"
+                    @click="cancelEdit(row)" />
+                </template>
+                <template v-else>
+                  <span>{{ row.bidfloor }}</span>
+                  <el-button v-show="row.hover" type="primary" size="small" icon="el-icon-edit" @click="row.edit = !row.edit" />
+                </template>
+              </div>
+              <div v-if="row.type === 'unSelectSource'">
+                <span>￥</span>
+                <span>{{ row.bidfloor }}</span>
+              </div>
+              <!-- <div v-else>
+              <span>-</span>
+            </div> -->
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+      <Empty v-else></Empty>
+      <el-dialog ref="dialog" :title="dialogSourceType === 0 ? '新增代码位' : '编辑代码位'" :visible.sync="dialogSourceVisible" @close="closeSourceDialog">
+        <el-form ref="form" :model="temp" :rules="rules" label-width="120px" label-position="left">
+          <el-form-item label="流量分组">
+            <span>{{ group.name }}</span>
+          </el-form-item>
+          <el-form-item label="广告源">
+            <AppPlatform :app-id="appId" :linked-show="false" :active="active" :disabled="dialogSourceType === 1" :is-edit="isEdit"
+              @selectPlatId="selectPlatId" @platAppId="getPlatAppId" @accessType="getAccessType" />
+          </el-form-item>
+          <!-- 广告平台对应appid -->
+          <el-form-item label="广告平台appID">
+            <span>{{ platAppId }}</span>
+          </el-form-item>
+          <!-- 应用名称 -->
+          <el-form-item label="应用名称">
+            <span>{{ appName }}</span>
+          </el-form-item>
+          <el-form-item label="应用ID">
+            <span>{{ query.appId }}</span>
+          </el-form-item>
+          <!-- 广告位 -->
+          <el-form-item label="广告位">
+            <span>{{ placeName }}</span>
+          </el-form-item>
+          <el-form-item label="广告位ID">
+            <span>{{ query.placeId }}</span>
+          </el-form-item>
+          <el-form-item label="代码位名称" prop="name">
+            <el-input v-model="temp.name" placeholder="请输入代码位名称" />
+          </el-form-item>
+          <el-form-item label="代码位ID" prop="platPlaceId">
+            <el-input v-model="temp.platPlaceId" placeholder="请输入代码位ID" />
+          </el-form-item>
+          <el-form-item label="底价" prop="bidfloor">
+            <el-input v-model="temp.bidfloor" placeholder="请输入底价" type="number" />
+          </el-form-item>
+          <el-form-item v-if="temp.position === 1 && this.accessType === '1'" label="热区">
+            <el-radio-group v-model="temp.hotspot">
+              <el-radio label="A">开启</el-radio>
+              <el-radio label="S">关闭</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item v-if="temp.hotspot === 'A'  && this.accessType === '1'" label="热区样式">
+            <el-radio-group v-model="temp.hotspotType">
+              <el-radio :label=1>默认</el-radio>
+              <el-radio :label=2>开启摇一摇</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item v-if="temp.position === 6 && this.accessType === '1'" label="模版类型" prop="templateTypeId">
+            <el-select v-model="temp.templateTypeId" placeholder="请选择模版类型">
+              <el-option v-for="item in templateTypeOptions" :key="item.id" :value="item.id" :label="item.name" />
+            </el-select>
+          </el-form-item>
+          <el-form-item v-if="temp.position === 6 && this.accessType === '1'" label="左右边距">
+            <el-input-number v-model="temp.lrMargin" controls-position="right"></el-input-number>
+          </el-form-item>
+          <el-form-item v-if="temp.position === 6 && this.accessType === '1'" label="上下边距">
+            <el-input-number v-model="temp.tbMargin" controls-position="right"></el-input-number>
+          </el-form-item>
+          <el-form-item label="备注" prop="remark">
+            <el-input v-model="temp.remark" placeholder="请输入备注" />
+          </el-form-item>
+          <el-form-item v-if="dialogSourceType === 1" label="状态" prop="sts">
+            <el-select v-model="temp.sts">
+              <el-option value="A" label="启动" />
+              <el-option value="D" label="暂停" />
+            </el-select>
+          </el-form-item>
+        </el-form>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="dialogSourceVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleSubmitForm">确定</el-button>
+        </span>
+      </el-dialog>
+    </div>
+    <div v-else class="app-container">
+      <el-page-header content="高级设置" style="color: #2265ff" @back="goBack" />
+      <div class="body-container">
+        <!-- 广告位 -->
+        <div class="adverting">
+          <!-- <el-form
+            ref="form"
+            label-position="left"
+            :model="adverting"
+            label-width="180px"
+          >
+            <el-form-item label="应用">
+              <div>{{ appName }}</div>
+            </el-form-item>
+            <el-form-item label="广告位">
+              <div>{{ placeName }}</div>
+            </el-form-item>
+            <el-form-item label="单次并行请求超时时长" width="150px">
+              <div>
+                <el-input v-model="adverting.timeout" @blur="editTime" />
+                <span>ms</span>
+              </div>
+            </el-form-item>
+            <el-form-item label="瀑布流总请求超时时长">
+              <el-input v-model="adverting.allTime" @blur="editTime" />
+              <span>ms</span>
+            </el-form-item>
+            <el-form-item
+              v-if="roles === 'SUPER_ADMIN'"
+              label="瀑布流策略缓存生效时长"
+            >
+              <el-input v-model="adverting.cacheTime" @blur="editTime" />
+              <span>s</span>
+            </el-form-item>
+          </el-form> -->
+          <div class="item">
+            <div class="left">应用</div>
+            <div class="right">{{ appName }}</div>
+          </div>
+          <div class="item">
+            <div class="left">广告位</div>
+            <div class="right">{{ placeName }}</div>
+          </div>
+          <div class="item">
+            <div class="left">
+              单次并行请求超时时长
+              <el-popover width="200" placement="top-start" trigger="hover" content="一次并行请求没有返回广告填充结果（成功或失败）时最多等待的时长">
+                <div slot="reference">
+                  <i class="iconfont icon-wenhao" />
+                </div>
+              </el-popover>
+            </div>
+            <div class="right">
+              <el-input v-model="adverting.timeout" @blur="editTime" />
+              <span>ms</span>
+            </div>
+          </div>
+          <div class="item">
+            <div class="left">
+              瀑布流总请求超时时长
+              <el-popover width="200" placement="top-start" trigger="hover" content="一次瀑布流总请求还没有返回任何成功广告填充时最多等待的时长">
+                <div slot="reference">
+                  <i class="iconfont icon-wenhao" />
+                </div>
+              </el-popover>
+            </div>
+            <div class="right">
+              <el-input v-model="adverting.allTime" @blur="editTime" />
+              <span>ms</span>
+            </div>
+          </div>
+          <div class="item" v-if="roles === 'SUPER_ADMIN'">
+            <div class="left">瀑布流策略缓存生效时长</div>
+            <div class="right">
+              <el-input v-model="adverting.cacheTime" @blur="editTime" />
+              <span>s</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-container">
+          <el-button v-waves type="primary" icon="el-icon-plus" @click="addFlowGroups">流量分组
+          </el-button>
+          <!-- <el-button type="primary" @click="editTime">确定</el-button> -->
+        </div>
+        <el-table :key="tableKey" ref="dragTable" v-loading="listLoading" :data="config.groups" border fit highlight-current-row>
+          <el-table-column align="center" label="优先级">
+            <template slot-scope="{ row }">
+              <div>
+                <!-- <span class="el-icon-s-grid" /> {{ row.priority }} -->
+                <el-input v-if="row.name !== '默认分组'" v-model="row.priority" class="dragBox" @blur="handelPriority(row)" />
+                <span v-else>0</span>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="流量分组" align="center" prop="name" />
+          <el-table-column label="操作" align="center" width="270">
+            <template slot-scope="{ row }">
+              <el-button type="primary" size="mini" @click="aaa(row)">
+                <router-link :to="{
+                    path: '/traffic/aggregate',
+                    query: { appId: row.appId, placeId: row.id },
+                  }">聚合管理
+                </router-link>
+              </el-button>
+              <el-button v-if="row.id != 'default'" type="primary" size="mini" @click="handleUpdateFlowGroups(row)">
+                编辑
+              </el-button>
+              <el-button v-if="row.id != 'default'" size="mini" type="danger" @click="handleDelete(row)">删除
+              </el-button>
+            </template>
+          </el-table-column>
+          <el-table-column label="并行请求数" align="center" prop="name">
+            <template slot-scope="{ row }">
+              <el-select v-model="row.concurrentNum" placeholder="请选择" @change="editInputVal(row)">
+                <el-option v-for="item in options4" :key="item.value" :label="item.label" :value="item.value" />
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="展示上限 (小时) " align="center" prop="name">
+            <template slot-scope="{ row }">
+              <!-- <span>{{ row.impressFreqHour }}</span> -->
+              <el-input v-model="row.impressFreqHour" type="number" placeholder="不限" @blur="editInputVal(row)" />
+            </template>
+          </el-table-column>
+          <el-table-column label="展示上限 (天) " align="center" prop="name">
+            <template slot-scope="{ row }">
+              <!-- <span>{{ row.impressFreqDay }}</span> -->
+              <el-input v-model="row.impressFreqDay" type="number" placeholder="不限" @blur="editInputVal(row)" />
+            </template>
+          </el-table-column>
+          <el-table-column label="展示间隔 (秒)" align="center" prop="name">
+            <template slot-scope="{ row }">
+              <!-- <span>{{ row.impressInterval }}</span> -->
+              <el-input v-model="row.impressInterval" type="number" placeholder="不限" @blur="editInputVal(row)" />
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div>
+    <!-- 流量分组弹框 -->
+    <el-dialog :title="isAdd ? '添加流量分组' : '编辑流量分组'" :visible.sync="flowGroupsDialog" width="50%" @close="closeGroups">
+      <!-- 内容 -->
+      <div class="container">
+        <div v-if="isEditShow" class="left">
+          <h3>快速添加</h3>
+          <ul>
+            <li v-for="(e, i) in adverteData" :key="i" :class="i === activeIndex && isBorder === true ? 'active' : ''" @click="itemClick(e, i)">
+              {{ e.name }}
+            </li>
+          </ul>
+        </div>
+        <!-- 右侧 内容 -->
+        <div class="right">
+          <el-form ref="flowGroupsRef" :model="flowGroupsForm" label-width="150px" :rules="flowGroupsRules">
+            <el-form-item label="流量分组名称" prop="name">
+              <el-input v-model="flowGroupsForm.name" maxlength="30" show-word-limit />
+            </el-form-item>
+            <el-form-item v-show="sdkShow" label="sdk版本">
+              <div style="display: flex" class="box1">
+                <el-select v-model="flowGroupsForm.sdkSelect" placeholder="请选择">
+                  <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+                <el-input v-model="flowGroupsForm.sdk" placeholder="示多个sdk版本用英文逗号隔开" />
+                <span class="closeIcon el-icon-circle-close" @click="closeInput(1)" />
+              </div>
+            </el-form-item>
+            <el-form-item v-show="equipmentId" label="设备ID">
+              <div style="display: flex" class="box1">
+                <el-select v-model="flowGroupsForm.equipSelect" placeholder="请选择">
+                  <el-option v-for="item in options1" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+                <el-input v-model="flowGroupsForm.equipVal" placeholder="示多个设备ID用英文逗号隔开" />
+                <span class="closeIcon el-icon-circle-close" @click="closeInput(2)" />
+              </div>
+            </el-form-item>
+            <el-form-item v-show="channelShow" label="渠道">
+              <div style="display: flex" class="box1">
+                <el-select v-model="flowGroupsForm.channelSelect" placeholder="请选择">
+                  <el-option v-for="item in options2" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+                <el-input v-model="flowGroupsForm.channelVal" placeholder="支持填入多个渠道标识，用英文逗号隔开" />
+                <span class="closeIcon el-icon-circle-close" @click="closeInput(3)" />
+              </div>
+            </el-form-item>
+            <el-form-item v-show="areaShow" label="地区">
+              <div style="display: flex" class="box1">
+                <el-select v-model="flowGroupsForm.areaSelect" placeholder="请选择">
+                  <el-option v-for="item in options2" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+                <el-cascader v-model="flowGroupsForm.areaVal" :options="areaOptions" :props="props" clearable></el-cascader>
+                <span class="closeIcon el-icon-circle-close" @click="closeInput(4)" />
+              </div>
+            </el-form-item>
+          </el-form>
+          <!-- 添加规则 -->
+          <el-dropdown style="float: right; cursor: pointer" @command="addRules">
+            <span style="color: #2265ff">
+              添加规则<i class="el-icon-arrow-down el-icon--right" />
+            </span>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item command="1">sdk版本</el-dropdown-item>
+              <el-dropdown-item command="2">设备ID</el-dropdown-item>
+              <el-dropdown-item command="3">渠道</el-dropdown-item>
+              <el-dropdown-item command="4">地区</el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
+        </div>
+      </div>
+
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="flowGroupsDialog = false">取 消</el-button>
+        <el-button type="primary" @click="handelAddOrEdit">确 定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import waves from "@/directive/waves";
+import { Message } from "element-ui";
+import Empty from "@/components/empty";
+// import HelpHint from "@/components/tips/HelpHint/HelpHint.vue";
+import {
+  getPlaceGroup,
+  getPlaceSource,
+  updateGroupSourcePrice,
+  updateGroupSourceSts,
+  addSource,
+  updateSource,
+  adverteList,
+  editInput,
+  delFlowGroups,
+  deladverte,
+  addFlowGrow,
+  editFlowGrow,
+  adverteTime,
+  adverteTimeEdit,
+  getPriority,
+  getTemplateTypeList,
+  getArea
+} from "@/api/aggregate";
+import { getAppList } from "@/api/app";
+import AppPlatform from "@/components/Platform";
+import { getPlaceListByAppId } from "@/api/place";
+import HelpHint from "@/components/tips/HelpHint/HelpHint.vue";
+import { getAccounts, getPlatOptions } from "@/api/plat";
+export default {
+  name: "Aggregate",
+  directives: { waves },
+  components: { AppPlatform, Empty, HelpHint },
+  data () {
+    return {
+      query: {
+        appId: " ",
+        placeId: " ",
+        groupId: null,
+      },
+      platOptions: [],
+      platAppId: "", //平台对应appid  子组件传递过来
+      active: null,
+      isEdit: null,
+      appId: null,
+      accessType: "",
+      appName: null,
+      placeName: null,
+      roles: "",
+      expand: true,
+      addOrEdit: true, // 判断添加或者编辑
+      isBorder: false,
+      isAdd: true,
+      isEditShow: true, // 编辑时左侧部分隐藏
+      appOptions: [],
+      appOptionsAll: [],
+      placeOptions: [],
+      templateTypeOptions: [],
+      config: null,
+      group: { name: "默认分组" },
+      tableKey: 0,
+      listLoading: false,
+      list: [],
+      total: 0,
+      temp: { groupId: "default", platId: 1 },
+      dialogSourceType: 0,
+      dialogSourceVisible: false,
+      rules: {},
+      accounts: [],
+      dialogVisible: false,
+      activeGroup: "0",
+      groupRuleStr: "",
+      dialogType: 0,
+      vueType: true,
+      adverting: {
+        placeId: "",
+        timeout: "",
+        allTime: "",
+        cacheTime: "",
+      }, // 广告位
+      valueProps: false, // 输入框输入值校验
+      activeIndex: "",
+      flowGroupsDialog: false, // 流量分组
+      equipmentId: false, // 设备id
+      channelShow: false, // 渠道
+      areaShow: false, // 地区
+      sdkShow: false, // sdk
+      flowGroupsForm: {
+        name: "", // 流量分组名称
+        equipVal: "",
+        channelVal: "",
+        areaVal: "",
+        sdk: "",
+        sdkSelect: "0",
+        equipSelect: "0",
+        channelSelect: "0",
+        areaSelect: "0",
+      },
+      adverteData: [],
+
+
+      //mock数据
+      props: {
+        multiple: true,
+      },
+      areaOptions: [],
+      ruleContent: [],
+      areaList: [],
+      options: [
+        {
+          value: "0",
+          label: "包括",
+        },
+        {
+          value: "1",
+          label: "不包括",
+        },
+        {
+          value: "2",
+          label: ">",
+        },
+        {
+          value: "3",
+          label: "<",
+        },
+      ],
+      options1: [
+        {
+          value: "0",
+          label: "包括",
+        },
+      ],
+      options2: [
+        {
+          value: "0",
+          label: "包括",
+        },
+        {
+          value: "1",
+          label: "不包括",
+        },
+      ],
+      options4: [
+        {
+          value: 1,
+          label: 1,
+        },
+        {
+          value: 2,
+          label: 2,
+        },
+        {
+          value: 3,
+          label: 3,
+        },
+        {
+          value: 4,
+          label: 4,
+        },
+      ],
+      flowGroupsRules: {
+        name: [
+          { required: true, message: "请填写流量分组名称", trigger: "blur" },
+        ],
+      },
+      rules: {
+        name: [
+          { required: true, message: "请输入代码位名称", trigger: "blur" },
+        ],
+        bidfloor: [{ required: true, message: "请输入底价", trigger: "blur" }],
+        templateTypeId: [{ required: true, message: "请输入底价", trigger: "change" }],
+      },
+    };
+  },
+  watch: {
+    activeGroup (val) { },
+  },
+  async created () {
+    let roles = this.$store.getters.roles[0];
+    this.roles = roles;
+    let appId = this.$route.query.appId;
+    let placeId = this.$route.query.placeId;
+    if (appId && appId.trim().length > 0) {
+      this.query.appId = appId;
+      // this.initPlaceOptions()
+      // this.handleGetGroup()
+    }
+    if (placeId && placeId.trim().length > 0) {
+      this.query.placeId = placeId;
+      await this.initAppOptions();
+      await this.handleGetGroup();
+    }
+    this.initAppOptions();
+    this.getTemplateTypeList();
+    this.initAreaptions();
+    this.initPlatOptions();
+  },
+  methods: {
+    initPlatOptions () {
+      getPlatOptions().then(res => {
+        this.platOptions = res.data
+      })
+    },
+    // PlatId
+    selectPlatId (e) {
+      this.temp.platId = e;
+    },
+    // 优先级
+    handelPriority (row) {
+      let obj = {
+        placeId: this.query.placeId,
+        segmentPriorityList: [
+          {
+            id: row.id,
+            priority: row.priority,
+          },
+        ],
+      };
+      getPriority(obj).then((res) => {
+        if (res.code != 200) return;
+        this.handleGetGroup();
+      });
+    },
+    aaa (row) {
+      let placeId = this.config.groups.findIndex((item) => {
+        return this.$route.query.placeId === item.id;
+      });
+      this.activeGroup = placeId + "";
+      this.vueType = !this.vueType;
+      this.query.groupId = this.config.groups[placeId].id;
+      this.group.name = this.config.groups[0].name;
+      this.handleGetSource();
+    },
+    editTime () {
+      this.adverting.placeId = this.query.placeId;
+      adverteTimeEdit(this.adverting).then((res) => {
+        if (res.code !== 200) return this.$message.error(res.msg);
+      });
+    },
+    // 点击添加流量分组 按钮
+    handleCommand (e, i) {
+      if (i === 0) {
+        // 删除
+        this.handleDelete(e);
+      } else {
+        // 编辑
+        this.handleUpdateFlowGroups(e);
+      }
+    },
+    addFlowGroups () {
+      this.isEditShow = true;
+      this.isAdd = true;
+      this.addOrEdit = true;
+      this.flowGroupsDialog = true;
+      // 获取列表
+      adverteList().then((res) => {
+        if (res.code != 200) return;
+        this.adverteData = res.data;
+
+      });
+    },
+    getGdverteTime () {
+      let { placeId } = this.query;
+      let file = new FormData();
+      file.append("placeId", placeId);
+      adverteTime(file).then((res) => {
+        if (res.code != 200) return;
+        this.adverting = res.data;
+      });
+    },
+    // 第一个下拉 数据
+    async initAppOptions () {
+      await getAppList().then((res) => {
+        this.appOptionsAll = res.data;
+        this.appOptions = this.appOptionsAll;
+        if (this.query.appId === " " && this.appOptions.length > 0) {
+          this.query.appId = this.appOptions[0].id;
+        }
+        this.initPlaceOptions();
+      });
+    },
+    async getTemplateTypeList () {
+      await getTemplateTypeList().then((res) => {
+        this.templateTypeOptions = res.data
+      })
+    },
+    // 第一个 下拉框 下拉事件   拿到第二个下拉框数据
+    initPlaceOptions (val) {
+      getPlaceListByAppId(this.query.appId).then((res) => {
+        if (res.code !== 200) return;
+        this.placeOptions = res.data;
+
+        if (this.placeOptions.length > 0) {
+          this.handleGetSource();
+          let init = false;
+          this.placeOptions.forEach((e) => {
+            if (this.query.placeId === e.id) {
+              init = true;
+              return;
+            }
+          });
+          if (!init) {
+            this.query.placeId = this.placeOptions[0].id;
+            this.handleGetGroup();
+          }
+        } else {
+          this.query.placeId = " ";
+        }
+      });
+    },
+    // 获取代码位分组(tabs切换)  首次进来选中第一个 将第一个分组的groupid拿来获取 代码位列表
+    async handleGetGroup () {
+      await getPlaceGroup(this.query.placeId).then((res) => {
+        // res.data.groups.unshift(res.data.groups.pop());
+        this.config = res.data;
+        // this.activeGroup = '0'
+        if (this.config && this.config.groups.length > 0) {
+          this.query.groupId = this.config.groups[0].id;
+          this.group.name = this.config.groups[0].name;
+          this.handleGetSource();
+          if (this.config.groups[0].segmentRule.length > 0) {
+            let newArr = this.config.groups[0].segmentRule;
+            this.temp.groupId = this.config.groups[0].id;
+            this.handelArrToStr(newArr);
+          }
+        }
+      });
+    },
+    // 封装一个共有的数组转换字符串
+    handelArrToStr (newArr) {
+      let str = "";
+      newArr.forEach((item, index) => {
+        if (item.ruleId == 1) {
+          str += "渠道号";
+        } else if (item.ruleId == 2) {
+          str += "sdk版本号";
+        } else if (item.ruleId == 3) {
+          str += "设备ID";
+        } else if (item.ruleId == 4) {
+          str += "地区";
+        }
+        if (item.ruleType == 0) {
+          str += " 包括 ";
+        } else if (item.ruleType == 1) {
+          str += " 不包括 ";
+        } else if (item.ruleType == 2) {
+          str += " 大于 ";
+        } else if (item.ruleType == 3) {
+          str += " 小于 ";
+          return;
+        }
+        if (item.ruleId == 4) {
+          item.ruleContent.forEach((o, index, array) => {
+            let temp = o.split("-")
+            temp.forEach((tempStr, index) => {
+              if (tempStr === 'CHN') {
+                str += "中国/"
+              } else {
+                let label = this.areaList.find((e) => e.value === tempStr).lable
+                if (index === 2) {
+                  str += label
+                } else {
+                  str += label + "/"
+                }
+              }
+            })
+            if (index + 1 != array.length) {
+              str += ","
+            }
+          })
+        } else {
+          str += item.ruleContent.filter(Boolean).join(",");
+        }
+        str += "&";
+      });
+      str = str.substring(0, str.length - 1);
+      this.groupRuleStr = str;
+      str = "";
+    },
+    handleGetSource () {
+      let appName = null;
+
+      if (this.query.appId) {
+        this.appOptions.forEach((v) => {
+          if (v.id === this.query.appId) {
+            appName = v.name;
+          }
+        });
+        this.appName = appName;
+      }
+      let placeName = null;
+      if (this.query.placeId) {
+        this.placeOptions.forEach((v) => {
+          if (v.id === this.query.placeId) {
+            placeName = v.name;
+          }
+        });
+        this.placeName = placeName;
+      }
+      getPlaceSource(this.query).then((res) => {
+        this.list = [];
+        let selectedSource = [];
+        let unSelectedSource = [];
+        res.data.sources.map((v) => {
+          this.$set(v, "edit", false);
+          v.oriBidfloor = v.bidfloor;
+          if (v.sts === "A") {
+            v.type = "selectSource";
+            v.index = selectedSource.length;
+            selectedSource.push(v);
+          } else {
+            v.type = "unSelectSource";
+            unSelectedSource.push(v);
+          }
+          return v;
+        });
+        res.data.all.type = "all";
+        res.data.all.name = selectedSource.length + "个代码位开启";
+        this.list.push(res.data.all);
+        selectedSource.filter((item) => {
+          this.list.push(item);
+        });
+        this.list.push({
+          text: "未启用（" + unSelectedSource.length + "个代码位)",
+        });
+        unSelectedSource.filter((item) => {
+          this.list.push(item);
+        });
+      });
+    },
+    handleGroupTabClick (value) {
+      this.expand = true;
+      // 拿到当前 groupId 重新获取 广告元表格数据
+      this.query.groupId = this.config.groups[value.index].id;
+      this.group = this.config.groups[value.index];
+      this.temp.groupId = this.config.groups[value.index].id;
+      // 用于将数组转字符串
+      this.handelArrToStr(this.group.segmentRule);
+      this.handleGetSource();
+    },
+    // 点击 添加代码位
+    handleAdd () {
+      let _position = this.placeOptions.find((item) => item.id === this.query.placeId).position
+      this.active = null;
+      this.appId = this.query.appId;
+      this.dialogSourceType = 0;
+      let _groupId = this.temp.groupId;
+      this.temp = { groupId: _groupId, position: _position, hotspot: "S", hotspotType: 1, lrMargin: 16, tbMargin: 16 };
+      this.dialogSourceVisible = true;
+      this.temp.platId = 1; // 平台默认选择第一个
+    },
+    // 编辑流量分组
+    handleUpdateFlowGroups (row) {
+      this.query.groupId = row.id;
+      this.addOrEdit = false;
+      this.isAdd = false;
+      this.isEditShow = false;
+      this.flowGroupsDialog = true;
+      // 编辑弹框
+      this.flowGroupsForm.name = row.name;
+      this.disPoseAddOrEdit(row);
+    },
+    // 点击编辑 代码位
+    handleUpdate (row) {
+      this.isEdit = 1;
+      this.active = row.platId;
+      this.appId = this.query.appId;
+      this.dialogSourceType = 1;
+      this.temp = JSON.parse(JSON.stringify(row));
+      this.temp.groupId = this.query.groupId;
+      this.temp.position = this.placeOptions.find((item) => item.id === this.query.placeId).position
+      this.dialogSourceVisible = true;
+    },
+    // 封装一个添加或者编辑处理数据的方法
+    disPoseAddOrEdit (row) {
+      row.segmentRule.forEach((item, index) => {
+        if (item.ruleId == 1) {
+          this.channelShow = true;
+          this.flowGroupsForm.channelVal = item.ruleContent.join(",");
+          this.flowGroupsForm.channelSelect = item.ruleType + "";
+        } else if (item.ruleId == 2) {
+          this.sdkShow = true;
+          this.flowGroupsForm.sdk = item.ruleContent.join(",");
+          this.flowGroupsForm.sdkSelect = item.ruleType + "";
+        } else if (item.ruleId == 3) {
+          this.equipmentId = true;
+          this.flowGroupsForm.equipVal = item.ruleContent.join(",");
+          this.flowGroupsForm.equipSelect = item.ruleType + "";
+        } else if (item.ruleId == 4) {
+          this.areaShow = true;
+          let arr = [];
+          item.ruleContent.forEach((ele) => {
+            let temp = ele.split("-")
+            arr.push(temp)
+          })
+          this.flowGroupsForm.areaVal = arr;
+          this.flowGroupsForm.areaSelect = item.ruleType + "";
+        }
+      });
+    },
+    handleSubmitForm () {
+      let _this = this;
+      this.temp.placeId = this.query.placeId;
+      this.$refs.form.validate(async (valid) => {
+        if (valid) {
+          if (_this.dialogSourceType === 0) {
+            await addSource(_this.temp).then((res) => {
+              Message({
+                message: res.msg,
+                type: "success",
+                duration: 5 * 1000,
+              });
+            });
+          } else if (_this.dialogSourceType === 1) {
+            await updateSource(_this.temp).then((res) => {
+              Message({
+                message: res.msg,
+                type: "success",
+                duration: 5 * 1000,
+              });
+            });
+          }
+          _this.dialogSourceVisible = false;
+          this.handleGetSource();
+        }
+      });
+    },
+    handleAggregateSetting () {
+      this.vueType = !this.vueType;
+      // 获取广告位时间
+      this.getGdverteTime();
+    },
+    goBack () {
+      this.activeGroup = "0";
+      this.handleGetGroup();
+      this.vueType = !this.vueType;
+    },
+    handleUpdateSourceSts (row, sts) {
+      row.sts = sts;
+      row.groupId = this.query.groupId;
+      updateGroupSourceSts(row).then(() => {
+        this.handleGetSource();
+      });
+    },
+    cancelEdit (row) {
+      row.bidfloor = row.oriBidfloor;
+      row.edit = false;
+    },
+    confirmEdit (row) {
+      row.groupId = this.query.groupId;
+      updateGroupSourcePrice(row).then(() => {
+        this.handleGetSource();
+      });
+    },
+    getAccounts (plat) {
+      getAccounts(plat).then((res) => {
+        this.accounts = res.data;
+      });
+    },
+    expandTable (row) {
+      if (this.expand) {
+        this.list.forEach((item) => {
+          if (item.sts && item.sts === "S") {
+            var index = this.list.findIndex((e) => e.sts === "S");
+            this.list = JSON.parse(JSON.stringify(this.list));
+            this.list.splice(index, 1);
+          }
+        });
+      } else {
+        this.handleGetSource();
+      }
+
+      this.expand = !this.expand;
+    },
+    itemClick (e, i) {
+      this.isBorder = true;
+      this.activeIndex = i;
+      this.channelShow = false;
+      this.areaShow = false;
+      this.equipmentId = false;
+      this.sdkShow = false;
+      this.flowGroupsForm.name = e.name;
+      this.disPoseAddOrEdit(e);
+    },
+    closeGroups () {
+      this.$refs.flowGroupsRef.resetFields();
+      this.channelShow = false;
+      this.areaShow = false;
+      this.equipmentId = false;
+      this.sdkShow = false;
+      this.isBorder = false;
+      this.flowGroupsForm = {
+        name: "", // 流量分组名称
+        equipVal: "",
+        channelVal: "",
+        areaVal: "",
+        sdk: "",
+        sdkSelect: "0",
+        equipSelect: "0",
+        channelSelect: "0",
+        areaSelect: "0",
+      };
+    },
+    // 删除广告
+    Adver (row) {
+      this.$confirm("此操作将永久删除该代码位, 是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then(() => {
+          deladverte({ id: row.id }).then((res) => {
+            if (res.code !== 200) return this.$message.error("删除失败");
+            this.handleGetSource();
+            return this.$message.success("删除成功");
+          });
+        })
+        .catch(() => { });
+    },
+    // 删除流量分组
+    handleDelete (row) {
+      this.$confirm("此操作将永久删除该条流量分组, 是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then(() => {
+          delFlowGroups({ groupId: row.id }).then((res) => {
+            if (res.code != 200) return this.$message.error("删除失败");
+            this.handleGetGroup();
+            this.$message.success("删除成功");
+          });
+        })
+        .catch(() => { });
+    },
+    addRules (val) {
+      switch (val) {
+        case "1":
+          this.sdkShow = true;
+          break;
+        case "2":
+          this.equipmentId = true;
+          break;
+        case "3":
+          this.channelShow = true;
+          break;
+        case "4":
+          this.areaShow = true;
+          break;
+        default:
+          return;
+      }
+    },
+    // 关闭按钮
+    closeInput (val) {
+      switch (val) {
+        case 1:
+          this.sdkShow = false;
+          this.flowGroupsForm.sdk = "";
+          break;
+        case 2:
+          this.equipmentId = false;
+          this.flowGroupsForm.equipVal = "";
+          break;
+        case 3:
+          this.channelShow = false;
+          this.flowGroupsForm.channelVal = "";
+          break;
+        case 4:
+          this.areaShow = false;
+          this.flowGroupsForm.areaVal = "";
+          break;
+        default:
+          return;
+      }
+    },
+    handelAddOrEdit () {
+      this.$refs.flowGroupsRef.validate((val) => {
+        if (!val) return;
+        if (!this.equipmentId && !this.channelShow && !this.sdkShow && !this.areaShow) {
+          return this.$message.error("至少选择一条规则");
+        }
+        let obj;
+        // 添加 流量分组
+        if (this.addOrEdit) {
+          let { placeId } = this.query;
+          obj = {
+            placeId,
+            name: this.flowGroupsForm.name,
+            segmentRule: [],
+          };
+          this.handelAddOEditData(obj);
+          addFlowGrow(obj).then((res) => {
+            if (res.code !== 200) return this.$message.err(res.msg);
+            this.handleGetGroup();
+            this.flowGroupsDialog = false;
+            this.$message.success("添加成功");
+          });
+        } else {
+          // 编辑 流量分组
+          let { placeId, groupId } = this.query;
+          obj = {
+            placeId,
+            groupId,
+            name: this.flowGroupsForm.name,
+            segmentRule: [],
+          };
+          this.handelAddOEditData(obj);
+
+          editFlowGrow(obj).then((res) => {
+            if (res.code !== 200) return this.$message.err(res.msg);
+            this.handleGetGroup();
+            this.flowGroupsDialog = false;
+            this.$message.success("编辑成功");
+          });
+        }
+      });
+    },
+    // 封装 添加流量分组 和编辑流量分组 数据处理
+    handelAddOEditData (obj) {
+      if (this.sdkShow) {
+        let adkObj = {
+          ruleId: 2,
+          ruleType: this.flowGroupsForm.sdkSelect - 0,
+          ruleContent: this.flowGroupsForm.sdk.split(","),
+        };
+        obj.segmentRule.push(adkObj);
+      }
+      if (this.channelShow) {
+        let channelObj = {
+          ruleId: 1,
+          ruleType: this.flowGroupsForm.channelSelect - 0,
+          ruleContent: this.flowGroupsForm.channelVal.split(","),
+        };
+        obj.segmentRule.push(channelObj);
+      }
+      if (this.areaShow) {
+        let areaStr = "";
+        this.flowGroupsForm.areaVal.forEach((item, index, array) => {
+          if (index + 1 != array.length) {
+            let tempStr = item.join("-")
+            areaStr = areaStr + tempStr + ","
+          } else {
+            let tempStr = item.join("-")
+            areaStr = areaStr + tempStr
+          }
+        })
+        let areaObj = {
+          ruleId: 4,
+          ruleType: this.flowGroupsForm.areaSelect - 0,
+          ruleContent: areaStr.split(","),
+        };
+        obj.segmentRule.push(areaObj);
+      }
+      if (this.equipmentId) {
+
+        let equipmentObj = {
+          ruleId: 3,
+          ruleType: this.flowGroupsForm.equipSelect - 0,
+          ruleContent: this.flowGroupsForm.equipVal.split(","),
+        };
+        obj.segmentRule.push(equipmentObj);
+      }
+    },
+    // 编辑展示上限小时
+    editInputVal (row) {
+      // console.log(row);
+      if (
+        row.impressFreqHour < 0 ||
+        row.impressFreqDay < 0 ||
+        row.impressInterval < 0
+      ) {
+        return this.$message.error("最小值为1");
+      }
+      let { placeId } = this.query;
+      let groupId = row.id;
+      let { concurrentNum, impressFreqHour, impressFreqDay, impressInterval } =
+        row;
+      impressFreqHour = Number(row.impressFreqHour);
+      impressFreqDay = Number(row.impressFreqDay);
+      impressInterval = Number(row.impressInterval);
+      let obj = {
+        placeId,
+        groupId,
+        concurrentNum,
+        impressFreqHour,
+        impressFreqDay,
+        impressInterval,
+      };
+
+      editInput(obj).then((res) => {
+        if (res.code != 200) return this.$message.error(res.msg);
+      });
+    },
+    closeSourceDialog () {
+      this.active = 0;
+      this.platAppId = "";
+    },
+    getPlatAppId (e) {
+      this.platAppId = e;
+    },
+    getAccessType (e) {
+      this.accessType = e;
+    },
+    initAreaptions () {
+      getArea().then(res => {
+        this.areaOptions = res.data
+        this.areaList = this.treeToList(this.areaOptions)
+      })
+    },
+    /**
+     * 树转list
+     */
+    treeToList (tree) {
+      let res = [];
+      tree.forEach(country => {
+        country.children.forEach(province => {
+          res.push({ lable: province.label, value: province.value });
+          province.children.forEach(({ label, value }) => {
+            res.push({ lable: label, value: value });
+          })
+        })
+      });
+      return res;
+    },
+    getPlatName (row) {
+      if (row.platId != undefined) {
+        return this.platOptions.find((item) => item.id == row.platId).name
+      }
+    }
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.el-row {
+  margin-top: 5px;
+  height: 25px;
+  font-size: 20px;
+}
+
+.text {
+  font-size: 14px;
+}
+
+.item {
+  margin-bottom: 10px;
+}
+
+.container {
+  display: flex;
+  width: 100%;
+  .left {
+    flex: 2;
+    h3 {
+      font-weight: 400;
+      height: 40px;
+      line-height: 40px;
+      border: 1px solid #dddfe6;
+      padding-left: 30px;
+    }
+    ul {
+      max-height: 290px;
+      overflow-y: scroll;
+      box-sizing: border-box;
+
+      li {
+        height: 40px;
+        padding-left: 30px;
+        line-height: 40px;
+        border-bottom: 1px solid #dddfe6;
+        // box-sizing: border-box;
+        color: #999;
+        font-size: 12px;
+        cursor: pointer;
+        padding-left: 34px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+        border-left: 2px solid #ffffff;
+      }
+    }
+  }
+  .right {
+    flex: 5;
+    min-height: 290px;
+    padding: 50px 50px 50px 20px;
+  }
+}
+
+.active {
+  border-left: 2px solid #2265ff !important;
+  background-color: #e8efff;
+}
+
+.box1 {
+  position: relative;
+  .closeIcon {
+    position: absolute;
+    right: -27px;
+    top: 8px;
+    font-size: 20px;
+    cursor: pointer;
+    &:hover {
+      color: red;
+    }
+  }
+}
+
+.tabsStyle {
+  font-size: 14px;
+  height: 30px;
+  line-height: 30px;
+  padding-left: 40px;
+}
+
+.el-page-header {
+  height: 40px;
+  line-height: 40px;
+}
+
+.adverting {
+  width: 500px;
+  box-sizing: border-box;
+  padding: 10px;
+  padding-left: 0;
+  .item {
+    display: flex;
+    width: 100%;
+    height: 50px;
+    .left {
+      display: flex;
+      align-items: center;
+      color: #606266;
+      width: 50%;
+      height: 50px;
+      font-weight: 700;
+      .icon-wenhao {
+        color: #ddd9d9;
+        cursor: pointer;
+        margin-left: 5px;
+      }
+    }
+    .right {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      height: 50px;
+    }
+  }
+}
+
+.dragBox {
+  width: 80px;
+  /deep/ .el-input__inner {
+    text-align: center;
+  }
+}
+
+.empty {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 300px;
+  // background-color: red;
+  color: #999;
+  img {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+.tabs {
+  /deep/ .el-tabs__header {
+    background-color: #f3f5f7;
+    // height: 49px;
+  }
+  /deep/ .el-tabs__content {
+    padding: 0px;
+  }
+}
+
+/deep/ .el-tabs--border-card {
+  box-shadow: 0px 0px 0px 0px;
+  border: none;
+}
+
+.tabsbox {
+  border: 1px solid #d7dadd;
+}
+
+.app-container {
+  .filter-container {
+    .height {
+      margin: 0px 0 0 10px;
+    }
+  }
+}
+</style>

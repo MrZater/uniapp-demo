@@ -1,0 +1,152 @@
+<template>
+  <el-row
+    :gutter="20"
+    class="panel-group"
+  >
+    <el-col
+      v-for="(item, i) in menuList"
+      :key="i"
+      :span="6"
+      class="card-panel-col"
+    >
+      <div class="card-panel">
+        <div
+          class="card-panel-icon-wrapper"
+          :class="item.icon"
+        >
+          <svg-icon
+            icon-class="money"
+            class-name="card-panel-icon"
+          />
+        </div>
+        <div class="card-panel-description">
+          <div class="card-panel-text">
+            {{ item.fullName }}
+          </div>
+          <div class="box">
+            {{ item.num }}
+          </div>
+        </div>
+      </div>
+    </el-col>
+  </el-row>
+</template>
+<script>
+export default {
+  data() {
+    return {
+      menuList: [
+        { fullName: '今日预估收益（元）', num: 0, icon: 'icon-today' },
+        { fullName: '昨日收益（元）', num: 0, icon: 'icon-yesterday' },
+        { fullName: '前天收益（元）', num: 0, icon: 'icon-week' },
+        { fullName: '本月累计收益（元）', num: 0, icon: 'icon-month' },
+        { fullName: '上月累计收益（元）', num: 0, icon: 'icon-all' }
+      ]
+    }
+  },
+  created() {},
+  methods: {
+    initData(delayFee) {
+      this.menuList = []
+      this.menuList.push({
+        fullName: '今日预估收益（元）',
+        num: delayFee.today,
+        icon: 'icon-today'
+      })
+      this.menuList.push({
+        fullName: '昨日收益（元）',
+        num: delayFee.yesterday,
+        icon: 'icon-yesterday'
+      })
+      this.menuList.push({
+        fullName: '前天收益（元）',
+        num: delayFee.beforeYesterday,
+        icon: 'icon-week'
+      })
+      this.menuList.push({
+        fullName: '本月累计收益（元）',
+        num: delayFee.month,
+        icon: 'icon-month'
+      })
+      this.menuList.push({
+        fullName: '上月累计收益（元）',
+        num: delayFee.lastMonth,
+        icon: 'icon-all'
+      })
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+.panel-group {
+  margin-bottom: 15px;
+
+  .card-panel-col {
+    width: 20%;
+  }
+
+  .card-panel {
+    display: flex;
+    height: 108px;
+    font-size: 12px;
+    position: relative;
+    overflow: hidden;
+    color: #666;
+    background: #fff;
+    box-shadow: 4px 4px 40px rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.05);
+
+    .icon-today {
+      color: #74ebaf;
+    }
+
+    .icon-yesterday {
+      color: #40c9c6;
+    }
+
+    .icon-week {
+      color: #36a3f7;
+    }
+
+    .icon-month {
+      color: #f4516c;
+    }
+
+    .icon-all {
+      color: #34bfa3;
+    }
+
+    .card-panel-icon-wrapper {
+      float: left;
+      margin: 14px 0 0 0px;
+      padding: 16px;
+      transition: all 0.38s ease-out;
+      border-radius: 6px;
+    }
+
+    .card-panel-icon {
+      float: left;
+      font-size: 48px;
+    }
+
+    .card-panel-description {
+      // float: left;
+      flex: 1;
+      font-weight: bold;
+      margin: 26px 0px 26px 0;
+
+      .card-panel-text {
+        line-height: 16px;
+        color: #666;
+        font-size: 15px;
+        margin-bottom: 12px;
+      }
+      .box {
+        font-size: 22px;
+        font-weight: 800;
+      }
+    }
+  }
+}
+</style>

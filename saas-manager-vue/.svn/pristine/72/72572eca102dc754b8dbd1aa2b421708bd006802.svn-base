@@ -1,0 +1,28 @@
+<template>
+  <div class="ruoyi-doc-container">
+    <svg-icon class="svgicon" icon-class="question" @click="goto" />
+    <div />
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'RuoYiDoc',
+  data() {
+    return {
+      url: 'https://app.mediatom.cn/docs/#/'
+    }
+  },
+  methods: {
+    goto() {
+      window.open(this.url)
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+.ruoyi-doc-container {
+  width: 32px;
+}
+</style>

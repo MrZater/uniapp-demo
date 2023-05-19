@@ -1,0 +1,1042 @@
+<template>
+  <div class="tab-container">
+    <div class="search">
+      <el-row :gutter="5" class="search_box">
+        <el-col :span="6" class="item">
+          <!-- 日期 -->
+          <el-date-picker
+            v-model="time"
+            style="width: 95%"
+            :clearable="false"
+            type="daterange"
+            value-format="yyyy-MM-dd"
+            align="right"
+            unlink-panels
+            range-separator="与"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            :picker-options="pickerOptions"
+            @change="getSTime"
+        /></el-col>
+        <el-col :span="6" class="item">
+          <!-- 应用 -->
+          <CustSelectApp
+            style="width: 95%"
+            :word="'应用'"
+            :width="450"
+            :allData="departments1"
+            @selectListhandle="selectappListhandleApp"
+          />
+        </el-col>
+        <el-col :span="6" class="item">
+          <!-- 广告位 -->
+          <CustSelectApp
+            style="width: 95%"
+            :word="'广告位'"
+            :width="450"
+            :allData="departments2"
+            @selectListhandle="selectappListhandlePlace"
+          />
+        </el-col>
+        <el-col :span="6" class="item">
+          <!-- 广告样式 -->
+          <CustSelectApp
+            style="width: 95%"
+            :word="'广告样式'"
+            :width="450"
+            :allData="options1"
+            @selectListhandle="selectappListhandlePosition"
+          />
+        </el-col>
+
+        <el-col :span="6" class="item">
+          <!-- 渠道 -->
+          <CustSelectApp
+            style="width: 95%"
+            :word="'渠道'"
+            :width="450"
+            :allData="departments5"
+            @selectListhandle="selectappListhandleChannel"
+          />
+        </el-col>
+        <el-col :span="6" class="item">
+          <!-- 广告平台-->
+          <CustSelectApp
+            style="width: 95%"
+            :word="'广告源'"
+            :width="450"
+            :allData="departments3"
+            @selectListhandle="selectappListhandlePlat"
+        /></el-col>
+        <el-col :span="6" class="item">
+          <!-- 流量分组 -->
+          <CustSelectApp
+            style="width: 95%"
+            :word="'流量分组'"
+            :width="450"
+            :allData="departments6"
+            @selectListhandle="selectappListhandleGroup"
+        /></el-col>
+        <el-col :span="6" class="item">
+          <!-- 代码位 -->
+          <CustSelectApp
+            style="width: 95%"
+            :word="'代码位'"
+            :width="450"
+            :allData="departments4"
+            @selectListhandle="selectappListhandleCode"
+        /></el-col>
+
+        <el-col :span="6" class="item">
+          <!-- 操作系统 -->
+          <el-select
+            style="width: 95%"
+            v-model="reportParams.osIdList"
+            multiple
+            placeholder="操作系统"
+          >
+            <el-option
+              v-for="item in systemPlatformOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            /> </el-select
+        ></el-col>
+        <el-col :span="6" class="item"
+          ><el-button
+            type="primary"
+            class="searchBtn"
+            icon="el-icon-search"
+            @click="handleSearch"
+            >搜索</el-button
+          ></el-col
+        >
+      </el-row>
+    </div>
+
+    <el-card class="echarts_card">
+      <div class="search">
+        <el-select
+          v-model="checkList[0]"
+          placeholder=""
+          @change="changeEcharts"
+          size="mini"
+        >
+          <el-option label="展示" value="impress" />
+          <el-option label="预估收益" value="income" />
+          <el-option label="预估eCPM" value="estimatedRevenueEcpm" />
+          <el-option label="请求" value="request" />
+          <el-option label="请求填充率" value="requestFilledRate" />
+          <el-option label="点击" value="click" />
+          <el-option label="点击率" value="clickRate" />
+          <el-option label="广告请求" value="advRequest" />
+          <el-option label="广告填充率" value="advRequestFilledRate" />
+          <el-option label="展示率" value="impressRate" />
+        </el-select>
+      </div>
+      <div class="earcth">
+        <div ref="box" v-loading="loadingEcharts" class="eartch_left" />
+      </div>
+    </el-card>
+    <el-card class="table_card">
+      <div class="hoursTable">
+        <div class="head_export">
+          <el-button
+            :disabled="!allowDownload"
+            class="el-icon-download"
+            size="small"
+            type="primary"
+            @click="exportHourReport"
+            >导出报表</el-button
+          >
+        </div>
+        <el-table
+          :header-cell-style="{ background: '#f7f8fa', color: '#000' }"
+          v-if="!tableDataEmpty"
+          id="rebateSetTable"
+          :data="hoursTableData"
+          style="width: 100%"
+          stripe
+        >
+          <el-table-column
+            prop="date"
+            width="140"
+            label="日期"
+            align="center"
+          />
+          <el-table-column
+            prop="income"
+            :render-header="renderIncome"
+            label="预估eCPM"
+            align="center"
+            width="120"
+          />
+          <el-table-column
+            prop="estimatedRevenueEcpm"
+            :render-header="renderecpm"
+            label="预估eCPM"
+            align="center"
+            width="120"
+          />
+          <el-table-column
+            :render-header="renderequest"
+            prop="request"
+            label="流量请求"
+            align="center"
+            width="120"
+          />
+          <el-table-column
+            prop="requestFilledRate"
+            :formatter="flowFormatter"
+            :render-header="trafficFilledRate"
+            label="流量填充率"
+            align="center"
+            width="130"
+          />
+          <el-table-column
+            prop="advRequest"
+            :render-header="renderadvRequest"
+            label="广告请求"
+            align="center"
+            width="120"
+          />
+          <el-table-column
+            prop="advRequestFilledRate"
+            :formatter="advertFormatter"
+            :render-header="renderFilledRate"
+            label="广告填充率"
+            width="120"
+            align="center"
+          />
+          <el-table-column
+            prop="impress"
+            :render-header="renderimpress"
+            label="展示"
+            align="center"
+            width="120"
+          />
+          <el-table-column
+            prop="impressRate"
+            :formatter="showFormatter"
+            :render-header="renderimpressRate"
+            label="展示率"
+            align="center"
+            width="120"
+          />
+          <el-table-column
+            prop="click"
+            :render-header="renderclick"
+            label="点击"
+            align="center"
+            width="120"
+          />
+          <el-table-column
+            prop="clickRate"
+            :formatter="clickFormatter"
+            label="点击率"
+            :render-header="renderclickRate"
+            align="center"
+          />
+        </el-table>
+        <Empty v-else />
+      </div>
+    </el-card>
+  </div>
+</template>
+
+<script>
+import CustSelectApp from "@/components/CustSelectApp";
+
+import { getPlaceList } from "@/api/place";
+import { getAppList } from "@/api/app";
+import { getPositionList } from "@/api/common";
+import tips from "@/components/tips/HelpHint/HelpHint.vue";
+import { toDate } from "@/utils/toTimer";
+import FileSaver from "file-saver";
+import Empty from "@/components/empty";
+import XLSX from "xlsx";
+import {
+  advertPlatform,
+  appToAdvert,
+  codeBit,
+  getChannel,
+  flowGroups,
+  appToCode,
+  appToFlow,
+  advertToCode,
+  advertToFlow,
+  hoursEcharts,
+  hoursReport,
+} from "@/api/synthReport";
+import echarts from "echarts";
+export default {
+  name: "HourReport",
+  components: { Empty, tips, CustSelectApp },
+  data() {
+    return {
+      myEcharts: null,
+      iscreat: true,
+      reportParams: {
+        page: 1,
+        limit: 100,
+        dateStart: "",
+        dateEnd: "",
+        appIdList: [], // 应用id数组
+        appIdListExclude: 1,
+        placeIdList: [], // 广告位
+        placeIdListExclude: 1,
+        positionIdList: [], // 广告样式数组
+        positionIdListExclude: 1,
+        platIdList: [], // 广告平台id数组
+        platIdListExclude: 1,
+        osIdList: [], // number数组	操作系统数组
+        groupIdList: [], // 流量分组
+        groupIdListExclude: 1,
+        channelIdList: [], // 渠道
+        channelIdListExclude: 1,
+        sourceIdList: [], // 代码位
+        sourceIdListExclude: 1,
+      },
+      time: [],
+      tableDataEmpty: false,
+      loadingEcharts: false,
+      hoursTableData: [],
+      pickerOptions: {
+        disabledDate(time) {
+          return time.getTime() > Date.now() || time.getTime() < 1633017600000;
+        },
+        shortcuts: [
+          {
+            text: "最近一周",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+              picker.$emit("pick", [start, end]);
+            },
+          },
+          {
+            text: "最近14天",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 14);
+              picker.$emit("pick", [start, end]);
+            },
+          },
+          {
+            text: "最近一个月",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+              picker.$emit("pick", [start, end]);
+            },
+          },
+        ],
+      },
+      dateArr: [],
+      checkList: ["impress"],
+      ecjartsList: [],
+      firstEcjartsList: [],
+      secondEcjartsList: [],
+      option: {
+        tooltip: {
+          trigger: "axis",
+          formatter: (params) => {
+            let str = "";
+            params.forEach((item, index) => {
+              let temp = {};
+              if (
+                item.seriesName == "预估收益" ||
+                item.seriesName == "预估eCPM"
+              ) {
+                temp.value = "￥" + item.value;
+              } else if (
+                item.seriesName == "流量填充率" ||
+                item.seriesName == "广告填充率" ||
+                item.seriesName == "点击率" ||
+                item.seriesName == "请求填充率"
+              ) {
+                temp.value = item.value + "%";
+              } else {
+                temp.value = item.value;
+              }
+              str += item.marker + item.seriesName + ": " + temp.value + "<br>";
+            });
+
+            return params[0].axisValue + "<br>" + str;
+          },
+        },
+        grid: {
+          left: "1%",
+          right: "1%",
+          bottom: "1%",
+          containLabel: true,
+        },
+        xAxis: {
+          type: "category",
+          boundaryGap: false,
+          data: [],
+          axisLine: {
+            lineStyle: {
+              color: "#000",
+              width: 0.5,
+            },
+          },
+        },
+        yAxis: [
+          // 0
+          {
+            type: "value",
+            position: "left",
+            axisLine: {
+              lineStyle: {
+                color: "#000",
+                width: 0.5,
+              },
+            },
+            splitLine: {
+              show: true,
+            },
+
+            axisTick: {
+              show: true,
+            },
+
+            axisLabel: {
+              show: true,
+            },
+          },
+        ],
+        series: [],
+      },
+      options1: [],
+      options2: [],
+      departments1: [],
+      departments2: [],
+      departments3: [],
+      departments4: [],
+      departments5: [],
+      departments6: [],
+      department1: [],
+      department2: [],
+
+      selfstyle: {
+        textAlign: "right",
+        paddingRight: "10px",
+      },
+      appOptions: [],
+      adverStyleOptions: [],
+      systemPlatformOptions: [
+        { label: "Android", value: "1" },
+        { label: "iOS", value: "0" },
+      ],
+      adverStyleVal: "",
+      systemPlatform: [],
+    };
+  },
+  computed: {
+    title() {
+      return this.$store.getters.title;
+    },
+    allowDownload() {
+      return this.$store.getters.allowDownload;
+    },
+  },
+  watch: {},
+  created() {
+    window.addEventListener("resize", this.getSize);
+    this.getSize();
+  },
+  destroyed() {
+    this.myEcharts.dispose();
+    window.removeEventListener("resize", this.getSize);
+  },
+  mounted() {
+    this.getDate();
+    this.echartsInit();
+    this.getApp();
+    this.getPlace();
+    this.getFlowGroups();
+    this.getPosition();
+    this.getChannelData();
+    this.getCodeBit();
+    this.getPlatOptionList();
+    this.getHoursReport();
+    this.getHoursEcharts();
+  },
+  methods: {
+    getDate() {
+      // 昨天
+      let today = toDate(Date.now() - 24 * 60 * 60 * 1000);
+      // 13天前
+      let day13Before = toDate(Date.now() - 14 * 24 * 60 * 60 * 1000);
+      this.time = [day13Before, today];
+      this.reportParams.dateStart = this.time[0];
+      this.reportParams.dateEnd = this.time[1];
+    },
+    // 应用
+    getApp() {
+      getAppList().then((res) => {
+        this.departments1 = res.data;
+      });
+    },
+    // 广告位
+    getPlace() {
+      getPlaceList().then((res) => {
+        this.departments2 = res.data;
+      });
+    },
+    // 流量分组
+    getFlowGroups() {
+      flowGroups().then((res) => {
+        this.departments6 = res.data;
+      });
+    },
+    // 广告样式
+    getPosition() {
+      getPositionList().then((res) => {
+        this.options1 = res.data;
+      });
+    },
+    // 渠道
+    getChannelData() {
+      getChannel().then((res) => {
+        this.departments5 = res.data.map((item) => {
+          return { name: item, id: item };
+        });
+      });
+    },
+    // 广告平台
+    getPlatOptionList() {
+      advertPlatform().then((res) => {
+        this.departments3 = res.data;
+      });
+    },
+    // 代码位
+    getCodeBit() {
+      codeBit().then((res) => {
+        this.departments4 = res.data;
+      });
+    },
+    // 小时报表
+    getHoursReport() {
+      hoursReport(this.reportParams).then((res) => {
+        if (res.code != 200) return;
+        if (res.data.list.length === 0) {
+          this.tableDataEmpty = true;
+          return;
+        } else {
+          this.tableDataEmpty = false;
+        }
+        res.data.aggregate.date = "汇总";
+        res.data.list.unshift(res.data.aggregate);
+        this.hoursTableData = res.data.list;
+      });
+    },
+    getSTime() {
+      if (this.time) {
+        this.reportParams.dateStart = this.time[0];
+        this.reportParams.dateEnd = this.time[1];
+      } else {
+        this.reportParams.dateStart = "";
+        this.reportParams.dateEnd = "";
+        this.time = [];
+      }
+    },
+    // 应用 下拉 关闭
+    appSelectClose(val) {
+      if (val && this.department1.length > 0) {
+        //  应用影响广告位
+        appToAdvert(this.department1).then((res) => {
+          this.departments2 = res.data;
+        });
+        //  应用影响 代码位
+        appToCode(this.department1).then((res) => {
+          this.departments4 = res.data;
+        });
+        //  应用影响 流量分组
+        appToFlow(this.department1).then((res) => {
+          this.departments6 = res.data;
+        });
+      }
+      if (val && this.department1.length == 0) {
+        this.getPlace();
+        this.getCodeBit();
+        this.getFlowGroups();
+      }
+    },
+    // 广告位 下拉 关闭
+    advertSelectClose(val) {
+      if (val && this.department2.length > 0) {
+        // 广告位影响 代码位
+        advertToCode(this.department2).then((res) => {
+          this.departments4 = res.data;
+        });
+        // 广告位影响 流量分组
+        advertToFlow(this.department2).then((res) => {
+          this.departments6 = res.data;
+        });
+      }
+      if (val && this.department2.length == 0) {
+        this.getCodeBit();
+        this.getFlowGroups();
+      }
+    },
+    selectappListhandleApp(val) {
+      this.department1 = val;
+      this.appSelectClose(val);
+      this.reportParams.appIdList = val;
+    },
+    selectappListhandlePlace(val) {
+      this.department2 = val;
+      this.advertSelectClose(val);
+      this.reportParams.placeIdList = val;
+    },
+    selectappListhandlePosition(val) {
+      this.reportParams.positionIdList = val;
+    },
+    selectappListhandleChannel(val) {
+      this.reportParams.channelIdList = val;
+    },
+    selectappListhandlePlat(val) {
+      this.reportParams.platIdList = val;
+    },
+    selectappListhandleGroup(val) {
+      this.reportParams.groupIdList = val;
+    },
+    selectappListhandleCode(val) {
+      this.reportParams.platIdList = val;
+    },
+
+    // 搜索
+    handleSearch() {
+      this.getHoursReport();
+      this.getHoursEcharts();
+    },
+
+    getHoursEcharts() {
+      this.loadingEcharts = true;
+      hoursEcharts(this.reportParams).then((res) => {
+        let arr = [];
+        for (let i = 0; i < 24; i++) {
+          arr.push(i);
+        }
+        this.option.xAxis.data = arr;
+        this.dateArr = [];
+        for (let key in res.data) {
+          this.dateArr.push(key);
+        }
+        // console.log(this.dateArr);
+        this.dateArr.forEach((item, i) => {
+          if (i == 0) {
+            this.firstEcjartsList = res.data[item];
+          } else if (this.dateArr.length > 1 && i == 1) {
+            this.secondEcjartsList = res.data[item];
+          }
+        });
+        this.changeEcharts();
+      });
+    },
+    // 点击复选框
+    changeEcharts() {
+      this.option.series = [];
+      for (let i = 0; i < this.checkList.length; i++) {
+        this.firstEcjartsList.forEach((child, c) => {
+          if (this.checkList[i] == child.field) {
+            this.option.legend = {
+              data: [this.dateArr[0] + "-" + child.name],
+            };
+            this.option.series[0] = {
+              name: this.dateArr[0] + "-" + child.name,
+              type: "line",
+              smooth: true,
+              data: child.data,
+              symbol: "circle", // 设定为实心点
+              symbolSize: 4, // 设定实心点的大小
+              itemStyle: {
+                normal: {
+                  color: "#ffab31",
+                  lineStyle: {
+                    color: "#ffab31",
+                    width: 1.8,
+                  },
+                },
+              },
+            };
+          }
+        });
+      }
+      if (this.dateArr.length > 1) {
+        for (let i = 0; i < this.checkList.length; i++) {
+          this.secondEcjartsList.forEach((child, c) => {
+            if (this.checkList[i] == child.field) {
+              this.option.legend.data[1] = this.dateArr[1] + "-" + child.name;
+              this.option.series[1] = {
+                name: this.dateArr[1] + "-" + child.name,
+                type: "line",
+                smooth: true,
+                data: child.data,
+                symbol: "circle", // 设定为实心点
+                symbolSize: 4, // 设定实心点的大小
+                itemStyle: {
+                  normal: {
+                    color: "#39da61",
+                    lineStyle: {
+                      color: "#39da61",
+                      width: 1.8,
+                    },
+                  },
+                },
+              };
+            }
+          });
+        }
+      }
+
+      this.option.tooltip.formatter = (params) => {
+        let str = "";
+        params.forEach((item, index) => {
+          let temp = {};
+          if (
+            item.seriesName.includes("预估收益") ||
+            item.seriesName.includes("预估eCPM")
+          ) {
+            temp.value = "￥" + item.value;
+          } else if (
+            item.seriesName.includes("流量填充率") ||
+            item.seriesName.includes("广告填充率") ||
+            item.seriesName.includes("点击率") ||
+            item.seriesName.includes("请求填充率")
+          ) {
+            temp.value = item.value + "%";
+          } else {
+            temp.value = item.value;
+          }
+          str += item.marker + item.seriesName + ": " + temp.value + "<br>";
+        });
+
+        return params[0].axisValue + "时<br>" + str;
+      };
+      this.loadingEcharts = false;
+      this.echartsInit();
+    },
+    getSize() {
+      // 判断是否是created时调用
+      if (!this.iscreat) {
+        this.myEcharts.resize();
+      }
+      this.iscreat = false;
+    },
+    echartsInit() {
+      if (this.myEcharts) {
+        this.myEcharts.dispose();
+        this.myEcharts = null;
+      }
+      let myEcharts = echarts.init(this.$refs.box);
+      myEcharts.setOption(this.option);
+      this.myEcharts = myEcharts;
+    },
+    exportHourReport() {
+      let wb = XLSX.utils.table_to_book(
+        document.querySelector("#rebateSetTable")
+      );
+      let wbout = XLSX.write(wb, {
+        bookType: "xlsx",
+        bookSST: true,
+        type: "array",
+      });
+      try {
+        FileSaver.saveAs(
+          new Blob([wbout], { type: "application/octet-stream" }),
+          "sheet.xlsx"
+        );
+      } catch (e) {
+        if (typeof console !== "undefined") console.log(e, wbout);
+      }
+      return wbout;
+    },
+    flowFormatter(row) {
+      return row.requestFilledRate + "%";
+    },
+    advertFormatter(row) {
+      return row.advRequestFilledRate + "%";
+    },
+    showFormatter(row) {
+      return row.impressRate + "%";
+    },
+    clickFormatter(row) {
+      return row.clickRate + "%";
+    },
+    renderIncome() {
+      return this.$createElement("tips", {
+        props: {
+          content: `预估收益=SUM(代码位人工填写的eCPM价格*${this.title}统计的展示/1000)`,
+          title: "预估收益",
+          isShow: true,
+        },
+      });
+    },
+    renderecpm() {
+      return this.$createElement("tips", {
+        props: {
+          content: `预估收益/${this.title}统计的展示）*1000`,
+          title: "预估eCPM",
+          isShow: true,
+        },
+      });
+    },
+    renderequest() {
+      return this.$createElement("tips", {
+        props: {
+          content: `应用向${this.title}发送请求的次数，一次流量请求可能触发多次广告请求`,
+          title: "流量请求",
+          isShow: true,
+        },
+      });
+    },
+    renderadvRequest() {
+      return this.$createElement("tips", {
+        props: {
+          content: `${this.title}向广告平台发送请求的次数。一次流量请求可能触发多次广告请求`,
+          title: "广告请求",
+          isShow: true,
+        },
+      });
+    },
+    renderimpress() {
+      return this.$createElement("tips", {
+        props: {
+          content: `${this.title}统计的广告曝光次数，由于统计口径差异、网络丢包等因素，${this.title}统计的展示数据与广告平台展示数据可能存在差异`,
+          title: "展示",
+          isShow: true,
+        },
+      });
+    },
+    trafficFilledRate() {
+      return this.$createElement("tips", {
+        props: {
+          content: `应用向${this.title}发送请求后，响应成功的占比`,
+          title: "流量填充率",
+          isShow: true,
+        },
+      });
+    },
+    renderFilledRate() {
+      return this.$createElement("tips", {
+        props: {
+          content: `${this.title}向广告平台发送请求后，返回成功的占比`,
+          title: "广告填充率",
+          isShow: true,
+        },
+      });
+    },
+    renderimpressRate() {
+      return this.$createElement("tips", {
+        props: {
+          content: `${this.title}收到来自广告平台的广告返回后，展示成功的占比。公式为 展示率 = (展示/流量填充)`,
+          title: "展示率",
+          isShow: true,
+        },
+      });
+    },
+    renderclick() {
+      return this.$createElement("tips", {
+        props: {
+          content: `${this.title}统计的广告点击数，由于部分广告平台不提供点击回调，${this.title}统计的点击数据与广告平台点击数据可能存在差异`,
+          title: "点击",
+          isShow: true,
+        },
+      });
+    },
+    renderclickRate() {
+      return this.$createElement("tips", {
+        props: {
+          content: `${this.title}统计的点击率，点击率=点击数/展示数`,
+          title: "点击率",
+          isShow: true,
+        },
+      });
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.tab-container {
+  // padding: 10px;
+  background-color: #f5f5f5;
+  position: relative;
+  .search {
+    background-color: #fff;
+    .search_box {
+      padding: 10px;
+      .item {
+        padding: 10px;
+      }
+    }
+  }
+
+  .echarts_card {
+    margin: 15px 0;
+  }
+  .hoursTable {
+    width: 100%;
+    ::v-deep .el-table--border th {
+      border-right: none;
+    }
+    ::v-deep .el-table--border td {
+      border-right: none;
+    }
+    .head_export {
+      display: flex;
+      justify-content: flex-end;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+  }
+
+  // .item {
+  //   margin: 0 6px 8px 0;
+  // }
+  .panel-group {
+    .card-panel-col {
+      margin-bottom: 32px;
+    }
+
+    .card-panel {
+      height: 108px;
+      cursor: pointer;
+      font-size: 12px;
+      position: relative;
+      overflow: hidden;
+      color: #666;
+      background: #fff;
+      box-shadow: 4px 4px 40px rgba(0, 0, 0, 0.05);
+      border-color: rgba(0, 0, 0, 0.05);
+
+      &:hover {
+        .card-panel-icon-wrapper {
+          color: #fff;
+        }
+
+        .icon-yesterday {
+          background: #40c9c6;
+        }
+
+        .icon-last-seven-day {
+          background: #36a3f7;
+        }
+
+        .icon-month {
+          background: #f4516c;
+        }
+
+        .icon-all {
+          background: #34bfa3;
+        }
+      }
+
+      .icon-yesterday {
+        color: #40c9c6;
+      }
+
+      .icon-last-seven-day {
+        color: #36a3f7;
+      }
+
+      .icon-month {
+        color: #f4516c;
+      }
+
+      .icon-all {
+        color: #34bfa3;
+      }
+
+      .card-panel-icon-wrapper {
+        float: left;
+        margin: 14px 0 0 14px;
+        padding: 16px;
+        transition: all 0.38s ease-out;
+        border-radius: 6px;
+      }
+
+      .card-panel-icon {
+        float: left;
+        font-size: 48px;
+      }
+
+      .card-panel-description {
+        float: right;
+        font-weight: bold;
+        margin: 26px 26px 26px 0;
+
+        .card-panel-text {
+          line-height: 18px;
+          color: rgba(0, 0, 0, 0.45);
+          font-size: 16px;
+          margin-bottom: 12px;
+        }
+
+        .card-panel-num {
+          font-size: 20px;
+        }
+      }
+    }
+  }
+  .earcth {
+    display: flex;
+    width: 100%;
+    margin-top: 15px;
+    background-color: #fff;
+    margin-bottom: 15px;
+    .eartch_left {
+      width: 100%;
+      height: 40vh;
+      // background-color: blue;
+    }
+
+    .data_right {
+      flex: 1;
+
+      h3 {
+        font-weight: 400;
+        height: 40px;
+        line-height: 40px;
+        color: #333;
+        border: 1px solid rgb(214, 208, 208);
+        border-bottom: none;
+        box-sizing: border-box;
+        color: #333;
+        font-size: 14px;
+        padding-left: 30px;
+        background-color: #f5f7fa;
+      }
+      ul {
+        height: 300px;
+        overflow-y: scroll;
+        border: 1px solid rgb(214, 208, 208);
+        li {
+          height: 40px;
+          line-height: 40px;
+          padding-left: 20px;
+          box-sizing: border-box;
+          border-bottom: 1px solid rgb(214, 208, 208);
+        }
+      }
+    }
+  }
+  .searchTiaojian {
+    width: 100%;
+    background-color: red;
+    margin-bottom: 15px;
+  }
+  .table_card {
+    margin-bottom: 20px;
+  }
+}
+.box {
+  font-size: 27px;
+}
+</style>

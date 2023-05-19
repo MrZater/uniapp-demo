@@ -1,0 +1,328 @@
+<template>
+  <div class="report-container">
+    <div class="search">
+      <el-row :gutter="30">
+        <el-col :span="6">
+          <el-date-picker
+            style="width: 100%"
+            v-model="date"
+            :clearable="false"
+            class="item"
+            type="daterange"
+            value-format="yyyy-MM-dd"
+            align="right"
+            unlink-panels
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            :picker-options="pickerOptions"
+            @change="getSTimeChange"
+        /></el-col>
+        <el-col :span="4"
+          ><CustSelectOne
+            v-if="$store.state.user.roles[0] === 'SUPER_ADMIN'"
+            @handleSelect="selectListhandleAdmin"
+            :model="query.userId"
+            :word="'账户'"
+            :width="190"
+            :allData="adminList"
+        /></el-col>
+        <el-col :span="4"
+          ><CustSelectOne
+            @handleSelect="selectListhandlePlat"
+            :model="query.platId"
+            :word="'广告源'"
+            :width="190"
+            :allData="platList"
+        /></el-col>
+        <el-col :span="4" v-if="$store.state.user.roles[0] !== 'AUDITOR'">
+          <CustSelectApp
+            :word="'审核人员'"
+            :width="450"
+            :allData="auditUserList"
+            @selectListhandle="selectListhandleAudit"
+          />
+        </el-col>
+      </el-row>
+    </div>
+    <div class="dimension">
+      <div class="dimension_box">
+        <span>数据维度</span>
+        <el-checkbox @change="handelDimension" v-model="query.isGroupByPlat"
+          >广告源</el-checkbox
+        >
+        <el-checkbox @change="handelDimension" v-model="query.isGroupByUser"
+          >审核人员</el-checkbox
+        >
+      </div>
+    </div>
+    <div class="table" v-if="tableList.length > 0">
+      <el-table
+        v-loading="isLoading"
+        ref="box"
+        :header-cell-style="{ background: '#f7f8fa' }"
+        :data="tableList"
+        style="width: 100%"
+      >
+        <el-table-column
+          align="center"
+          prop="date"
+          min-width="120px"
+          label="日期"
+        ></el-table-column>
+        <el-table-column
+          v-if="query.isGroupByPlat"
+          align="center"
+          prop="platName"
+          min-width="120px"
+          label="广告源"
+        ></el-table-column>
+        <el-table-column
+          v-if="query.isGroupByUser"
+          align="center"
+          prop="username"
+          min-width="120px"
+          label="审核人员"
+        ></el-table-column>
+        <el-table-column
+          align="center"
+          prop="totalNum"
+          min-width="120px"
+          label="送审量"
+        ></el-table-column>
+        <el-table-column
+          align="center"
+          prop="auditNum"
+          min-width="120px"
+          label="完审量"
+        ></el-table-column>
+        <el-table-column
+          align="center"
+          prop="passNum"
+          min-width="120px"
+          label="通过量"
+        ></el-table-column>
+
+        <el-table-column
+          align="center"
+          prop="auditRatio"
+          min-width="120px"
+          label="审核率"
+        >
+          <template slot-scope="{ row }">
+            {{ row.auditRatio + "%" }}
+          </template></el-table-column
+        >
+        <el-table-column
+          align="center"
+          prop="passRatio"
+          min-width="120px"
+          label="通过率"
+        >
+          <template slot-scope="{ row }">
+            {{ row.passRatio + "%" }}
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        style="margin-top: 20px"
+        :current-page="query.page"
+        :page-sizes="[10, 15, 20]"
+        :page-size="query.limit"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div>
+    <Empty v-else></Empty>
+  </div>
+</template>
+
+<script>
+import { adminDateOotion } from "@/utils/options";
+import {
+  apiPlatformList,
+  auditUserList,
+  getMaterialReport,
+  getAdminIDListInMaterial,
+} from "@/api/material";
+import { getAdminAndAppListByBusinessId } from "@/api/app";
+import CustSelectOne from "@/components/CustSelectOne";
+import Empty from "@/components/empty";
+import CustSelectApp from "@/components/CustSelectApp";
+
+export default {
+  components: { CustSelectOne, CustSelectApp, Empty },
+  data() {
+    return {
+      date: [],
+      pickerOptions: adminDateOotion ? adminDateOotion : [],
+      query: {
+        page: 1,
+        limit: 10,
+        platId: null,
+        userId: "",
+        userIds: [],
+        beginDate: "",
+        endDate: "",
+        isGroupByPlat: false,
+        isGroupByUser: false,
+      },
+      total: 0,
+      adminList: [],
+      platList: [],
+      auditUserList: [],
+      tableList: [],
+      isLoading: false,
+      timer: null,
+      isMounted: true,
+    };
+  },
+  async mounted() {
+    this.initDate();
+    await this.getAdminList();
+    await this.getPlatList();
+    await this.getAuditUserList();
+    this.isMounted = false;
+    this.getMaterialReport();
+  },
+  methods: {
+    getSTimeChange() {
+      this.query.endDate = this.date[1];
+      this.query.beginDate = this.date[0];
+      this.getMaterialReport();
+    },
+    // 初始化时间
+    initDate() {
+      let time = new Date().getTime();
+      let year = new Date(time).getFullYear();
+      let month = new Date(time).getMonth() + 1;
+      let day = new Date(time).getDate();
+      let str = `${year}-${month < 10 ? "0" + month : month}-${
+        day < 10 ? "0" + day : day
+      }`;
+      this.date = [str, str];
+      this.query.endDate = str;
+      this.query.beginDate = str;
+    },
+    // 获取账户列表列表
+    async getAdminList() {
+      let resp = await getAdminIDListInMaterial();
+      if (resp.code !== 200) return;
+
+      let arr = resp.data;
+      arr.forEach((item) => {
+        item.id = "" + item.id;
+      });
+      this.adminList = arr;
+      if (this.$store.state.user.roles[0] === "SUPER_ADMIN") {
+        this.query.userId = this.adminList[0].id.toString();
+      }
+    },
+    // 获取广告位列表
+    async getPlatList() {
+      let resp = await apiPlatformList();
+      if (resp.code !== 200) return;
+
+      resp.data.forEach((item) => {
+        item.id = "" + item.id;
+      });
+      this.platList = resp.data;
+      this.platList.unshift({
+        name: "所有广告源",
+        id: "所有广告源",
+      });
+    },
+    // 获取审核人员列表
+    async getAuditUserList() {
+      let resp = await auditUserList(this.query.userId);
+      if (resp.code !== 200) return;
+      resp.data.forEach((item) => {
+        item.name = item.username;
+      });
+      this.auditUserList = resp.data;
+    },
+    // 账户选择事件
+    selectListhandleAdmin(val) {
+      this.query.userId = "" + val;
+      this.getAuditUserList();
+      // this.getMaterialReport();
+    },
+    // 广告位选择事件
+    selectListhandlePlat(val) {
+      this.query.platId = val;
+      this.getMaterialReport();
+    },
+    // 审核人员选择事件
+    selectListhandleAudit(val) {
+      this.query.userIds = val;
+      this.getMaterialReport();
+    },
+    async getMaterialReport() {
+      if (this.isMounted) {
+        return;
+      }
+      let query = JSON.parse(JSON.stringify(this.query));
+      if (query.platId == "所有广告源") {
+        query.platId = "";
+      }
+      this.isLoading = true;
+      let resp = await getMaterialReport(query);
+      if (resp.code !== 200) return;
+      if (!resp.data.items) {
+        resp.data.items = [];
+      }
+      this.total = resp.data.total;
+      this.tableList = resp.data.items;
+      this.isLoading = false;
+    },
+    handelDimension() {
+      if (this.timer) {
+        clearTimeout(this.timer);
+        this.timer = null;
+      }
+      this.timer = setTimeout(() => {
+        this.getMaterialReport();
+      }, 600);
+    },
+    handleSizeChange(val) {
+      this.query.limit = val;
+      this.getMaterialReport();
+    },
+    handleCurrentChange(val) {
+      this.query.page = val;
+      this.getMaterialReport();
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.report-container {
+  width: 100%;
+  .search {
+    background-color: #fff;
+    margin-top: 30px;
+    padding: 30px 20px;
+  }
+  .dimension {
+    width: 100%;
+    background-color: #fff;
+    .dimension_box {
+      margin-top: 10px;
+      padding: 10px 20px;
+      width: 25%;
+      display: flex;
+      justify-content: space-between;
+    }
+  }
+  .table {
+    background-color: #fff;
+    padding: 10px 20px;
+  }
+  .empty{
+    background-color: #fff;
+  }
+}
+</style>

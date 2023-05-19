@@ -1,0 +1,152 @@
+<template>
+  <div class="app-container">
+    <div class="filter-container">
+      <el-button
+        v-waves
+        class="filter-item"
+        type="primary"
+        icon="el-icon-search"
+        @click="handleGetPager"
+      >
+        查询
+      </el-button>
+    </div>
+    <div class="body-container">
+      <div class="filter-container">
+        <el-button
+          v-waves
+          type="primary"
+          icon="el-icon-plus"
+          class="filter-item"
+          @click="handleAdd"
+        >
+          应用
+        </el-button>
+      </div>
+      <el-table
+        :key="tableKey"
+        v-loading="listLoading"
+        :data="list"
+        fit
+        highlight-current-row
+      >
+        <el-table-column
+          label="操作"
+          align="center"
+        >
+          <template slot-scope="{ row }">
+            <el-button
+              type="primary"
+              size="mini"
+              @click="handleUpdate(row)"
+            >
+              编辑
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <pagination
+        v-show="total > 0"
+        :total="total"
+        :page.sync="query.page"
+        :limit.sync="query.limit"
+        @pagination="handleGetPager"
+      />
+    </div>
+    <el-dialog
+      ref="dialog"
+      :title="dialogType === 0 ? '新增' : '编辑'"
+      :visible.sync="dialogVisible"
+    >
+      <el-form
+        ref="form"
+        :model="temp"
+        :rules="rules"
+        label-width="4rem"
+        label-position="left"
+      />
+      <span
+        slot="footer"
+        class="dialog-footer"
+      >
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button
+          type="primary"
+          @click="handleSubmitForm"
+        >确定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import waves from '@/directive/waves'
+import Pagination from '@/components/Pagination'
+import { Message } from 'element-ui'
+
+export default {
+  name: '',
+  components: { Pagination },
+  directives: { waves },
+  data() {
+    return {
+      query: {
+        page: 0,
+        limit: 20
+      },
+      appOptions: [],
+      appOptionsAll: [],
+      tableKey: 0,
+      listLoading: false,
+      list: [],
+      total: 0,
+      temp: {},
+      dialogType: 0,
+      dialogVisible: false,
+      rules: {}
+    }
+  },
+  methods: {
+    handleGetPager() {},
+    handleAdd() {
+      this.dialogType = 0
+      this.temp = {}
+      this.dialogVisible = true
+    },
+    handleUpdate(row) {
+      this.dialogType = 1
+      this.temp = JSON.parse(JSON.stringify(row))
+      this.dialogVisible = true
+    },
+    handleSubmitForm() {
+      let _this = this
+      this.$refs.form.validate(async(valid) => {
+        if (valid) {
+          if (_this.dialogType === 0) {
+            await _this.temp.then((res) => {
+              Message({
+                message: '操作成功！',
+                type: 'success',
+                duration: 5 * 1000
+              })
+            })
+          } else if (_this.dialogType === 1) {
+            await _this.temp.then((res) => {
+              Message({
+                message: '操作成功！',
+                type: 'success',
+                duration: 5 * 1000
+              })
+            })
+          }
+          _this.dialogVisible = false
+          _this.handleGetPager()
+        }
+      })
+    }
+  }
+}
+</script>
+
+<style scoped>
+</style>

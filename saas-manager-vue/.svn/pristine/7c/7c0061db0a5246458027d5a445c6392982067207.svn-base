@@ -1,0 +1,4865 @@
+<template>
+  <div class="aggregate-container">
+    <div v-if="vueType" class="app-container">
+      <div class="filter-container search">
+        <el-date-picker
+          :clearable="false"
+          style="width: 16rem"
+          v-model="date"
+          class="filter-item"
+          type="daterange"
+          value-format="yyyy-MM-dd"
+          align="right"
+          unlink-panels
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          :picker-options="pickerOptions"
+          @change="getSTime"
+        />
+        <CustSelectOne
+          class="filter-item"
+          @handleSelect="handleSelectApp"
+          style="
+            display: inline-block;
+            width: 12rem;
+            margin-left: 8px;
+            margin-right: 5px;
+          "
+          :model="query.appId"
+          :allData="appOptions"
+          :width="190"
+          word="应用"
+          :searchById="true"
+        />
+        <CustSelectOne
+          class="filter-item"
+          @handleSelect="handleSelectPlace"
+          style="
+            display: inline-block;
+            width: 12rem;
+            margin-left: 5px;
+            margin-right: 5px;
+          "
+          :model="query.placeId"
+          :allData="placeOptions"
+          searchById
+          :width="190"
+          word="广告位"
+        />
+        <!-- 流量分组 -->
+        <template v-if="config && placeOptions.length > 0">
+          <CustSelectOne
+            class="filter-item"
+            @handleSelect="handleSelectGroup"
+            style="
+              display: inline-block;
+              width: 12rem;
+              margin-left: 5px;
+              margin-right: 5px;
+            "
+            :model="query.groupId"
+            :allData="config.groups"
+            :width="190"
+            word="流量分组"
+          />
+        </template>
+        <span
+          v-if="
+            group.id !== 'default' &&
+            group.name !== '默认分组' &&
+            group.id !== '' &&
+            placeOptions.length > 0
+          "
+          @click="showRuleText = !showRuleText"
+          class="filter-item ruletextbtn"
+          >规则<i class="el-icon-arrow-down"></i
+        ></span>
+        <!-- 流量分组 -->
+        <el-button
+          style="position: absolute; right: 30px"
+          v-if="query.placeId != ' '"
+          v-waves
+          type="primary"
+          icon="el-icon-setting"
+          class="filter-item height"
+          @click="handleAggregateSetting"
+          size="small"
+        >
+          流量分组
+        </el-button>
+        <!-- A/B测试 -->
+        <el-button
+          class="filter-item"
+          v-if="group.id && group.abTests && group.abTests.length <= 1"
+          style="position: absolute; right: 160px"
+          type="primary"
+          icon="el-icon-plus"
+          @click="handleClickAdd"
+          >A/B测试</el-button
+        >
+
+        <div
+          v-if="
+            showRuleText &&
+            group.id !== 'default' &&
+            group.name !== '默认分组' &&
+            group.id !== '' &&
+            placeOptions.length > 0
+          "
+          class="filter-item ruletext"
+        >
+          <el-row :lg="20" class="tabsStyle">
+            <el-col :span="24">
+              <span class="ruleSpan">规则:{{ groupRuleStr }}</span>
+            </el-col>
+          </el-row>
+        </div>
+      </div>
+      <div v-if="query.placeId != ' '" class="body-container">
+        <div class="testgroups" v-if="abTestList.length > 1">
+          <div>
+            <el-radio-group @change="changeabtest" v-model="query.testId">
+              <template v-for="(item, i) in abTestList">
+                <el-radio-button
+                  v-if="abTestList.length > 1"
+                  :key="i"
+                  :label="item.testId"
+                  >{{ item.groupName }}&nbsp;&nbsp;<span v-if="item.type == 0"
+                    >{{ item.proportion }}%</span
+                  >
+                  <span v-if="item.type == 1">{{
+                    1 + item.max - item.min + "%"
+                  }}</span></el-radio-button
+                ></template
+              >
+            </el-radio-group>
+            <el-dropdown placement="right" trigger="click">
+              <span>
+                <i
+                  v-if="abTestList.length > 1"
+                  class="el-icon-setting setting"
+                ></i>
+              </span>
+              <el-dropdown-menu slot="dropdown">
+                <el-dropdown-item>
+                  <div style="width: 120%; height: 30px" @click="editABTest">
+                    编辑
+                  </div>
+                </el-dropdown-item>
+                <el-dropdown-item>
+                  <div style="width: 120%; height: 30px" @click="linkToABData">
+                    A/B测试数据
+                  </div>
+                </el-dropdown-item>
+                <el-dropdown-item>
+                  <div style="width: 120%; height: 30px" @click="endABTest">
+                    结束测试
+                  </div>
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </el-dropdown>
+          </div>
+        </div>
+        <div class="filter-container-operate">
+          <div class="left">
+            <el-dropdown
+              class="item"
+              trigger="click"
+              size="small"
+              split-button
+              type="primary"
+              @click="handleAdd"
+            >
+              <span class="el-dropdown-link">
+                <i class="el-icon-plus"></i>代码位
+              </span>
+              <el-dropdown-menu slot="dropdown">
+                <el-dropdown-item
+                  ><span class="dropdown_item" @click="handleAdd"
+                    ><i class="el-icon-plus"></i>单个添加</span
+                  ></el-dropdown-item
+                >
+                <el-dropdown-item
+                  ><span class="dropdown_item" @click="handleBatchAdd">
+                    <i class="el-icon-circle-plus"></i>批量添加</span
+                  ></el-dropdown-item
+                >
+
+                <el-dropdown-item
+                  ><span class="dropdown_item" @click="handleBatchExport">
+                    <i class="el-icon-folder-add"></i>批量导入</span
+                  ></el-dropdown-item
+                >
+              </el-dropdown-menu>
+            </el-dropdown>
+            <el-button
+              size="mini"
+              icon="el-icon-setting"
+              class="pinterest item"
+              @click="handleSettingArgs"
+              >瀑布流属性配置
+            </el-button>
+            <el-button
+              class="item"
+              :disabled="selectTableColumn.length == 0"
+              type="warning "
+              size="small"
+              @click="handleEditSts"
+              >批量修改状态</el-button
+            >
+            <batchCopyConfig
+              :testId="query.testId"
+              :groupId="query.groupId"
+              :selectData="selectTableColumn"
+              :groups="config ? config.groups : []"
+            ></batchCopyConfig>
+          </div>
+          <div class="right">
+            <CustTag
+              class="item"
+              @handelConfirmDialog="handelConfirmDialog"
+              :FarTargetArr="targetArr"
+              :storageName="storageName"
+              :boxHeight="600"
+            />
+            <el-button
+              class="item"
+              :disabled="!allowDownload"
+              type="primary"
+              :loading="downloading"
+              size="mini"
+              @click="downloadReport"
+              >导出报表</el-button
+            >
+          </div>
+        </div>
+        <div class="chooseBox">
+          <el-checkbox
+            :disabled="Alen == 0"
+            v-model="chooseAllA"
+            @change="handleChooseA($event, 'A')"
+            ><span class="chooseItem">全部已开启</span></el-checkbox
+          >
+          <el-checkbox
+            :disabled="Slen == 0"
+            v-model="chooseAllS"
+            @change="handleChooseA($event, 'S')"
+            ><span class="chooseItem">全部已关闭</span></el-checkbox
+          >
+        </div>
+        <el-table
+          class="aggregatetable"
+          :header-cell-style="{ 'background-color': '#f7f8fa', color: '#000' }"
+          :key="tableKey"
+          v-loading="listLoading"
+          :span-method="arraySpanMethod"
+          :data="listTemp"
+          empty-text="-"
+          fit
+          highlight-current-row
+          :row-class-name="tableRowClassName"
+          @selection-change="handleSelectionChange"
+          ref="tableref"
+        >
+          <!-- :height="listTemp.length < 20 ? listTemp.length * 45 : 900" -->
+
+          <el-table-column
+            align="center"
+            type="selection"
+            :selectable="handleSelectable"
+            fixed
+          >
+          </el-table-column>
+          <!-- 优先级 -->
+          <el-table-column label="优先级" fixed align="center">
+            <template slot-scope="{ row }">
+              <span v-if="row.type === 'selectSource'">{{
+                row.index + 1
+              }}</span>
+              <span v-else-if="row.type === 'all'">汇总</span>
+              <span v-else-if="row.type === 'unSelectSource'">-</span>
+              <span v-else-if="row.type === 'settle'"
+                ><svg-icon style="color: #f40" icon-class="bidding"></svg-icon
+              ></span>
+              <span
+                v-else-if="
+                  row.type === 'closebottom' || row.type === 'openbottom'
+                "
+              >
+                <el-popover
+                  placement="top"
+                  title=""
+                  width="150"
+                  trigger="hover"
+                  :content="`兜底代码位`"
+                >
+                  <svg-icon
+                    slot="reference"
+                    style="color: #f40; font-size: 16px"
+                    icon-class="bottom"
+                  ></svg-icon>
+                </el-popover>
+              </span>
+              <span class="expandbox" v-else
+                >{{ row.text }}
+                <el-button
+                  size="mini"
+                  class="expand"
+                  @click="expandTable(row)"
+                  style="margin-left: 10px"
+                  >{{ expand ? "折叠" : "展开" }}
+                  <i
+                    :class="
+                      expand
+                        ? 'el-icon-arrow-up el-icon--right'
+                        : 'el-icon-arrow-down el-icon--right'
+                    "
+                  />
+                </el-button>
+              </span>
+            </template>
+          </el-table-column>
+          <!-- 广告源 -->
+          <el-table-column
+            label="广告源"
+            fixed
+            prop="name"
+            width="120"
+            align="left"
+          >
+            <template slot-scope="{ row }">
+              <div>
+                <template v-for="item in PlatOptions">
+                  <span :key="item.id" v-if="row.platId == item.id">{{
+                    item.name
+                  }}</span>
+                </template>
+              </div>
+            </template>
+          </el-table-column>
+          <!-- 代码位 -->
+          <el-table-column
+            label="代码位"
+            width="200px"
+            fixed
+            prop="name"
+            align="left"
+            ><template slot-scope="{ row }">
+              <el-tooltip
+                v-if="row.isAutoSorting == '1'"
+                placement="top"
+                effect="light"
+              >
+                <div slot="content">
+                  {{ "已开启“自动价格”" }}
+                </div>
+                <span style="margin-right: 5px">
+                  <svg-icon
+                    style="color: #f40; font-size: 18px"
+                    class="svgicon"
+                    icon-class="bid"
+                  ></svg-icon
+                ></span>
+              </el-tooltip>
+              <span>{{ row.name }}</span>
+            </template></el-table-column
+          >
+          <!-- 操作 -->
+          <el-table-column label="操作" fixed align="center" width="100px">
+            <template slot-scope="{ row }">
+              <!-- 编辑 -->
+              <div
+                v-if="
+                  (row.type === 'selectSource' ||
+                    row.type === 'unSelectSource' ||
+                    row.type === 'settle' ||
+                    row.type === 'closebottom' ||
+                    row.type === 'openbottom') &&
+                  allowOperate
+                "
+                class="doicon"
+                @click="handleUpdate(row)"
+              >
+                <svg-icon
+                  style="color: #3685df"
+                  class="svgicon"
+                  icon-class="edit"
+                ></svg-icon>
+              </div>
+              <!-- 删除 & 状态 -->
+              <el-dropdown
+                placement="right"
+                class="right-menu-item hover-effect"
+                trigger="click"
+                v-if="
+                  (row.type === 'selectSource' ||
+                    row.type === 'unSelectSource' ||
+                    row.type === 'settle' ||
+                    row.type === 'closebottom' ||
+                    row.type === 'openbottom') &&
+                  allowOperate
+                "
+              >
+                <span style="cursor: pointer"
+                  ><svg-icon
+                    icon-class="omit"
+                    style="
+                      fon-size: 20px;
+                      color: #000;
+                      font-weight: 600;
+                      margin-left: 5px;
+                    "
+                  ></svg-icon
+                ></span>
+                <el-dropdown-menu slot="dropdown">
+                  <el-dropdown-item
+                    ><div class="doicon" @click="Adver(row)">
+                      <svg-icon
+                        style="color: red; margin-right: 10px; font-size: 14px"
+                        class="svgicon"
+                        icon-class="delete"
+                      ></svg-icon
+                      >删除
+                    </div></el-dropdown-item
+                  >
+                  <el-dropdown-item
+                    ><div class="doicon" @click="Advanced(row)">
+                      <svg-icon
+                        style="color: #1890ff; margin-right: 10px; font-size: 14px"
+                        class="svgicon"
+                        icon-class="gear"
+                      ></svg-icon
+                      >高级设置
+                    </div></el-dropdown-item
+                  >
+                  <el-dropdown-item>
+                    <div
+                      class="doicon"
+                      @click="
+                        handleUpdateSourceSts(row, row.sts == 'A' ? 'S' : 'A')
+                      "
+                    >
+                      <svg-icon
+                        style="margin-right: 10px; font-size: 14px"
+                        :style="{ color: row.sts == 'A' ? '#13CE66' : 'red' }"
+                        class="svgicon"
+                        icon-class="swith"
+                      ></svg-icon
+                      >{{ row.sts == "A" ? "关闭" : "开启" }}
+                    </div>
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </el-dropdown>
+            </template>
+          </el-table-column>
+          <!-- 价格 -->
+          <el-table-column
+            class="table_money"
+            width="100"
+            label="价格"
+            fixed
+            align="center"
+          >
+            <template slot-scope="{ row }">
+              <div
+                v-if="row.type === 'selectSource' || row.type === 'openbottom'"
+                class="editmoney"
+                style="height:27px"
+              >
+                <template v-if="row.edit">
+                  <el-dropdown placement="right">
+                    <el-input
+                      @mouseleave="row.edit = false"
+                      style="width: 80px"
+                      v-model.trim="row.bidfloor"
+                      size="small"
+                    >
+                      <span
+                        style="position: absolute; top: -3px; line-height: 40px"
+                        slot="prefix"
+                        >￥</span
+                      >
+                    </el-input>
+                    <el-dropdown-menu slot="dropdown">
+                      <el-dropdown-item>
+                        <span v-if="row.edit" @click.self="confirmEdit(row)"
+                          >保存</span
+                        >
+                      </el-dropdown-item>
+                      <el-dropdown-item>
+                        <span v-if="row.edit" @click="cancelEdit(row)"
+                          >取消</span
+                        >
+                      </el-dropdown-item>
+                    </el-dropdown-menu>
+                  </el-dropdown>
+                </template>
+                <template v-else>
+                  <span>￥{{ row.bidfloor }}</span>
+                  <i class="el-icon-edit editIcon" @click="row.edit = true"></i>
+                </template>
+              </div>
+              <div
+                class="money"
+                v-if="
+                  row.type === 'unSelectSource' || row.type === 'closebottom'
+                "
+              >
+                <span>￥</span>
+                <span>{{ row.bidfloor }}</span>
+              </div>
+              <div v-if="row.type === 'settle'" style="color: #1890ff">
+                竞价
+              </div>
+              <div v-if="row.type == 'all'">￥{{ row.placePrice }}</div>
+            </template>
+          </el-table-column>
+          <template v-for="(item, i) in sureArr">
+            <el-table-column
+              :key="i"
+              :prop="item.prop"
+              :label="item.label"
+              :align="item.align"
+              :width="item.width"
+              :render-header="renderHeader"
+            >
+              <template slot-scope="{ row }">
+                <div
+                  v-if="
+                    (item.prop == 'advRequestFilledRate' ||
+                      item.prop == 'impressRate' ||
+                      item.prop == 'clickRate' ||
+                      item.prop == 'unitFilledRate' ||
+                      item.prop == 'unitCtr' ||
+                      item.prop == 'clickGap' ||
+                      item.prop == 'impressionGap' ||
+                      item.prop == 'askPriceFilledRate' ||
+                      item.prop == 'display' ||
+                      item.prop == 'revenuePercentage' ||
+                      item.prop == 'impressRequestRate' ||
+                      item.prop == 'bidSuccessRate') &&
+                    (row[item.prop] || row[item.prop] == 0)
+                  "
+                >
+                  {{
+                    row[item.prop] || row[item.prop] == 0
+                      ? row[item.prop] + "%"
+                      : "-"
+                  }}
+                </div>
+                <div
+                  v-else-if="
+                    item.prop == 'advResponseTime' &&
+                    (row[item.prop] || row[item.prop] == 0)
+                  "
+                >
+                  {{ row[item.prop] + "s" }}
+                </div>
+
+                <div v-else>{{ row[item.prop] }}</div>
+              </template>
+            </el-table-column>
+          </template>
+        </el-table>
+      </div>
+      <Empty class="empty" v-else />
+      <el-dialog
+        ref="dialog"
+        :title="
+          dialogSourceType === 0 && !isAdvanced
+            ? '新增代码位'
+            : dialogSourceType === 1 && !isAdvanced
+            ? '编辑代码位'
+            : isAdvanced
+            ? '高级设置'
+            : ''
+        "
+        :visible.sync="dialogSourceVisible"
+        v-if="dialogSourceVisible"
+        @close="closeSourceDialog"
+        :destroy-on-close="true"
+        :close-on-click-modal="false"
+      >
+        <el-form
+          ref="form"
+          :model="temp"
+          :rules="rules"
+          label-width="120px"
+          class="addSourceForm"
+          label-position="right"
+        >
+          <div class="edit_form_item" v-if="!isAdvanced">
+            <div style="width: 800px; margin-bottom: 40px">
+              <el-row>
+                <el-col :lg="1">
+                  <el-image
+                    fit="fill"
+                    style="width: 40px; height: 40px; border-radius: 10px"
+                    :src="
+                      iconUrl
+                        ? 'http://creative.medproad.com/material/' + iconUrl
+                        : '/images/app-none.png'
+                    "
+                  />
+                </el-col>
+                <el-col :lg="6" style="margin-left: 20px">
+                  <div class="app">
+                    <div style="margin-bottom: 10px">
+                      <span>{{ appName }}</span>
+                    </div>
+                    <div>
+                      <span>ID:{{ query.appId }}</span>
+                    </div>
+                  </div>
+                </el-col>
+                <el-col :lg="6">
+                  <div class="ad">
+                    <div style="margin-bottom: 10px">
+                      <span>{{ placeName }}</span>
+                    </div>
+                    <div>
+                      <span>ID:{{ query.placeId }}</span>
+                    </div>
+                  </div>
+                </el-col>
+              </el-row>
+            </div>
+            <el-form-item label="流量分组">
+              <span>{{ group.name }}</span>
+            </el-form-item>
+            <el-form-item label="广告源">
+              <AppPlatform
+                :isBatch="false"
+                :app-id="appId"
+                :linked-show="false"
+                :active="active"
+                :disabled="dialogSourceType === 1"
+                :is-edit="isEdit"
+                @selectPlatId="selectPlatId"
+                @getplatrow="getplatrow"
+                @platAppId="getPlatAppId"
+                @accessType="getAccessType"
+                @settleType="getSettleType"
+                @id="getId"
+                @selectAccount="selectAccount"
+              />
+            </el-form-item>
+            <el-form
+              ref="platLinkForm"
+              :model="editplatquery"
+              label-width="120px"
+              label-position="right"
+              :rules="editplatrules"
+            >
+              <!-- 账户 -->
+              <el-form-item label="账户" prop="platAccountId">
+                <el-select v-model="editplatquery.platAccountId">
+                  <el-option
+                    v-for="account in accounts"
+                    :key="account.id"
+                    :label="account.name"
+                    :value="account.id"
+                  >
+                  </el-option>
+                </el-select>
+
+                <span v-if="editplatquery.platId"
+                  >创建<span
+                    style="color: #338aff; cursor: pointer"
+                    class="text-a"
+                    @click="showNewAccount"
+                    >新账户</span
+                  ></span
+                >
+              </el-form-item>
+              <!-- appid -->
+              <el-form-item
+                label="AppId"
+                v-if="accessType && accessType != 2"
+                :prop="accessType == 1 ? '' : 'platAppId'"
+              >
+                <el-input
+                  v-model.trim="editplatquery.platAppId"
+                  placeholder="请输入"
+                />
+                <p style="color: red; font-size: 12px">
+                  注意：修改AppID后，该应用下的所有广告位配置都会同步生效！
+                </p>
+              </el-form-item>
+              <!-- appkey -->
+              <el-form-item
+                label="AppKey"
+                prop="appKey"
+                v-if="editplatquery.platId == 7 || editplatquery.platId == 11"
+              >
+                <el-input
+                  v-model.trim="editplatquery.appKey"
+                  placeholder="请输入"
+                />
+              </el-form-item>
+            </el-form>
+
+            <el-form-item v-if="showSlotId" label="广告版位ID" prop="slotId">
+              <el-input
+                placeholder="请输入广告版位ID"
+                v-model="temp.slotId"
+                style="width: 95%"
+              ></el-input>
+            </el-form-item>
+            <el-form-item label="代码位名称" prop="name">
+              <el-input
+                v-model="temp.name"
+                placeholder="请输入代码位名称"
+                style="width: 95%"
+              />
+            </el-form-item>
+            <el-form-item
+              label="代码位ID"
+              prop="platPlaceId"
+              v-if="accessType && accessType != 2"
+            >
+              <el-input
+                v-model="temp.platPlaceId"
+                placeholder="请输入代码位ID"
+                style="width: 95%"
+              />
+            </el-form-item>
+            <el-form-item
+              label="代码位ID"
+              v-if="accessType == 2 && dialogSourceType"
+            >
+              <div>
+                <span> {{ temp.platPlaceId }}</span>
+                <el-tooltip
+                  content="复制代码位ID"
+                  placement="right"
+                  effect="light"
+                >
+                  <i
+                    @click="copyId(temp.platPlaceId)"
+                    style="cursor: pointer; margin-left: 5px"
+                    class="el-icon-copy-document"
+                  ></i>
+                </el-tooltip>
+              </div>
+            </el-form-item>
+            <el-form-item
+              label="参数"
+              prop="ext"
+              v-if="accessType && accessType == 2"
+            >
+              <el-input
+                type="textarea"
+                v-model="temp.ext"
+                placeholder="参数必须符合JSON格式"
+                style="width: 95%"
+              />
+            </el-form-item>
+            <el-form-item
+              v-if="(id >= 900 || +temp.platId >= 900) && accessType != 2"
+              label="素材模板"
+              prop="templateIds"
+            >
+              <el-transfer
+                v-model="temp.templateIds"
+                :data="templeteList"
+                :titles="['可选模板', '已选模板']"
+              ></el-transfer>
+            </el-form-item>
+            <el-form-item
+              label="是否自渲染"
+              prop="isAutoDrawing"
+              v-if="
+                isAutoDrawing &&
+                (temp.platId == 1 ||
+                  temp.platId == 2 ||
+                  temp.platId == 3 ||
+                  temp.platId == 6)
+              "
+            >
+              <el-radio v-model="temp.isAutoDrawing" :label="'1'">是</el-radio>
+              <el-radio v-model="temp.isAutoDrawing" :label="'0'">否</el-radio>
+            </el-form-item>
+
+            <el-form-item prop="settleType">
+              <tips
+                v-if="temp.platId == 2 || temp.platId == 6"
+                slot="label"
+                style="display: inline-block"
+                :content="
+                  temp.platId == 2
+                    ? `优量汇竞价必须选择服务端实时竞价(S2S Bidding)。优量汇头部竞价需要${title} SDK  2.4.2及以上版本支持。`
+                    : temp.platId == 6
+                    ? `百度竞价为服务端实时竞价(S2S Bidding)。百度头部竞价需要${title} SDK 2.4.9及以上版本支持。`
+                    : ``
+                "
+                :title="'价格类型'"
+                :isShow="true"
+              ></tips>
+              <span slot="label" v-else>价格类型</span>
+              <el-radio-group
+                v-model="temp.settleType"
+                fill="#8ec4f0"
+                size="mini"
+              >
+                <el-radio-button :label="0">固价</el-radio-button>
+                <el-radio-button
+                  v-if="settleType === 1 || temp.isBidding"
+                  :label="1"
+                  >竞价</el-radio-button
+                >
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item
+              v-if="temp.settleType == 0"
+              label="价格"
+              prop="bidfloor"
+            >
+              <el-input
+                v-model="temp.bidfloor"
+                placeholder="请输入底价"
+                type="number"
+                style="width: 95%"
+              />
+            </el-form-item>
+            <el-form-item v-if="temp.settleType == 0" prop="isBottom">
+              <tips
+                slot="label"
+                style="display: inline-block"
+                :content="`兜底代码位将会和瀑布流并行请求，建议设置无底价的代码位，在瀑布流请求失败后进行填充。${title} SDK 2.4.9及以上版本支持该功能.`"
+                :title="'是否兜底'"
+                :isShow="true"
+              ></tips>
+              <el-radio v-model="temp.isBottom" :label="'1'">是</el-radio>
+              <el-radio v-model="temp.isBottom" :label="'0'">否</el-radio>
+            </el-form-item>
+            <el-form-item v-show="temp.settleType == 1" label="价格">
+              <el-input
+                v-model="temp.bidfloor"
+                placeholder="请输入底价"
+                type="number"
+                style="width: 95%"
+              />
+            </el-form-item>
+            <el-form-item v-if="temp.platId == 997" label="dealID">
+              <el-input
+                v-model="temp.dealid"
+                placeholder="请输入dealID"
+                style="width: 95%"
+              />
+            </el-form-item>
+            <el-form-item
+              prop="isAutoSorting"
+              v-if="temp.settleType == 0"
+              label-width="150px"
+            >
+              <tips
+                slot="label"
+                style="display: inline-block"
+                :content="`选择是之后，${title}将根据广告平台过去3天的平均eCPM来计算价格，需要代码位所属广告源开通Reporting API后才可使用。当展示少于5000时，该配置不生效。`"
+                :title="'是否自动价格'"
+                :isShow="true"
+              ></tips>
+              <el-radio v-model="temp.isAutoSorting" :label="'1'">是</el-radio>
+              <el-radio v-model="temp.isAutoSorting" :label="'0'">否</el-radio>
+            </el-form-item>
+
+            <el-form-item v-show="accessType === '1'" label="价格浮动%">
+              <el-input-number
+                v-model="temp.floatingRate"
+                controls-position="right"
+                :min="0"
+                :max="100"
+                :step="1"
+                style="width: 95%"
+              ></el-input-number>
+            </el-form-item>
+            <el-form-item
+              v-if="temp.position === 1 && this.accessType === '1'"
+              label="热区"
+            >
+              <el-radio-group v-model="temp.hotspot">
+                <el-radio label="A">开启</el-radio>
+                <el-radio label="S">关闭</el-radio>
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item
+              v-if="temp.hotspot === 'A' && accessType === '1'"
+              label="热区样式"
+            >
+              <el-radio-group v-model="temp.hotspotType">
+                <el-radio :label="1">默认</el-radio>
+                <el-radio :label="2">开启摇一摇</el-radio>
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item
+              v-if="temp.position === 6 && accessType === '1'"
+              label="模版类型"
+              prop="templateTypeId"
+            >
+              <el-select
+                v-model="temp.templateTypeId"
+                placeholder="请选择模版类型"
+              >
+                <el-option
+                  v-for="item in templateTypeOptions"
+                  :key="item.id"
+                  :value="item.id"
+                  :label="item.name"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item
+              v-if="temp.position === 6 && accessType === '1'"
+              label="左右边距"
+            >
+              <el-input-number
+                v-model="temp.lrMargin"
+                controls-position="right"
+                style="width: 95%"
+              ></el-input-number>
+            </el-form-item>
+            <el-form-item
+              v-if="temp.position === 6 && accessType === '1'"
+              label="上下边距"
+            >
+              <el-input-number
+                v-model="temp.tbMargin"
+                controls-position="right"
+                style="width: 95%"
+              ></el-input-number>
+            </el-form-item>
+            <el-form-item
+              v-if="showDownload"
+              label="二次下载确认"
+              prop="showDownload"
+            >
+              <el-select v-model="temp.isDownload">
+                <el-option label="开启" :value="'A'"> </el-option>
+                <el-option label="关闭" :value="'S'"> </el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item v-if="dialogSourceType === 1" label="状态" prop="sts">
+              <el-select v-model="temp.sts">
+                <el-option value="A" label="启动" />
+                <el-option value="S" label="暂停" />
+              </el-select>
+            </el-form-item>
+            <el-form-item
+              v-if="accessType == 1"
+              label="应用名称"
+              prop="appnameReplace"
+            >
+              <el-input
+                placeholder="请输入应用名称"
+                v-model="temp.appnameReplace"
+              />
+            </el-form-item>
+            <el-form-item
+              v-if="accessType == 1"
+              label="应用版本号"
+              prop="versionReplace"
+            >
+              <el-input
+                placeholder="请输入应用版本号"
+                v-model="temp.versionReplace"
+              />
+            </el-form-item>
+            <el-form-item
+              v-if="accessType == 1"
+              label="应用包名"
+              prop="bundleReplace"
+            >
+              <el-input
+                placeholder="请输入应用包名"
+                v-model="temp.bundleReplace"
+              />
+            </el-form-item>
+          </div>
+          <div class="advanced_form_item" v-if="isAdvanced">
+            <!-- 	请求上限 -->
+            <el-form-item label="请求上限" prop="requestFreq">
+              <div class="label" slot="label">
+                <tips
+                  style="display: inline-block"
+                  :content="'设置该代码位请求次数上限/天。不填，则表示不限制；'"
+                  :title="'请求上限'"
+                  :isShow="true"
+                ></tips>
+              </div>
+              <el-input
+                placeholder="不限"
+                v-model="temp.requestFreq"
+                type="number"
+                style="width: 95%"
+                @keyup.native="proving($event)"
+                :min="0"
+                @input="
+                  typeof $event != 'Number'
+                    ? ''
+                    : +$event < 0
+                    ? (temp.requestFreq = 0)
+                    : (temp.requestFreq = +$event)
+                "
+                @mousewheel.native.prevent
+                @DOMMouseScroll.native.prevent
+              >
+                <span slot="suffix">次/天</span>
+              </el-input>
+            </el-form-item>
+            <!-- 展示上限 -->
+            <el-form-item label="展示上限" prop="impressFreq">
+              <div class="label" slot="label">
+                <tips
+                  style="display: inline-block"
+                  :content="'设置该代码位展示次数上限/天。不填，则表示不限制；'"
+                  :title="'展示上限'"
+                  :isShow="true"
+                ></tips>
+              </div>
+              <el-input
+                @keyup.native="proving($event)"
+                :min="0"
+                @input="
+                  typeof $event != 'Number'
+                    ? ''
+                    : +$event < 0
+                    ? (temp.impressFreq = 0)
+                    : (temp.impressFreq = +$event)
+                "
+                type="number"
+                placeholder="不限"
+                v-model="temp.impressFreq"
+                style="width: 95%"
+                @mousewheel.native.prevent
+                @DOMMouseScroll.native.prevent
+              >
+                <span slot="suffix">次/天</span>
+              </el-input>
+            </el-form-item>
+            <!-- 点击上限 -->
+            <el-form-item label="点击上限" prop="clickFreq">
+              <div class="label" slot="label">
+                <tips
+                  style="display: inline-block"
+                  :content="'设置该代码位点击次数上限/天。不填，则表示不限制；'"
+                  :title="'点击上限'"
+                  :isShow="true"
+                ></tips>
+              </div>
+              <el-input
+                @keyup.native="proving($event)"
+                :min="0"
+                @input="
+                  typeof $event != 'Number'
+                    ? ''
+                    : +$event < 0
+                    ? (temp.clickFreq = 0)
+                    : (temp.clickFreq = +$event)
+                "
+                type="number"
+                placeholder="不限"
+                v-model="temp.clickFreq"
+                style="width: 95%"
+                @mousewheel.native.prevent
+                @DOMMouseScroll.native.prevent
+              >
+                <span slot="suffix">次/天</span>
+              </el-input>
+            </el-form-item>
+            <!-- 展示频次/天 -->
+            <el-form-item label="展示频次" prop="impressFreqDay">
+              <div class="label" slot="label">
+                <tips
+                  style="display: inline-block"
+                  :content="'设置单个用户的广告展示次数上限/天。不填，则表示不限制；'"
+                  :title="'展示频次'"
+                  :isShow="true"
+                ></tips>
+              </div>
+              <el-input
+                @keyup.native="proving($event)"
+                :min="0"
+                @input="
+                  typeof $event != 'Number'
+                    ? ''
+                    : +$event < 0
+                    ? (temp.impressFreqDay = 0)
+                    : (temp.impressFreqDay = +$event)
+                "
+                type="number"
+                placeholder="不限"
+                v-model="temp.impressFreqDay"
+                style="width: 95%"
+                @mousewheel.native.prevent
+                @DOMMouseScroll.native.prevent
+              >
+                <span slot="suffix">次/设备/天</span>
+              </el-input>
+            </el-form-item>
+            <!-- 	展示频次/小时 -->
+            <el-form-item label="展示频次" prop="impressFreqHour">
+              <div class="label" slot="label">
+                <tips
+                  style="display: inline-block"
+                  :content="'设置单个用户的广告展示次数上限/小时。不填，则表示不限制；'"
+                  :title="'展示频次'"
+                  :isShow="true"
+                ></tips>
+              </div>
+              <el-input
+                @keyup.native="proving($event)"
+                :min="0"
+                @input="
+                  typeof $event != 'Number'
+                    ? ''
+                    : +$event < 0
+                    ? (temp.impressFreqHour = 0)
+                    : (temp.impressFreqHour = +$event)
+                "
+                type="number"
+                placeholder="不限"
+                v-model="temp.impressFreqHour"
+                style="width: 95%"
+                @mousewheel.native.prevent
+                @DOMMouseScroll.native.prevent
+              >
+                <span slot="suffix">次/设备/小时</span>
+              </el-input>
+            </el-form-item>
+
+            <!-- 	点击频次 -->
+            <el-form-item label="点击频次" prop="clickInterval">
+              <div class="label" slot="label">
+                <tips
+                  style="display: inline-block"
+                  :content="'设置单个用户的广告点击次数上限/天。不填，则表示不限制；'"
+                  :title="'点击频次'"
+                  :isShow="true"
+                ></tips>
+              </div>
+              <el-input
+                @keyup.native="proving($event)"
+                :min="0"
+                @input="
+                  typeof $event != 'Number'
+                    ? ''
+                    : +$event < 0
+                    ? (temp.clickInterval = 0)
+                    : (temp.clickInterval = +$event)
+                "
+                type="number"
+                placeholder="不限"
+                v-model="temp.clickInterval"
+                style="width: 95%"
+                @mousewheel.native.prevent
+                @DOMMouseScroll.native.prevent
+              >
+                <span slot="suffix">次/设备/天</span>
+              </el-input>
+            </el-form-item>
+            <!-- 展示间隔 -->
+            <el-form-item label="展示间隔" prop="impressInterval">
+              <div class="label" slot="label">
+                <tips
+                  style="display: inline-block"
+                  :content="'设置本次展示到下一次请求之间的时间间隔/秒。不填，则表示不限'"
+                  :title="'展示间隔'"
+                  :isShow="true"
+                ></tips>
+              </div>
+              <el-input
+                @keyup.native="proving($event)"
+                :min="0"
+                @input="
+                  typeof $event != 'Number'
+                    ? ''
+                    : +$event < 0
+                    ? (temp.impressInterval = 0)
+                    : (temp.impressInterval = +$event)
+                "
+                type="number"
+                placeholder="不限"
+                v-model="temp.impressInterval"
+                style="width: 95%"
+                @mousewheel.native.prevent
+                @DOMMouseScroll.native.prevent
+              >
+                <span slot="suffix">秒</span>
+              </el-input>
+            </el-form-item>
+          </div>
+        </el-form>
+        <span slot="footer" class="dialog-footer" v-if="allowOperate">
+          <el-button size="mini" @click="dialogSourceVisible = false"
+            >取消</el-button
+          >
+          <el-button size="mini" type="primary" @click="handleSubmitForm"
+            >确定</el-button
+          >
+        </span>
+      </el-dialog>
+    </div>
+    <div v-else class="app-container">
+      <el-page-header
+        content="高级设置"
+        style="color: #2265ff"
+        @back="goBack"
+      />
+
+      <div class="body-container">
+        <!-- 广告位 -->
+        <div class="adverting">
+          <div class="item">
+            <div class="left">应用</div>
+            <div class="right">{{ appName }}</div>
+          </div>
+          <div class="item">
+            <div class="left">广告位</div>
+            <div class="right">{{ placeName }}</div>
+          </div>
+
+          <div class="item" v-if="roles === 'SUPER_ADMIN'">
+            <div class="left">瀑布流策略缓存生效时长</div>
+            <div class="right">
+              <el-input
+                :disabled="!allowOperate"
+                v-model="adverting.cacheTime"
+                @blur="editTime"
+              />
+              <span>s</span>
+            </div>
+          </div>
+        </div>
+        <div class="filter-container">
+          <el-button
+            size="mini"
+            v-waves
+            type="primary"
+            icon="el-icon-plus"
+            @click="addFlowGroups"
+            >流量分组
+          </el-button>
+        </div>
+        <el-table
+          :key="dragTableKey"
+          ref="dragTable"
+          v-loading="listLoading"
+          :data="config.groups"
+          fit
+          highlight-current-row
+          class="dragTable"
+          style="cursor: move"
+        >
+          <el-table-column align="center" label="优先级">
+            <template slot-scope="{ row }">
+              <div>
+                <span style="font-size: 14px" v-if="row.name !== '默认分组'">{{
+                  row.priority
+                }}</span>
+                <span style="font-size: 14px" v-else>0</span>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="流量分组" align="center" prop="name" />
+          <el-table-column label="操作" align="center" width="270">
+            <template slot-scope="{ row }">
+              <el-button type="primary" size="mini" @click="aaa(row)">
+                聚合管理
+              </el-button>
+              <el-button
+                v-if="row.id != 'default' && allowOperate"
+                type="primary"
+                size="mini"
+                @click="handleUpdateFlowGroups(row)"
+              >
+                编辑
+              </el-button>
+              <el-button
+                v-if="row.id != 'default' && allowOperate"
+                size="mini"
+                type="danger"
+                @click="handleDelete(row)"
+                >删除
+              </el-button>
+            </template>
+          </el-table-column>
+          <el-table-column label="展示上限 (小时) " align="center" prop="name">
+            <template slot-scope="{ row }">
+              <el-input
+                :disabled="!allowOperate"
+                v-model="row.impressFreqHour"
+                type="number"
+                placeholder="不限"
+                @blur="editInputVal(row)"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column label="展示上限 (天) " align="center" prop="name">
+            <template slot-scope="{ row }">
+              <el-input
+                :disabled="!allowOperate"
+                v-model="row.impressFreqDay"
+                type="number"
+                placeholder="不限"
+                @blur="editInputVal(row)"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column label="展示间隔 (秒)" align="center" prop="name">
+            <template slot-scope="{ row }">
+              <el-input
+                :disabled="!allowOperate"
+                v-model="row.impressInterval"
+                type="number"
+                placeholder="不限"
+                @blur="editInputVal(row)"
+              />
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div>
+    <!-- 流量分组弹框 -->
+    <el-dialog
+      :title="isAdd ? '添加流量分组' : '编辑流量分组'"
+      :visible.sync="flowGroupsDialog"
+      v-if="flowGroupsDialog"
+      width="50%"
+      @close="closeGroups"
+      :destroy-on-close="true"
+      :close-on-click-modal="false"
+    >
+      <!-- 内容 -->
+      <div class="container">
+        <div v-if="isEditShow" class="left">
+          <h3>快速添加</h3>
+          <ul>
+            <li
+              v-for="(e, i) in adverteData"
+              :key="i"
+              :class="i === activeIndex && isBorder === true ? 'addactive' : ''"
+              @click="itemClick(e, i)"
+            >
+              {{ e.name }}
+            </li>
+          </ul>
+        </div>
+        <!-- 右侧 内容 -->
+        <div class="right">
+          <el-form
+            ref="flowGroupsRef"
+            :model="flowGroupsForm"
+            label-width="150px"
+            :rules="flowGroupsRules"
+          >
+            <el-form-item label="流量分组名称" prop="name">
+              <div class="name">
+                <el-input
+                  v-model="flowGroupsForm.name"
+                  maxlength="30"
+                  show-word-limit
+                />
+              </div>
+            </el-form-item>
+            <!-- SDK版本 -->
+            <el-form-item v-show="sdkShow" label="SDK版本" prop="sdk">
+              <div style="display: flex" class="box1 sdkbox">
+                <el-select
+                  :required="false"
+                  v-model="flowGroupsForm.sdkSelect"
+                  placeholder="请选择"
+                  class="select"
+                >
+                  <el-option
+                    v-for="item in options"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+                <el-input
+                  class="sdk"
+                  v-model="flowGroupsForm.sdk"
+                  placeholder="显示多个SDK版本用英文逗号隔开"
+                />
+                <span
+                  class="closeIcon el-icon-circle-close"
+                  @click="closeInput(1)"
+                />
+              </div>
+            </el-form-item>
+            <!-- 设备ID -->
+            <el-form-item v-show="equipmentId" label="设备ID" prop="equipVal">
+              <div style="display: flex" class="box1 equipmentbox">
+                <el-select
+                  :required="false"
+                  v-model="flowGroupsForm.equipSelect"
+                  placeholder="请选择"
+                  class="select"
+                >
+                  <el-option
+                    v-for="item in options1"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+                <el-input
+                  class="equipment"
+                  v-model="flowGroupsForm.equipVal"
+                  placeholder="示多个设备ID用英文逗号隔开"
+                />
+                <span
+                  class="closeIcon el-icon-circle-close"
+                  @click="closeInput(2)"
+                />
+              </div>
+            </el-form-item>
+            <!-- 渠道 -->
+            <el-form-item v-show="channelShow" label="渠道" prop="channelVal">
+              <div style="display: flex" class="box1 channelbox">
+                <el-select
+                  v-model="flowGroupsForm.channelSelect"
+                  placeholder="请选择"
+                  :required="false"
+                  class="select"
+                >
+                  <el-option
+                    v-for="item in options1"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+                <el-input
+                  class="channel"
+                  v-model="flowGroupsForm.channelVal"
+                  placeholder="支持填入多个渠道标识，用英文逗号隔开"
+                />
+                <span
+                  class="closeIcon el-icon-circle-close"
+                  @click="closeInput(3)"
+                />
+              </div>
+            </el-form-item>
+            <!-- 地区 -->
+            <el-form-item v-show="areaShow" label="地区" prop="areaVal">
+              <div style="display: flex" class="box1 areabox">
+                <el-select
+                  v-model="flowGroupsForm.areaSelect"
+                  placeholder="请选择"
+                  :required="false"
+                  class="select"
+                >
+                  <el-option
+                    v-for="item in options1"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+                <el-cascader
+                  class="area"
+                  collapse-tags
+                  v-model="flowGroupsForm.areaVal"
+                  :options="areaOptions"
+                  :props="props"
+                  clearable
+                ></el-cascader>
+                <span
+                  class="closeIcon el-icon-circle-close"
+                  @click="closeInput(4)"
+                />
+              </div>
+            </el-form-item>
+            <!-- 日期 -->
+            <el-form-item v-show="dateShow" label="日期" required>
+              <div style="display: flex" class="box1">
+                <div class="datepickers">
+                  <div
+                    class="picker_item"
+                    v-for="(item, index) in pickDate"
+                    :key="index"
+                  >
+                    <el-select
+                      :disabled="!(index === 0)"
+                      width="100px"
+                      v-model="flowGroupsForm.dateSelect"
+                      placeholder="请选择"
+                      :required="false"
+                    >
+                      <el-option
+                        v-for="item in options1"
+                        :key="item.value"
+                        :label="item.label"
+                        :value="item.value"
+                      />
+                    </el-select>
+                    <el-date-picker
+                      width="300px"
+                      size="mini"
+                      v-model="pickDate[index]"
+                      type="daterange"
+                      align="right"
+                      unlink-panels
+                      range-separator="至"
+                      start-placeholder="开始日期"
+                      end-placeholder="结束日期"
+                      value-format="yyyy-MM-dd"
+                      :picker-options="pickerOptions"
+                    >
+                    </el-date-picker>
+                    <span
+                      v-show="!(index === 0)"
+                      class="closeItem el-icon-circle-close"
+                      @click="closeDateItem(index)"
+                    ></span>
+                  </div>
+                  <!-- 添加日期规则 -->
+                  <span class="additem" @click="addDatepicker"
+                    >+ 添加日期规则</span
+                  >
+                </div>
+                <span
+                  class="closeIcon el-icon-circle-close"
+                  @click="closeInput(5)"
+                />
+              </div>
+            </el-form-item>
+            <!-- 时间 -->
+            <el-form-item v-show="timeShow" label="时间" required>
+              <div style="display: flex" class="box1">
+                <div class="timepickers">
+                  <div
+                    class="picker_item"
+                    v-for="(item, index) in flowGroupsForm.timeVal"
+                    :key="index"
+                  >
+                    <el-select
+                      :disabled="!(index === 0)"
+                      width="100px"
+                      v-model="flowGroupsForm.timeSelect"
+                      placeholder="请选择"
+                      :required="false"
+                    >
+                      <el-option
+                        v-for="item in options2"
+                        :key="item.value"
+                        :label="item.label"
+                        :value="item.value"
+                      />
+                    </el-select>
+                    <el-time-picker
+                      is-range
+                      v-model="flowGroupsForm.timeVal[index]"
+                      range-separator="至"
+                      start-placeholder="开始时间"
+                      end-placeholder="结束时间"
+                      placeholder="选择时间范围"
+                      value-format="HH:mm"
+                      format="HH:mm"
+                      :picker-options="{
+                        start: '08:30',
+                        end: '18:30',
+                      }"
+                    >
+                    </el-time-picker>
+                    <span
+                      v-show="!(index === 0)"
+                      class="closeItem el-icon-circle-close"
+                      @click="closeTimeItem(index)"
+                    ></span>
+                  </div>
+                  <!-- 添加时间规则 -->
+                  <span class="additem" @click="addTimepicker"
+                    >+ 添加时间规则</span
+                  >
+                </div>
+                <span
+                  class="closeIcon el-icon-circle-close"
+                  @click="closeInput(6)"
+                />
+              </div>
+            </el-form-item>
+            <!-- 设备品牌 -->
+            <el-form-item v-show="brandShow" label="设备品牌" prop="equipVal">
+              <div style="display: flex" class="box1">
+                <div class="brandbox">
+                  <el-select
+                    class="select"
+                    :required="false"
+                    v-model="flowGroupsForm.brandSelect"
+                    placeholder="请选择"
+                  >
+                    <el-option
+                      v-for="item in options1"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value"
+                    />
+                  </el-select>
+                  <el-select
+                    class="brand"
+                    v-model="flowGroupsForm.brandVal"
+                    multiple
+                    collapse-tags
+                    filterable
+                    reserve-keyword
+                    placeholder="请输入设备品牌"
+                  >
+                    <el-option
+                      v-for="item in brandList"
+                      :key="item.id"
+                      :label="item.name"
+                      :value="item.name"
+                    >
+                    </el-option>
+                  </el-select>
+                  <span
+                    class="closeIcon el-icon-circle-close"
+                    @click="closeInput(7)"
+                  />
+                </div>
+              </div>
+            </el-form-item>
+            <!-- 网络类型 -->
+            <el-form-item v-show="nettypeShow" label="网络类型" prop="equipVal">
+              <div style="display: flex" class="box1">
+                <div class="nettypebox">
+                  <el-select
+                    class="select"
+                    :required="false"
+                    v-model="flowGroupsForm.nettypeSelect"
+                    placeholder="请选择"
+                  >
+                    <el-option
+                      v-for="item in options1"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value"
+                    />
+                  </el-select>
+                  <el-select
+                    class="nettype"
+                    v-model="flowGroupsForm.nettypeVal"
+                    multiple
+                    collapse-tags
+                    filterable
+                    reserve-keyword
+                    placeholder="请输入网络类型"
+                  >
+                    <el-option
+                      v-for="item in netTypeList"
+                      :key="item"
+                      :label="item"
+                      :value="item"
+                    >
+                    </el-option>
+                  </el-select>
+                  <span
+                    class="closeIcon el-icon-circle-close"
+                    @click="closeInput(8)"
+                  />
+                </div>
+              </div>
+            </el-form-item>
+            <!-- 系统版本 -->
+            <el-form-item v-show="sysVersionShow" label="系统版本" prop="">
+              <div style="display: flex" class="box1">
+                <div class="nettypebox">
+                  <el-select
+                    :required="false"
+                    v-model="flowGroupsForm.sysVersionSelect"
+                    placeholder="请选择"
+                    class="select"
+                  >
+                    <el-option
+                      v-for="item in options"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value"
+                    />
+                  </el-select>
+                  <el-input
+                    class="nettype"
+                    v-model="flowGroupsForm.sysVersion"
+                    :placeholder="
+                      flowGroupsForm.sysVersionSelect == '2' ||
+                      flowGroupsForm.sysVersionSelect == '3'
+                        ? '请输入系统版本'
+                        : '支持填入多个系统版本，用中英文逗号隔开'
+                    "
+                  />
+                  <span
+                    class="closeIcon el-icon-circle-close"
+                    @click="closeInput(9)"
+                  />
+                </div>
+              </div>
+            </el-form-item>
+            <!-- 应用版本 -->
+            <el-form-item v-show="appVersionShow" label="应用版本" prop="">
+              <div style="display: flex" class="box1">
+                <div class="nettypebox">
+                  <el-select
+                    :required="false"
+                    v-model="flowGroupsForm.appVersionSelect"
+                    placeholder="请选择"
+                    class="select"
+                  >
+                    <el-option
+                      v-for="item in options"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value"
+                    />
+                  </el-select>
+                  <el-input
+                    class="nettype"
+                    v-model="flowGroupsForm.appVersion"
+                    :placeholder="
+                      flowGroupsForm.appVersionSelect == '2' ||
+                      flowGroupsForm.appVersionSelect == '3'
+                        ? '请输入应用版本'
+                        : '支持填入多个应用版本，用中英文逗号隔开'
+                    "
+                  />
+                  <span
+                    class="closeIcon el-icon-circle-close"
+                    @click="closeInput(10)"
+                  />
+                </div>
+              </div>
+            </el-form-item>
+            <!-- 子渠道 -->
+            <el-form-item
+              v-show="childchannelShow"
+              label="子渠道"
+              prop="childchannelVal"
+            >
+              <div style="display: flex" class="box1 channelbox">
+                <el-select
+                  v-model="flowGroupsForm.childchannelSelect"
+                  placeholder="请选择"
+                  :required="false"
+                  class="select"
+                >
+                  <el-option
+                    v-for="item in options1"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+                <el-input
+                  class="channel"
+                  v-model="flowGroupsForm.childchannelVal"
+                  placeholder="支持填入多个子渠道标识，用英文逗号隔开"
+                />
+                <span
+                  class="closeIcon el-icon-circle-close"
+                  @click="closeInput(11)"
+                />
+              </div>
+            </el-form-item>
+            <!-- 自定义 -->
+            <el-form-item v-show="custShow" prop="">
+              <span slot="label"
+                >自定义规则<tips
+                  style="display: inline-block"
+                  content="通过Key-Value条件进行设置，Key和Value的条件可以是等于=或不等于!=，一个Key可以对应多个Value，用英文逗号分隔。多个条件之间使用&，即多个条件需要同时满足。建议Value使用以下字符规则：大小写字母数字和下划线[A-Za-z0-9]"
+                  :title="''"
+                  :isShow="true"
+                ></tips
+              ></span>
+              <div style="display: flex" class="box1">
+                <div class="nettypebox">
+                  <el-input
+                    v-model="flowGroupsForm.custVal"
+                    :placeholder="'请输入自定义规则'"
+                  />
+                  <span
+                    class="closeIcon el-icon-circle-close"
+                    @click="closeInput(12)"
+                  />
+                </div>
+              </div>
+            </el-form-item>
+            <!-- 应用安装时间 -->
+            <el-form-item v-show="installTimeShow" prop="">
+              <span slot="label"
+                >应用安装时间<tips
+                  style="display: inline-block"
+                  :content="`小时/天：从请求广告时间到应用第一次初始化${title} SDK时间`"
+                  :title="''"
+                  :isShow="true"
+                ></tips
+              ></span>
+              <div style="display: flex" class="box1">
+                <el-select
+                  v-model="flowGroupsForm.installTimeSelect"
+                  placeholder="请选择"
+                  :required="false"
+                  class="select"
+                  style="width: 110px; margin-right: 5px"
+                >
+                  <el-option
+                    v-for="item in options3"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+                <div class="nettypebox">
+                  <el-input
+                    style="width: 200px; margin-right: 5px"
+                    v-model="flowGroupsForm.installTime"
+                    :placeholder="'请输入'"
+                  />
+                  <el-select
+                    style="width: 80px"
+                    v-model="flowGroupsForm.installTimeType"
+                    placeholder=""
+                  >
+                    <el-option :label="'小时'" :value="'h'" />
+                    <el-option :label="'天'" :value="'d'" />
+                  </el-select>
+                  <span
+                    class="closeIcon el-icon-circle-close"
+                    @click="closeInput(13)"
+                  />
+                </div>
+              </div>
+            </el-form-item>
+          </el-form>
+          <!-- 添加规则 -->
+          <el-dropdown
+            style="float: right; cursor: pointer"
+            @command="addRules"
+          >
+            <span style="color: #2265ff">
+              添加规则<i class="el-icon-arrow-down el-icon--right" />
+            </span>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item command="1">SDK版本</el-dropdown-item>
+              <el-dropdown-item command="2">设备ID</el-dropdown-item>
+              <el-dropdown-item command="3">渠道</el-dropdown-item>
+              <el-dropdown-item command="4">地区</el-dropdown-item>
+              <el-dropdown-item command="5">日期</el-dropdown-item>
+              <el-dropdown-item command="6">时间</el-dropdown-item>
+              <el-dropdown-item command="7">设备品牌</el-dropdown-item>
+              <el-dropdown-item command="8">网络类型</el-dropdown-item>
+              <el-dropdown-item command="9">系统类型</el-dropdown-item>
+              <el-dropdown-item command="10">应用版本</el-dropdown-item>
+              <el-dropdown-item command="11">子渠道</el-dropdown-item>
+              <el-dropdown-item command="12">自定义规则</el-dropdown-item>
+              <el-dropdown-item command="13">应用安装时间</el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
+        </div>
+      </div>
+      <span slot="footer" class="dialog-footer" v-if="allowOperate">
+        <el-button size="mini" @click="flowGroupsDialog = false"
+          >取 消</el-button
+        >
+        <el-button size="mini" type="primary" @click="handelAddOrEdit"
+          >确 定</el-button
+        >
+      </span>
+    </el-dialog>
+    <addABTestDialog
+      :showTestDialogTemp="showTestDialog"
+      :addAbtest="addAbtest"
+      :testqueryTemp="testquery"
+      :appName="appName"
+      :placeName="placeName"
+      :group="group"
+      @closeTestDialog="showTestDialog = false"
+      @editSuccess="handleSubmitTestForm"
+    ></addABTestDialog>
+    <el-dialog
+      v-if="showEndTestDialog"
+      title="结束A/B测试"
+      :visible.sync="showEndTestDialog"
+      @close="showEndTestDialog = false"
+      :destroy-on-close="true"
+      :close-on-click-modal="false"
+    >
+      <el-form
+        ref="endtestdialog"
+        style="padding-right: 50px"
+        :model="endquery"
+        label-width="250px"
+        :rules="endTestRules"
+      >
+        <el-form-item label-width="50px">
+          <h3 style="color: #f40" class="enddesc">
+            请选择您认为最优的测试分组，关闭测试后，您将使用所选测试分组的配置，流量将全部分配到该测试组，且该操作不可撤销。
+          </h3>
+        </el-form-item>
+        <el-form-item label="测试应用：">
+          <span>{{ appName }}</span>
+        </el-form-item>
+        <el-form-item label="测试广告位：">
+          <span>{{ placeName }}</span>
+        </el-form-item>
+        <el-form-item label="测试流量分组：">
+          <span>{{ group.name }}</span>
+        </el-form-item>
+        <el-form-item label="A/B测试名称：">
+          <span>{{ testName }}</span>
+        </el-form-item>
+        <el-form-item label="测试分组：" prop="testId">
+          <el-select
+            clearable
+            v-model="endquery.testId"
+            placeholder="请选择最优测试分组保存"
+          >
+            <template v-for="(item, i) in abTestList">
+              <el-option
+                v-if="item.testId !== 'default'"
+                :key="i"
+                :value="item.testId"
+                :label="item.groupName"
+              ></el-option>
+            </template>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer" v-if="allowOperate">
+        <el-button size="mini" @click="closeEndTestDialog">取消</el-button>
+        <el-button size="mini" type="primary" @click="handleSubmitEndTest"
+          >确定</el-button
+        >
+      </span>
+    </el-dialog>
+    <el-dialog
+      v-if="showSettingDialog"
+      title="瀑布流属性配置"
+      :visible.sync="showSettingDialog"
+      @close="showSettingDialog = false"
+      :destroy-on-close="true"
+      :close-on-click-modal="false"
+    >
+      <el-form
+        ref="settingdialog"
+        :model="settingquery"
+        label-width="250px"
+        :rules="endTestRules"
+      >
+        <el-form-item>
+          <span slot="label"
+            >并行请求数<tips
+              style="display: inline-block"
+              content="瀑布流中代码位将根据并行请求数来分组，同一组内代码位将同时发起广告请求"
+              :title="''"
+              :isShow="true"
+            ></tips
+            >：</span
+          >
+          <el-input-number
+            v-model="settingquery.concurrentNum"
+            :min="1"
+            :max="20"
+            :step="1"
+          ></el-input-number>
+        </el-form-item>
+        <el-form-item>
+          <span slot="label"
+            >单次并行请求超时时长<tips
+              style="display: inline-block"
+              content="一次并行请求没有返回广告填充结果(成功或失败)时最多等待的时长"
+              :title="''"
+              :isShow="true"
+            ></tips
+            >：</span
+          >
+          <el-input-number
+            v-model="settingquery.timeout"
+            :min="0.1"
+            :max="20"
+            :step="0.1"
+          ></el-input-number
+          >&nbsp;s
+        </el-form-item>
+        <el-form-item>
+          <span slot="label"
+            >瀑布流请求总超时时长<tips
+              style="display: inline-block"
+              content="一次瀑布流总请求还没有返回任何成功广告填充时最多等待的时长"
+              :title="''"
+              :isShow="true"
+            ></tips
+            >：</span
+          >
+          <el-input-number
+            v-model="settingquery.allTime"
+            :min="1"
+            :max="60"
+            :step="1"
+          ></el-input-number
+          >&nbsp;s
+        </el-form-item>
+        <el-form-item v-if="$store.state.user.roles[0] === 'SUPER_ADMIN'">
+          <span slot="label"
+            >竞价请求超时时长<tips
+              style="display: inline-block"
+              content="一次瀑布流总请求还没有返回任何成功广告填充时最多等待的时长"
+              :title="''"
+              :isShow="true"
+            ></tips
+            >：</span
+          >
+          <el-input-number
+            v-model="settingquery.apiTimeout"
+            :min="0.1"
+            :max="10"
+            :step="0.1"
+          ></el-input-number
+          >&nbsp;s
+        </el-form-item>
+
+        <el-form-item v-if="!isAutoDrawing">
+          <span slot="label"
+            >缓存状态<tips
+              style="display: inline-block"
+              :content="`缓存功能仅对${title}SDK 2.4.8 及以上版本生效，支持插屏、激励视频、原生和全屏广告`"
+              :title="''"
+              :isShow="true"
+            ></tips
+            >：</span
+          >
+          <el-switch
+            v-model="settingquery.cacheSts"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+            :active-value="'A'"
+            :inactive-value="'S'"
+          >
+          </el-switch>
+        </el-form-item>
+
+        <el-form-item v-if="settingquery.cacheSts == 'A'">
+          <span slot="label">缓存时间：</span>
+          <el-input-number
+            v-model="settingquery.cacheTime"
+            :min="1"
+            :max="30"
+            :step="1"
+          ></el-input-number
+          >&nbsp;min
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer" v-if="allowOperate">
+        <el-button size="mini" @click="closeSettingDialog">取消</el-button>
+        <el-button size="mini" type="primary" @click="handleSetting"
+          >确定</el-button
+        >
+      </span>
+    </el-dialog>
+
+    <el-dialog
+      title="创建新账户"
+      :visible.sync="addAccountDialog"
+      append-to-body
+    >
+      <el-form
+        ref="account_form"
+        :model="addAccountQuery"
+        :rules="addAccountRules"
+        label-width="120px"
+        label-position="left"
+      >
+        <el-form-item label="广告源">
+          <span>{{ editplatquerytemp.name }}</span>
+        </el-form-item>
+        <el-form-item label="账户名称" prop="name">
+          <el-input
+            v-model="addAccountQuery.name"
+            placeholder="输入名称以区分不同账号"
+            maxlength="30"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item
+          v-if="
+            editplatquery.platId == '993' ||
+            editplatquery.platId == '992' ||
+            editplatquery.platId == '991' ||
+            editplatquery.platId == '998' ||
+            editplatquery.platId == '996' ||
+            editplatquery.platId == '1000'
+          "
+          :label="
+            editplatquery.platId == '993'
+              ? 'MID'
+              : editplatquery.platId == '992'
+              ? 'ChannleId'
+              : editplatquery.platId == '991'
+              ? '发布商Id'
+              : editplatquery.platId == '998'
+              ? 'token'
+              : editplatquery.platId == '996'
+              ? '渠道ID'
+              : editplatquery.platId == '1000'
+              ? 'MID'
+              : ''
+          "
+          prop="mid"
+        >
+          <el-input
+            v-model="addAccountQuery.mid"
+            :placeholder="
+              editplatquery.platId == '993'
+                ? '请输入MID'
+                : editplatquery.platId == '992'
+                ? '请输入ChannleId'
+                : editplatquery.platId == '991'
+                ? '请输入发布商Id'
+                : editplatquery.platId == '998'
+                ? '请输入token'
+                : editplatquery.platId == '996'
+                ? '请输入渠道ID'
+                : editplatquery.platId == '1000'
+                ? '请输入MID'
+                : ''
+            "
+          />
+        </el-form-item>
+        <el-form-item
+          label="密钥Id  "
+          prop="keyId"
+          v-if="editplatquery.platId == '991'"
+        >
+          <el-input
+            v-model="addAccountQuery.keyId"
+            placeholder="请输入密钥Id "
+            prop="keyId"
+          />
+        </el-form-item>
+        <el-form-item
+          label="密钥  "
+          prop="signKey"
+          v-if="editplatquery.platId == '991'"
+        >
+          <el-input
+            v-model="addAccountQuery.signKey"
+            placeholder="请输入密钥 "
+            prop="signKey"
+          />
+        </el-form-item>
+        <el-form-item
+          label="请求环境"
+          v-if="
+            editplatquery.accessType != 2 &&
+            (editplatquery.platId == 5 ||
+              (editplatquery.platId >= 900 && editplatquery.platId != 989))
+          "
+        >
+          <el-radio-group v-model="addAccountQuery.isDebug">
+            <el-radio :label="'1'" border>测试</el-radio>
+            <el-radio :label="'0'" border>正式</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="请求地址" v-if="editplatquery.platId == 989">
+          <el-input
+            placeholder="请输入请求地址"
+            v-model="editplatquery.requestUrl"
+          />
+        </el-form-item>
+        <el-form-item
+          label="报表API"
+          v-if="
+            editplatquery.accessType &&
+            editplatquery.accessType != '1' &&
+            editplatquery.accessType != '2'
+          "
+        >
+          <el-radio-group
+            v-model="addAccountQuery.openApiStatus"
+            :value="addAccountQuery.openApiStatus"
+            size="small"
+          >
+            <el-radio :label="1" border>已开通</el-radio>
+            <el-radio :label="0" border>未开通</el-radio>
+          </el-radio-group>
+        </el-form-item>
+
+        <el-form-item
+          v-if="addAccountQuery.openApiStatus && showUserId"
+          :label="'账户' + userIdLabel"
+          prop="accountId"
+        >
+          <el-input
+            v-model="addAccountQuery.accountId"
+            :placeholder="'请输入账户' + userIdLabel"
+            maxlength="30"
+            show-word-limit
+          />
+        </el-form-item>
+
+        <el-form-item
+          v-if="addAccountQuery.openApiStatus === 1 && showAccessKey"
+          :label="accessKeyLabel"
+          prop="accessKey"
+        >
+          <el-input
+            v-model="addAccountQuery.accessKey"
+            :placeholder="'请输入' + accessKeyLabel"
+          />
+        </el-form-item>
+        <el-form-item
+          v-if="addAccountQuery.openApiStatus"
+          :label="secretLabel"
+          prop="secretKey"
+        >
+          <el-input
+            v-model="addAccountQuery.secretKey"
+            :placeholder="'请输入' + secretLabel"
+          />
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="addAccountDialog = false">取消</el-button>
+        <el-button type="primary" @click="handlePlatForm">确定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import waves from "@/directive/waves";
+import { aggregateDataArr } from "@/utils/targetArr";
+import excel from "@/utils/1";
+
+import { Message } from "element-ui";
+import vuedraggable from "vuedraggable";
+import { copy } from "@/utils/string";
+import Sortable from "sortablejs";
+import { adminDateOption } from "@/utils/options";
+import request from "@/utils/request";
+
+import {
+  getPlaceGroup,
+  getPlaceSource,
+  updateGroupSourcePrice,
+  updateGroupSourceSts,
+  addSource,
+  updateSource,
+  adverteList,
+  editInput,
+  delFlowGroups,
+  deladverte,
+  addFlowGrow,
+  editFlowGrow,
+  adverteTime,
+  adverteTimeEdit,
+  getPriority,
+  getTemplateTypeList,
+  getArea,
+  brandList,
+  addABTest,
+  getABTestList,
+  updateABTest,
+  shutdownTest,
+  settingArgs,
+  getTempleteList,
+  checkPlatPlaceId,
+  batchUpdateSourceSts,
+  adsourceAdvancedSetup,
+} from "@/api/aggregate";
+import { getAppList, platformLinkList, updateAppPlatLink } from "@/api/app";
+import { getPlaceListByAppId } from "@/api/place";
+import { getAccounts, getPlatOptions, addPlatform } from "@/api/plat";
+
+import batchCopyConfig from "./batchCopyConfig";
+import CustSelectOne from "@/components/CustSelectOne";
+import AppPlatform from "@/components/Platform";
+import CustTag from "@/components/CustTag";
+import tips from "@/components/tips/HelpHint/HelpHint.vue";
+import addABTestDialog from "./addABTest";
+import Empty from "@/components/empty";
+
+export default {
+  name: "Aggregate",
+  directives: { waves },
+  components: {
+    AppPlatform,
+    Empty,
+    vuedraggable,
+    CustTag,
+    tips,
+    Empty,
+    CustSelectOne,
+    batchCopyConfig,
+    addABTestDialog,
+  },
+  data() {
+    const extValidator = (rule, value, callback) => {
+      if (!value) {
+        return callback(new Error("请输入参数"));
+      } else {
+        try {
+          if (JSON.parse(value)) return callback();
+        } catch (error) {
+          return callback(new Error("请输入正确的JSON格式"));
+        }
+      }
+    };
+    const accessKeyValidator = (rule, value, callback) => {
+      if (!value || value === "") {
+        return callback(new Error("请输入" + this.accessKeyLabel));
+      } else {
+        callback();
+      }
+    };
+    const accountIdValidator = (rule, value, callback) => {
+      if (!value || value === "") {
+        return callback(new Error("请输入" + this.userIdLabel));
+      } else {
+        callback();
+      }
+    };
+    const secretKeyValidator = (rule, value, callback) => {
+      if (!value || value === "") {
+        return callback(new Error("请输入" + this.secretLabel));
+      } else {
+        callback();
+      }
+    };
+    return {
+      // 日期选择框配置
+      pickerOptions: adminDateOption ? adminDateOption : [],
+      // 网络类型列表
+      netTypeList: ["WIFI", "2G", "3G", "4G", "5G"],
+      // 日期数组
+      pickDate: [[]],
+      // 设备品牌列表
+      brandList: [],
+      prevquery: {},
+      query: {
+        appId: " ",
+        placeId: " ",
+        groupId: null,
+        dateStart: "",
+        dateEnd: "",
+        testId: "",
+      },
+      platAppId: "", //平台对应appid  子组件传递过来
+      active: null,
+      isEdit: null,
+      appId: null,
+      accessType: "",
+      iconUrl: "",
+      appName: null,
+      placeName: null,
+      roles: "",
+      expand: false,
+      addOrEdit: true, // 判断添加或者编辑
+      isBorder: false,
+      isAdd: true,
+      isEditShow: true, // 编辑时左侧部分隐藏
+      appOptions: [],
+      appOptionsAll: [],
+      placeOptions: [],
+      // 添加广告位弹窗中的模版类型列表
+      templateTypeOptions: [],
+      // 广告位下的流量分组
+      config: null,
+      group: { name: "默认分组", id: "" },
+      tableKey: 0,
+      listLoading: false,
+      list: [],
+      listTemp: [],
+      total: 0,
+      settleType: 0,
+      id: 0,
+      temp: {
+        groupId: "default",
+        platId: 0,
+        isDownload: "A",
+        slotId: "",
+        settleType: 0,
+        floatingRate: 0,
+        templateIds: [],
+      }, // isDownload 应用确认下载
+      dialogSourceType: 0,
+      dialogSourceVisible: false,
+      accounts: [],
+      dialogVisible: false,
+      // 规则字段
+      groupRuleStr: "",
+      dialogType: 0,
+      // 是否是主页面，false为流量管理/高级设置页面
+      vueType: true,
+      // 流量管理/高级设置 配置参数
+      adverting: {
+        placeId: "",
+        timeout: "",
+        allTime: "",
+        cacheTime: "",
+      }, // 广告位
+      valueProps: false, // 输入框输入值校验
+      activeIndex: "",
+      // form表单是否出现
+      flowGroupsDialog: false, // 流量分组
+      equipmentId: false, // 设备id
+      channelShow: false, // 渠道
+      areaShow: false, // 地区
+      sdkShow: false, // sdk
+      dateShow: false, // 日期
+      timeShow: false, // 时间
+      brandShow: false, // 设备品牌
+      nettypeShow: false, // 网络类型
+      sysVersionShow: false, // 系统版本
+      appVersionShow: false, // APP版本
+      childchannelShow: false, // 子渠道
+      custShow: false, // 自定义
+      installTimeShow: false,
+      // 流量分组数据
+      flowGroupsForm: {
+        name: "", // 流量分组名称
+        sdk: "", // sdk
+        equipVal: "", // 设备ID
+        channelVal: "", // 渠道ID
+        areaVal: "", // 地区ID
+        dateVal: "", // 日期
+        timeVal: [["00:00", "24:00"]], // 时间
+        brandVal: [], // 设备品牌
+        nettypeVal: [], // 网络类型
+        sysVersion: "", // 系统版本
+        appVersion: "", // app版本
+        childchannelVal: "", //子渠道
+        custVal: "", // 自定义
+        installTime: [], // 安装时间
+        installTimeType: "h", //安装时间种类
+        sdkSelect: "0", // sdk选择方式
+        equipSelect: "0", // 设备ID选择方式
+        channelSelect: "0", // 渠道选择方式
+        areaSelect: "0", // 地区选择方式
+        dateSelect: "0", // 日期选择方式
+        timeSelect: "0", // 时间选择方式
+        brandSelect: "0", // 设备品牌选择方式
+        nettypeSelect: "0", // 网络类型选择方式
+        sysVersionSelect: "0", // 系统版本选择方式
+        appVersionSelect: "0", // app版本选择方式
+        childchannelSelect: "0", // 子渠道选择方式
+        custSelect: "0", // 自定义选择方式
+        installTimeSelect: "2",
+      },
+      storageName: "aggregateData_0620", // 本地缓存key
+      adverteData: [],
+      //mock数据
+      props: {
+        multiple: true,
+      },
+      areaOptions: [],
+      ruleContent: [],
+      areaList: [],
+      options: [
+        {
+          value: "0",
+          label: "包括",
+        },
+        {
+          value: "1",
+          label: "不包括",
+        },
+        {
+          value: "2",
+          label: ">",
+        },
+        {
+          value: "3",
+          label: "<",
+        },
+      ],
+      options2: [
+        {
+          value: "0",
+          label: "包括",
+        },
+      ],
+      options1: [
+        {
+          value: "0",
+          label: "包括",
+        },
+        {
+          value: "1",
+          label: "不包括",
+        },
+      ],
+      options3: [
+        {
+          value: "2",
+          label: ">",
+        },
+        {
+          value: "3",
+          label: "<",
+        },
+      ],
+      flowGroupsRules: {
+        name: [
+          { required: true, message: "请填写流量分组名称", trigger: "blur" },
+        ],
+      },
+      addAccountRules: {
+        name: [{ required: true, message: "请输入账户名称", trigger: "blur" }],
+        mid: [{ required: true, message: "请输入ID", trigger: "blur" }],
+        keyId: [{ required: true, message: "请输入密钥Id", trigger: "blur" }],
+        signKey: [{ required: true, message: "请输入密钥", trigger: "blur" }],
+        accountId: [
+          { required: true, validator: accountIdValidator, trigger: "blur" },
+        ],
+        secretKey: [
+          { required: true, validator: secretKeyValidator, trigger: "blur" },
+        ],
+        accessKey: [
+          { required: true, validator: accessKeyValidator, trigger: "blur" },
+        ],
+        // m_id: [{ required: true, message: "请输入渠道ID", trigger: "blur" }],
+      },
+
+      rules: {
+        ext: [{ required: true, validator: extValidator, trigger: "blur" }],
+        name: [
+          { required: true, message: "请输入代码位名称", trigger: "blur" },
+        ],
+        bidfloor: [{ required: true, message: "请输入底价", trigger: "blur" }],
+        templateTypeId: [
+          { required: true, message: "请输入模版类型", trigger: "change" },
+        ],
+        platPlaceId: [
+          { required: true, message: "请输入代码位ID", trigger: "blur" },
+        ],
+        templateIds: [{ required: true, message: "请选择素材模板" }],
+      },
+      platList: [], // 广告源回显列表
+      PlatOptions: [], // 广告源列表
+      date: [],
+      showDownload: false, // 二次确认下载展示
+      showSlotId: false, // 广告版位展示
+      // 自定义指标
+      targetArr: aggregateDataArr, // 标志数组（不变）
+      sureArr: [], // 最终展示数组
+      // 启用项分解索引
+      lineIndex: 0,
+      downloading: false,
+      // 规则字段是否出现
+      showRuleText: false,
+      // A/B测试
+      addAbtest: true, // 添加ab测试模式
+      showTestDialog: false, // ab测试弹框显示
+      abTestList: [], // ab测试分组列表
+      testName: "",
+      testType: 0,
+      testquery: {
+        placeId: "",
+        groupId: "",
+        testName: "",
+        type: 0,
+        abTestList: [
+          {
+            groupName: "A组",
+            proportion: 50,
+            testId: "",
+            sts: "A",
+            max: 0,
+            min: 0,
+          },
+          {
+            groupName: "B组",
+            proportion: 50,
+            testId: "",
+            sts: "A",
+            max: 0,
+            min: 0,
+          },
+        ],
+      },
+      abTestList: [],
+
+      // 结束ab测试
+      showEndTestDialog: false,
+      endquery: {
+        groupId: "",
+        placeId: "",
+        testId: "",
+      },
+      endTestRules: {
+        testId: [{ required: true, message: "请选择测试组" }],
+      },
+      // 瀑布流设置
+      showSettingDialog: false,
+      settingquery: {
+        groupId: "",
+        placeId: "",
+        testId: "",
+        concurrentNum: "",
+        timeout: "",
+        allTime: "",
+        apiTimeout: "",
+        cacheTime: "",
+        cacheSts: "S",
+      },
+      templeteList: [],
+      // 添加/编辑代码位折叠
+      fallNum: 0,
+      biddingNum: 0,
+      concurrentNum: 0,
+      // ediaPlatDialog: false,
+      platName: "",
+      editplatquery: {},
+      editplatquerytemp: {},
+      editplatrules: {
+        platAccountId: [
+          { required: true, message: "请选择账户", trigger: "change" },
+        ],
+        platAppId: [
+          { required: true, message: "请输入AppID", trigger: "blur" },
+        ],
+      },
+      selectTableColumn: [],
+      chooseAllA: false,
+      chooseAllS: false,
+      dragTableKey: Math.random(),
+      addAccountQuery: {
+        platId: "",
+        openApiStatus: 0,
+        isDebug: "0",
+      },
+      addAccountDialog: false,
+      isAdvanced: false,
+    };
+  },
+  computed: {
+    // secretKey适应label
+    secretLabel() {
+      if (this.editplatquery.platId == 13) {
+        // 华为
+        return "client_secret";
+      } else if (this.editplatquery.platId == 14) {
+        // oppo
+        return "api_Key";
+      } else if (this.editplatquery.platId == 12) {
+        // 小米
+        return "appSecret";
+      } else {
+        // 其他
+        return "Security-Key";
+      }
+    },
+    // 是否显示accessKey输入框
+    showAccessKey() {
+      // 穿山甲，快手，sigmob，百度
+      let arr = [1, 3, 7, 6];
+      if (arr.includes(this.editplatquery.platId)) {
+        return true;
+      } else {
+        return false;
+      }
+    },
+    // 是否显示账户id输入框
+    showUserId() {
+      // 穿山甲，优量汇，华为，oppo，小米
+      let arr = [1, 2, 12, 13, 14];
+      if (arr.includes(this.editplatquery.platId)) {
+        return true;
+      } else {
+        return false;
+      }
+    },
+    // accessKey适应label
+    accessKeyLabel() {
+      if (this.editplatquery.platId == 1) {
+        // 穿山甲
+        return "RoleId";
+      } else if (this.editplatquery.platId == 3) {
+        // 快手
+        return "Access-Key";
+      } else if (this.editplatquery.platId == 7) {
+        // sigmob
+        return "Public-Key";
+      } else if (this.editplatquery.platId == 6) {
+        // 百度
+        return "Access-Key";
+      }
+    },
+    Alen() {
+      let len = 0;
+      this.listTemp.forEach((item) => {
+        if (item.sts == "A") {
+          len++;
+        }
+      });
+      return len;
+    },
+    Slen() {
+      let len = 0;
+      this.listTemp.forEach((item) => {
+        if (item.sts == "S") {
+          len++;
+        }
+      });
+      return len;
+    },
+    title() {
+      return this.$store.getters.title;
+    },
+    allowOperate() {
+      return this.$store.getters.allowOperate;
+    },
+    allowDownload() {
+      return this.$store.getters.allowDownload;
+    },
+    // 开屏是否自渲染
+    isAutoDrawing() {
+      let isAutoDrawing = false;
+      this.placeOptions.forEach((item) => {
+        if (item.id == this.query.placeId) {
+          isAutoDrawing = item.position == 1 ? true : false;
+        }
+      });
+      return isAutoDrawing;
+    },
+  },
+  created() {
+    this.initDate();
+  },
+  async mounted() {
+    // 获取角色
+    let roles = this.$store.getters.roles[0];
+    this.roles = roles;
+    let appId = this.$route.query.appId;
+    let placeId = this.$route.query.placeId;
+    if (appId && appId.trim().length > 0) {
+      this.query.appId = appId;
+    }
+    if (placeId && placeId.trim().length > 0) {
+      this.query.placeId = placeId;
+    }
+    await this.initAppOptions();
+    if (this.$route.query.appId) {
+      await this.handleGetSource();
+    }
+    await this.getTemplateTypeList();
+    // 初始化地区
+    await this.initAreaptions();
+    // 获取品牌列表
+    await this.getbrandList();
+    // 获取广告源渲染列表
+    await this.getPlatOptions();
+    // 初始化targetArr
+    this.initTargetArr();
+    // 初始化显示列表
+    this.initTableforTag();
+    await this.getTempleteList();
+    await this.getPlatList();
+  },
+  watch: {
+    selectTableColumn: {
+      handler(val) {
+        let Alen = 0,
+          Slen = 0;
+        val.forEach((item) => {
+          if (item.sts == "A") {
+            Alen++;
+          }
+          if (item.sts == "S") {
+            Slen++;
+          }
+        });
+        if (this.Alen == Alen && this.Alen != 0) {
+          this.chooseAllA = true;
+        } else {
+          this.chooseAllA = false;
+        }
+        if (this.Slen == Slen && this.Slen != 0) {
+          this.chooseAllS = true;
+        } else {
+          this.chooseAllS = false;
+        }
+      },
+    },
+  },
+
+  methods: {
+    // 流量分组table排序
+    initSort() {
+      let el = document.querySelector(
+        ".dragTable .el-table__body-wrapper tbody"
+      );
+      new Sortable(el, {
+        animation: 150,
+        onEnd: (evt) => {
+          this.handelPriority(evt.newIndex, evt.oldIndex);
+        },
+      });
+    },
+    async getTempleteList() {
+      let resp = await getTempleteList();
+      if (resp.code !== 200) return;
+      this.templeteList = resp.data.map((item) => {
+        return {
+          label: item.name,
+          key: item.id,
+          disabled: false,
+        };
+      });
+    },
+    initDate() {
+      // 初始化时间
+      let time = new Date().getTime();
+      let year = new Date(time).getFullYear();
+      let month = new Date(time).getMonth() + 1;
+      let day = new Date(time).getDate();
+      let str = `${year}-${month < 10 ? "0" + month : month}-${
+        day < 10 ? "0" + day : day
+      }`;
+      this.date[0] = this.date[1] = str;
+      this.query.dateEnd = str;
+      this.query.dateStart = str;
+    },
+    testrenderHeader(h, { column, $index }) {
+      if (this.testquery.type == 0) {
+        return this.$createElement("span", "比例");
+      } else if (this.testquery.type == 1) {
+        return this.$createElement("tips", {
+          props: {
+            content:
+              "对用户进行分组，每个分组配置一个数值区间，各分组数值区间不可以交叉。",
+            title: "用户区间",
+            isShow: true,
+          },
+        });
+      }
+    },
+    // 渲染table表头提示
+    renderHeader(h, { column, $index }) {
+      let prop = column.property;
+      let items = this.sureArr.filter((item) => {
+        return item.prop == prop;
+      });
+      let item = {};
+      if (items.length > 0) {
+        item = items[0];
+      }
+      if (item.prop) {
+        return this.$createElement("tips", {
+          props: {
+            content: item.desc,
+            title: item.label,
+            isShow: true,
+          },
+        });
+      }
+      // 其他
+      return this.$createElement("tips", {
+        props: {
+          content: ``,
+          title: column.label,
+          isShow: false,
+        },
+      });
+    },
+    // 价格修改
+    editbidfloor(row) {},
+    // 导出报表
+    async downloadReport() {
+      this.downloading = true;
+      let codeList = [];
+      let nameList = ["优先级", "广告源", "代码位", "状态", "价格"];
+      this.sureArr.forEach((item) => {
+        if (item.checked) {
+          codeList.push(item.prop);
+          nameList.push(item.label);
+        }
+      });
+      this.query.codeList = codeList;
+      this.query.nameList = nameList;
+      try {
+        const res = await this.exportToExcel();
+        await excel(res, `aggregate.xlsx`);
+      } catch (e) {
+        console.log(e, "导出excel错误信息");
+      }
+      this.downloading = false;
+    },
+    // 导出表格接口函数
+    exportToExcel() {
+      return request.post("/aggregate/downloadReport", this.query, {
+        responseType: "blob",
+      });
+    },
+    // 获取指标列表数组
+    initTargetArr() {
+      if (!localStorage.getItem(this.storageName)) {
+        return;
+      } else {
+        this.targetArr = JSON.parse(localStorage.getItem(this.storageName));
+      }
+    },
+    // 初始化显示列表
+    initTableforTag() {
+      this.targetArr.forEach((item) => {
+        if (item.checked) {
+          this.sureArr.push(JSON.parse(JSON.stringify(item)));
+        }
+      });
+    },
+    // 自定义指标确认事件
+    handelConfirmDialog(sureArr, targetArr) {
+      this.targetArr = JSON.parse(JSON.stringify(targetArr));
+      this.sureArr = JSON.parse(JSON.stringify(sureArr));
+    },
+    async getPlatList() {
+      let resp = await platformLinkList();
+      if (resp.code !== 200) return;
+      this.platList = resp.data;
+    },
+    // 获取广告源列表，渲染广告源
+    getPlatOptions() {
+      getPlatOptions().then((res) => {
+        this.PlatOptions = res.data;
+      });
+    },
+    // 获取设备品牌列表
+    async getbrandList() {
+      let resp = await brandList();
+      this.brandList = resp.data;
+    },
+    // 关闭子时间选择框
+    closeTimeItem(index) {
+      this.flowGroupsForm.timeVal.splice(index, 1);
+    },
+    // 关闭子日期选择框
+    closeDateItem(index) {
+      this.pickDate.splice(index, 1);
+    },
+    // 添加子时间选择框
+    addTimepicker() {
+      this.flowGroupsForm.timeVal.push(["00:00", "24:00"]);
+    },
+    // 添加子日期选择框
+    addDatepicker() {
+      this.pickDate.push([]);
+    },
+    // 添加代码位中的广告源选择  PlatId
+    selectPlatId(e) {
+      this.active = e;
+      this.editplat();
+      this.temp.platId = e;
+      // 判断广告源是否是穿山甲，是穿山甲则显示下载确认
+      if (e === 1) {
+        this.showDownload = true;
+      } else {
+        this.showDownload = false;
+      }
+      // 判断广告源是否是mintegral，是则显示广告版位id
+
+      if (e === 11) {
+        this.showSlotId = true;
+      } else {
+        this.showSlotId = false;
+      }
+    },
+    // 流量分组/高级设置中的 修改优先级
+    handelPriority(newIndex, oldIndex) {
+      if (newIndex == 0 || oldIndex == 0) {
+        this.$message.warning("默认分组优先级不可修改！");
+        this.handleGetGroup();
+        this.dragTableKey = Math.random();
+
+        setTimeout(() => {
+          this.initSort();
+        }, 1000);
+        return;
+      }
+      let groups = JSON.parse(JSON.stringify(this.config.groups));
+      let dragItem = groups.splice(oldIndex, 1);
+      groups.splice(newIndex, 0, dragItem[0]);
+      let obj = {
+        // 广告位
+        placeId: this.query.placeId,
+        // 流量分组id  和  该分组的优先级
+        segmentPriorityList: [],
+      };
+      groups.forEach((item, index) => {
+        if (index > 0) {
+          item.priority = index;
+          obj.segmentPriorityList.push({
+            id: item.id,
+            priority: index,
+          });
+        }
+      });
+      this.config.groups = groups;
+      // 修改优先级请求
+      getPriority(obj).then((res) => {
+        // 重新获取代码位分组
+        this.handleGetGroup();
+        this.dragTableKey = Math.random();
+
+        setTimeout(() => {
+          this.initSort();
+        }, 1000);
+      });
+    },
+    // 流量分组/高级设置中的操作列 回到聚合管理页
+    aaa(row) {
+      // 获取广告位
+      let placeId = this.config.groups.findIndex((item) => {
+        return row.id === item.id;
+      });
+      // 转到聚合管理主页面
+      this.vueType = !this.vueType;
+      this.query.groupId = row.id;
+
+      // 分组名
+      this.group = this.config.groups[placeId];
+      // 重新获取主页面列表数据
+      this.handleGetSource();
+    },
+    // 流量管理/高级设置  广告位时长修改
+    editTime() {
+      this.adverting.placeId = this.query.placeId;
+      // 修改分组参数请求
+      adverteTimeEdit(this.adverting).then((res) => {
+        if (res.code !== 200) return this.$message.error(res.msg);
+      });
+    },
+    // 点击编辑/删除流量分组 按钮
+    handleCommand(e, i) {
+      if (i === 0) {
+        // 删除
+        this.handleDelete(e);
+      } else {
+        // 编辑
+        this.handleUpdateFlowGroups(e);
+      }
+    },
+    // 添加流量分组按钮点击事件
+    addFlowGroups() {
+      // 右侧快速添加显示
+      this.isEditShow = true;
+      // 添加模式
+      this.isAdd = true;
+      // 添加
+      this.addOrEdit = true;
+      this.flowGroupsForm = {
+        name: "", // 流量分组名称
+        sdk: "", // sdk
+        equipVal: "", // 设备ID
+        channelVal: "", // 渠道ID
+        areaVal: "", // 地区ID
+        dateVal: "", // 日期
+        timeVal: [["00:00", "24:00"]], // 时间
+        brandVal: [], // 设备品牌
+        nettypeVal: [], // 网络类型
+        sysVersion: "", // 系统版本
+        appVersion: "", // 应用版本
+        childchannelVal: "", // 子渠道
+        custVal: "", // 自定义
+        installTime: "", // 安装时间
+        installTimeType: "h", //安装时间种类
+        sdkSelect: "0", // sdk选择方式
+        equipSelect: "0", // 设备ID选择方式
+        channelSelect: "0", // 渠道选择方式
+        areaSelect: "0", // 地区选择方式
+        dateSelect: "0", // 日期选择方式
+        timeSelect: "0", // 时间选择方式
+        brandSelect: "0", // 设备品牌选择方式
+        nettypeSelect: "0", // 网络类型选择方式
+        sysVersionSelect: "0", //系统版本
+        appVersionSelect: "0", // app版本
+        childchannelSelect: "0", // 子渠道
+        custSelect: "0", // 自定义规则
+        installTimeSelect: "2", // 应用安装时间
+      };
+      this.flowGroupsDialog = false; // 流量分组
+      this.equipmentId = false; // 设备id
+      this.channelShow = false; // 渠道
+      this.areaShow = false; // 地区
+      this.sdkShow = false; // sdk
+      this.dateShow = false; // 日期
+      this.timeShow = false; // 时间
+      this.brandShow = false; // 设备品牌
+      this.nettypeShow = false; // 网络类型
+      this.sysVersionShow = false; // 系统版本
+      this.appVersionShow = false; // app版本
+      this.childchannelShow = false; //子渠道
+      this.custShow = false; // 自定义
+      this.installTimeShow = false; // 安装时间
+      // 显示添加流量分组弹窗
+      this.flowGroupsDialog = true;
+      // 获取流量分组列表
+      adverteList().then((res) => {
+        this.adverteData = res.data;
+      });
+    },
+    // 获取广告位时间
+    getGdverteTime() {
+      let { placeId } = this.query;
+      let file = new FormData();
+      file.append("placeId", placeId);
+      adverteTime(file).then((res) => {
+        this.adverting = res.data;
+      });
+    },
+    // 第一个下拉 列表数据
+    async initAppOptions() {
+      await getAppList().then((res) => {
+        // 下拉表单
+        this.appOptionsAll = res.data;
+        this.appOptions = this.appOptionsAll;
+        // 默认选择第一个app
+        if (this.query.appId === " " && this.appOptions.length > 0) {
+          this.query.appId = this.appOptions[0].id;
+        }
+        this.initPlaceOptions();
+      });
+    },
+    // 添加广告位弹窗中的模版类型列表
+    async getTemplateTypeList() {
+      await getTemplateTypeList().then((res) => {
+        this.templateTypeOptions = res.data;
+      });
+    },
+    handleSelectApp(val) {
+      if (this.query.appId != val) {
+        this.query.appId = val;
+        this.initPlaceOptions(val);
+        this.$router
+          .push({
+            path: "/traffic/aggregate",
+            query: { appId: this.query.appId, placeId: this.query.placeId },
+          })
+          .catch(() => {});
+      }
+    },
+    // 第一个 下拉框 下拉事件   拿到第二个下拉框数据
+    // 获取广告位列表
+    initPlaceOptions(val) {
+      this.showRuleText = false;
+      // 传入应用id获取广告位列表
+      getPlaceListByAppId(this.query.appId).then((res) => {
+        // 默认选择默认分组
+        this.group.id = "default";
+        // 广告位列表
+        this.placeOptions = res.data;
+        // 判断该应用下是否有广告位，初始化
+        if (this.placeOptions.length > 0) {
+          // 获取主页列表数据
+          this.handleGetSource();
+          // 关闭初始化标志，
+          let init = false;
+          // 若广告位ID在该列表中，则打开初始化标志
+          this.placeOptions.forEach((e) => {
+            if (this.query.placeId === e.id) {
+              init = true;
+              return;
+            }
+          });
+          if (!init) {
+            // 若更换了新的广告位列表，则重新默认到第一项广告位
+            this.query.placeId = this.placeOptions[0].id;
+            if (this.config && this.config.groups.length > 0) {
+              this.query.groupId = this.config.groups[0].id;
+            }
+          }
+        } else {
+          this.group = { name: "默认分组", id: "" };
+          // 广告位列表为空
+          this.query.placeId = " ";
+          this.group = {};
+        }
+      });
+    },
+    handleSelectPlace(val) {
+      this.query.placeId = val;
+      this.$router
+        .push({
+          path: "/traffic/aggregate",
+          query: { appId: this.query.appId, placeId: val },
+        })
+        .catch(() => {});
+      this.handleGetGroup(val);
+    },
+    // 获取代码位分组(tabs切换)  首次进来选中第一个 将第一个分组的groupid拿来获取 代码位列表
+    // 获取流量分组
+    async handleGetGroup() {
+      this.showRuleText = false;
+      this.query.groupId = "";
+      // 传入广告位id获取该广告位下的流量分组
+      await getPlaceGroup(this.query.placeId).then((res) => {
+        this.config = res.data;
+
+        if (this.config && this.config.groups.length > 0) {
+          // 若该广告位下有分组
+          // 选中默认分组
+          this.query.groupId = this.config.groups[0].id;
+          // 给分组名赋值
+          this.group = this.config.groups[0];
+          this.handleGroup("default");
+          // // 获取主页面列表数据
+          this.handleGetSource();
+          // 该广告位下的流量分组有分组规则
+          if (
+            this.config.groups[0] &&
+            this.config.groups[0].segmentRule.length > 0
+          ) {
+            let newArr = this.config.groups[0].segmentRule;
+            // 代码位配置参数中的流量分组id
+            this.temp.groupId = this.config.groups[0].id;
+            // 流量分组规则
+            this.handelArrToStr(newArr);
+          }
+        }
+        // 默认选择第一个
+        this.group.id = "default";
+      });
+    },
+    // 封装一个共有的数组转换字符串
+    // 传入该流量分组下的分组规则
+    handelArrToStr(newArr) {
+      if (!newArr) {
+        newArr = [];
+      }
+      let len = newArr.length;
+      let str = "";
+      newArr.forEach((item, index) => {
+        if (item.ruleId == 1) {
+          str += "渠道号";
+        } else if (item.ruleId == 2) {
+          str += "SDK版本号";
+        } else if (item.ruleId == 3) {
+          str += "设备ID";
+        } else if (item.ruleId == 4) {
+          str += "地区";
+        } else if (item.ruleId == 5) {
+          str += "日期";
+        } else if (item.ruleId == 6) {
+          str += "时间";
+        } else if (item.ruleId == 7) {
+          str += "设备品牌";
+        } else if (item.ruleId == 8) {
+          str += "网络类型";
+        } else if (item.ruleId == 9) {
+          str += "系统类型";
+        } else if (item.ruleId == 10) {
+          str += "应用版本";
+        } else if (item.ruleId == 11) {
+          str += "子渠道";
+        } else if (item.ruleId == 12) {
+          str += "自定义规则";
+        }
+        if (item.ruleType == 0) {
+          str += " 包括 ";
+        } else if (item.ruleType == 1) {
+          str += " 不包括 ";
+        } else if (item.ruleType == 2) {
+          str += " 大于 ";
+        } else if (item.ruleType == 3) {
+          str += " 小于 ";
+          return;
+        }
+        if (item.ruleId == 4) {
+          item.ruleContent.forEach((o, index, array) => {
+            let temp = o.split("-");
+            temp.forEach((tempStr, index) => {
+              if (tempStr === "CHN") {
+                str += "中国/";
+              } else {
+                let label = this.areaList.find(
+                  (e) => e.value === tempStr
+                ).lable;
+                if (index === 2) {
+                  str += label;
+                } else {
+                  str += label + "/";
+                }
+              }
+            });
+            if (index + 1 != array.length) {
+              str += ",";
+            }
+          });
+        } else {
+          str += item.ruleContent.filter(Boolean).join(",");
+        }
+        if (index != len - 1) {
+          str += "\xa0\xa0\xa0\xa0&\xa0\xa0\xa0\xa0 ";
+        }
+      });
+      str = str.substring(0, str.length);
+      // 规则字段赋值
+      this.groupRuleStr = str;
+      str = "";
+    },
+    // 获取主页列表数据
+    async handleGetSource() {
+      let query = JSON.parse(JSON.stringify(this.query));
+      // 处理参数不全
+      if (
+        query.appId == "" ||
+        query.placeId == "" ||
+        query.groupId == "" ||
+        query.testId == ""
+      ) {
+        return;
+      }
+      let r = await getPlaceListByAppId(query.appId);
+      let isBelong = false;
+      let placeList = r.data ? r.data : [];
+      placeList.forEach((item) => {
+        if (item.id == query.placeId) {
+          isBelong = true;
+        }
+      });
+      if (!isBelong) return;
+      // 处理相同参数多次发送请求
+      if (
+        this.prevquery.appId == query.appId &&
+        this.prevquery.placeId == query.placeId &&
+        this.prevquery.groupId == query.groupId &&
+        this.prevquery.testId == query.testId
+      )
+        return;
+      this.prevquery = JSON.parse(JSON.stringify(query));
+      this.getTableData(query);
+    },
+    async getTableData(query) {
+      this.listLoading = true;
+      // 初始化 app icon
+      let appName = null;
+      let iconUrl = null;
+      if (query.appId) {
+        this.appOptions.forEach((v) => {
+          // 通过app列表获取app名称及appicon
+          if (v.id === query.appId) {
+            appName = v.name;
+            iconUrl = v.iconUrl;
+          }
+        });
+        this.appName = appName;
+        this.iconUrl = iconUrl;
+      }
+      // 初始化广告位
+      let placeName = null;
+      if (query.placeId) {
+        // 通过广告位列表获取广告位名称
+        this.placeOptions.forEach((v) => {
+          if (v.id === query.placeId) {
+            placeName = v.name;
+          }
+        });
+        this.placeName = placeName;
+      }
+      // 获取报表头部数据
+      let res = await getPlaceSource(query);
+      let bottomSourceList = [];
+      res.data.bottomSourceList.forEach((item) => {
+        item = { ...item.reportData, ...item };
+        bottomSourceList.push(item);
+      });
+
+      let closeBottomList = bottomSourceList.filter((item) => {
+        return item.sts == "S";
+      });
+      let openBottomList = bottomSourceList.filter((item) => {
+        return item.sts == "A";
+      });
+      openBottomList.forEach((item) => {
+        this.$set(item, "edit", false);
+        // 保存原价
+        item.oriBidfloor = item.bidfloor;
+      });
+
+      // 获取报表数据
+      this.list = [];
+      // 已启用
+      let selectedSource = [];
+      // 未启用
+      let unSelectedSource = [];
+      res.data.sources.map((v) => {
+        // 为每项价格是否可以修改
+        this.$set(v, "edit", false);
+        // 保存原价
+        v.oriBidfloor = v.bidfloor;
+        // 通过启用状态分组
+        if (v.sts === "A") {
+          v.type = "selectSource";
+          // 添加已启用项索引
+          // v.index = selectedSource.length;
+          selectedSource.push(v);
+        } else {
+          v.type = "unSelectSource";
+          unSelectedSource.push(v);
+        }
+        return v;
+      });
+      // 汇总数据
+      res.data.reportData.type = "all";
+      // 开启数
+      res.data.reportData.name = selectedSource.length + "个代码位开启";
+      // 第一项  汇总
+      res.data.reportData.advRequestFilledRate =
+        res.data.reportData.requestFilledRate;
+      res.data.reportData.advRequest = res.data.reportData.request;
+      // 导入汇总
+      this.list.push(res.data.reportData);
+      // 上半部分 启用项
+      let selectArr = JSON.parse(JSON.stringify(selectedSource));
+      let settleArr = [];
+      let indexArr = [];
+      selectedSource.forEach((item, i) => {
+        if (item.settleType == 1) {
+          indexArr.push(i);
+          settleArr.push(selectArr[i]);
+        }
+      });
+      indexArr.reverse().forEach((item, i) => {
+        selectArr.splice(item, 1);
+      });
+      this.fallNum = selectArr.length;
+      this.biddingNum = selectedSource.length - this.fallNum;
+
+      this.config.groups.forEach((item, i) => {
+        if (item.id == query.groupId) {
+          item.abTests.forEach((child, c) => {
+            if (child.testId == query.testId) {
+              this.concurrentNum = child.concurrentNum;
+            }
+          });
+        }
+      });
+      // index
+      selectArr.forEach((item, i) => {
+        item.index = i;
+      });
+      settleArr.forEach((item, i) => {
+        item.type = "settle";
+      });
+      selectedSource = [...settleArr, ...selectArr];
+
+      selectedSource.filter((item) => {
+        item = { ...item.reportData, ...item };
+        this.list.push(item);
+      });
+      this.lineIndex = selectedSource.length + 1 + openBottomList.length;
+      openBottomList.forEach((item) => {
+        item.type = "openbottom";
+        this.list.push(item);
+      });
+      // 分界线
+      this.list.push({
+        text: "未启用（" + unSelectedSource.length + "个代码位)",
+      });
+      // 下半部分 未启用项
+      let unselectArr = JSON.parse(JSON.stringify(unSelectedSource));
+      let unsettleArr = [];
+      let unindexArr = [];
+      unSelectedSource.forEach((item, i) => {
+        if (item.settleType == 1) {
+          unindexArr.push(i);
+          unsettleArr.push(unselectArr[i]);
+        }
+      });
+      unindexArr.reverse().forEach((item) => {
+        unselectArr.splice(item, 1);
+      });
+      unsettleArr.forEach((item, i) => {
+        item.type = "settle";
+      });
+      unSelectedSource = [...unsettleArr, ...unselectArr];
+      unSelectedSource.filter((item) => {
+        item = { ...item.reportData, ...item };
+        this.list.push(item);
+      });
+      closeBottomList.forEach((item) => {
+        item.type = "closebottom";
+        this.list.push(item);
+      });
+      this.listTemp = JSON.parse(JSON.stringify(this.list));
+      // 结束加载
+      this.listLoading = false;
+      this.$bus.$emit("totop");
+    },
+    // 合并表格
+    arraySpanMethod({ row, column, rowIndex, columnIndex }) {
+      if (rowIndex === this.lineIndex) {
+        if (columnIndex === 0) {
+          // 这一列第一项合并前三项
+          return [1, 3];
+        }
+      }
+    },
+    // 获取时间
+    getSTime(val) {
+      this.showRuleText = false;
+      this.query.dateStart = val[0];
+      this.query.dateEnd = val[1];
+      // 获取主页列表数据
+      this.getTableData(this.query);
+    },
+    handleSelectGroup(val) {
+      this.query.groupId = val;
+      this.handleGroup(val);
+    },
+    handleGroup(val) {
+      this.showRuleText = false;
+      // 展开列表
+      this.expand = true;
+      // 获取当前流量分组信息
+      this.config.groups.forEach((item) => {
+        if (item.id === val || !val) {
+          this.group = item;
+          if (item.abTests.length > 0) {
+            this.abTestList = item.abTests;
+            this.query.testId = item.abTests[0].testId;
+            this.testName = item.abTests[0].testName;
+            this.testType = item.abTests[0].type;
+          } else {
+            this.abTestList = [];
+            this.query.testId = "";
+            this.testName = "";
+            this.testType = 0;
+          }
+        }
+      });
+      // 更新代码位配置
+      this.temp.groupId = val;
+      // 用于将数组转字符串，得到规则字段
+      this.handelArrToStr(this.group.segmentRule);
+      // 获取主页面列表数据
+      this.handleGetSource();
+    },
+    handleBatchAdd() {
+      this.$router.push({
+        path: "/traffic/batchadd",
+        query: {
+          appId: this.query.appId,
+          placeId: this.query.placeId,
+          testId: this.query.testId,
+          groupId: this.query.groupId,
+        },
+      });
+    },
+    handleBatchExport() {
+      this.$router.push({
+        path: "/traffic/batchexport",
+        query: {
+          appId: this.query.appId,
+          placeId: this.query.placeId,
+          testId: this.query.testId,
+          groupId: this.query.groupId,
+        },
+      });
+    },
+    // 点击 添加代码位
+    handleAdd() {
+      this.editplatquery = {
+        appId: "",
+        appKey: "",
+        platAccountId: "",
+        platAppId: "",
+        accessType: "",
+        platId: "",
+      };
+      // 获取到当前广告位的广告样式
+      let _position = this.placeOptions.find(
+        (item) => item.id === this.query.placeId
+      ).position;
+      //
+      this.active = null;
+      this.appId = this.query.appId;
+      // 添加模式
+      this.dialogSourceType = 0;
+      // 保存流量分组id
+      let _groupId = this.temp.groupId;
+      // 代码位配置
+      this.temp = {
+        groupId: _groupId,
+        position: _position,
+        hotspot: "S",
+        // 热区样式
+        hotspotType: 1,
+        // 左右边距
+        lrMargin: 16,
+        // 上下边距
+        tbMargin: 16,
+        settleType: 0,
+        floatingRate: 0,
+        templateIds: [],
+        isAutoDrawing: "0",
+        isAutoSorting: "0",
+        isBottom: "0",
+      };
+      this.id = null;
+      // 弹框出现
+      this.accessType = "";
+      this.dialogSourceVisible = true;
+    },
+    // 编辑流量分组
+    handleUpdateFlowGroups(row) {
+      this.query.groupId = row.id;
+      this.addOrEdit = false;
+      this.isAdd = false;
+      this.isEditShow = false;
+      this.flowGroupsDialog = true;
+      // 编辑弹框
+      this.flowGroupsForm.name = row.name;
+      this.equipmentId = false; // 设备id
+      this.channelShow = false; // 渠道
+      this.areaShow = false; // 地区
+      this.sdkShow = false; // sdk
+      this.dateShow = false; // 日期
+      this.timeShow = false; // 时间
+      this.brandShow = false; // 设备品牌
+      this.nettypeShow = false; // 网络类型
+      this.sysVersionShow = false; // 系统版本
+      this.appVersionShow = false; // APP版本
+      this.childchannelShow = false; // 子渠道
+      this.custShow = false; // 自定义
+      this.installTimeShow = false; //安装时间
+      this.disPoseAddOrEdit(row);
+    },
+    Advanced(row) {
+      this.temp = JSON.parse(JSON.stringify(row));
+      this.temp.groupId = this.query.groupId;
+      this.dialogSourceVisible = true;
+      this.isAdvanced = true;
+    },
+
+    // 点击列表编辑 代码位
+    handleUpdate(row) {
+      this.getAccounts(row.platId);
+
+      platformLinkList(this.query.appId).then((res) => {
+        let plat = {};
+        res.data.forEach((item) => {
+          if (this.temp.platId == item.id) {
+            plat = item;
+          }
+        });
+        let appId = this.query.appId;
+        let appKey = plat.appKey;
+        let platAccountId = plat.platAccountId;
+        let platAppId = plat.platAppId;
+        let accessType = plat.accessType;
+        let platId = plat.id;
+        this.editplatquery = {
+          appId,
+          appKey,
+          platAccountId,
+          platAppId,
+          accessType,
+          platId,
+        };
+      });
+
+      this.id = "";
+      if (row.settleType == 1) {
+        row.isBidding = true;
+      } else {
+        row.isBidding = false;
+      }
+      if (row.platId == 1) {
+        this.showDownload = true;
+      } else {
+        this.showDownload = false;
+      }
+      if (row.platId == 11) {
+        this.showSlotId = true;
+      } else {
+        this.showSlotId = false;
+      }
+      this.settleType = 0;
+      this.platList.forEach((item) => {
+        if (row.platId == item.id) {
+          this.settleType = item.settleType;
+        }
+      });
+      this.isEdit = 1;
+      this.active = row.platId;
+      this.appId = this.query.appId;
+      this.dialogSourceType = 1;
+      this.temp = JSON.parse(JSON.stringify(row));
+      this.temp.groupId = this.query.groupId;
+      this.temp.position = this.placeOptions.find(
+        (item) => item.id === this.query.placeId
+      ).position;
+      this.dialogSourceVisible = true;
+    },
+    // 封装一个添加或者编辑处理数据的方法
+    disPoseAddOrEdit(row) {
+      row.segmentRule.forEach((item, index) => {
+        if (item.ruleId == 1) {
+          this.channelShow = true;
+          this.flowGroupsForm.channelVal = item.ruleContent.join(",");
+          this.flowGroupsForm.channelSelect = item.ruleType + "";
+        } else if (item.ruleId == 2) {
+          this.sdkShow = true;
+          this.flowGroupsForm.sdk = item.ruleContent.join(",");
+          this.flowGroupsForm.sdkSelect = item.ruleType + "";
+        } else if (item.ruleId == 3) {
+          this.equipmentId = true;
+          this.flowGroupsForm.equipVal = item.ruleContent.join(",");
+          this.flowGroupsForm.equipSelect = item.ruleType + "";
+        } else if (item.ruleId == 4) {
+          this.areaShow = true;
+          let arr = [];
+          item.ruleContent.forEach((ele) => {
+            let temp = ele.split("-");
+            arr.push(temp);
+          });
+          this.flowGroupsForm.areaVal = arr;
+          this.flowGroupsForm.areaSelect = item.ruleType + "";
+        } else if (item.ruleId == 5) {
+          this.dateShow = true;
+          this.flowGroupsForm.dateSelect = item.ruleType + "";
+          item.ruleContent.forEach((i, index) => {
+            let str1 = i.substring(0, 10);
+            let str2 = i.substring(11, 21);
+            if (index === 0) {
+              this.pickDate[0].push(str1);
+              this.pickDate[0].push(str2);
+            } else {
+              this.pickDate[index] = [];
+              this.pickDate[index].push(str1);
+              this.pickDate[index].push(str2);
+            }
+          });
+          this.flowGroupsForm.dateVal = this.pickDate;
+        } else if (item.ruleId === 6) {
+          this.timeShow = true;
+          this.flowGroupsForm.timeSelect = item.ruleType + "";
+          item.ruleContent.forEach((i, index) => {
+            let str1 = i.substring(0, 5);
+            let str2 = i.substring(6, 11);
+            if (index === 0) {
+              this.flowGroupsForm.timeVal[0] = [];
+              this.flowGroupsForm.timeVal[0].push(str1);
+              this.flowGroupsForm.timeVal[0].push(str2);
+            } else {
+              this.flowGroupsForm.timeVal[index] = [];
+              this.flowGroupsForm.timeVal[index].push(str1);
+              this.flowGroupsForm.timeVal[index].push(str2);
+            }
+          });
+        } else if (item.ruleId === 7) {
+          this.brandShow = true;
+          this.flowGroupsForm.brandVal = item.ruleContent;
+          this.flowGroupsForm.brandSelect = item.ruleType + "";
+        } else if (item.ruleId === 8) {
+          this.nettypeShow = true;
+          this.flowGroupsForm.nettypeVal = item.ruleContent;
+          this.flowGroupsForm.nettypeSelect = item.ruleType + "";
+        } else if (item.ruleId === 9) {
+          this.sysVersionShow = true;
+          this.flowGroupsForm.sysVersion = item.ruleContent.join(",");
+          this.flowGroupsForm.sysVersionSelect = item.ruleType + "";
+        } else if (item.ruleId === 10) {
+          this.appVersionShow = true;
+          this.flowGroupsForm.appVersion = item.ruleContent.join(",");
+          this.flowGroupsForm.appVersionSelect = item.ruleType + "";
+        } else if (item.ruleId === 11) {
+          this.childchannelShow = true;
+          this.flowGroupsForm.childchannelVal = item.ruleContent.join(",");
+          this.flowGroupsForm.childchannelSelect = item.ruleType + "";
+        } else if (item.ruleId === 12) {
+          this.custShow = true;
+          this.flowGroupsForm.custVal = item.ruleContent[0];
+          this.flowGroupsForm.custSelect = item.ruleType + "";
+        } else if (item.ruleId == 13) {
+          this.installTimeShow = true;
+          this.flowGroupsForm.installTime = item.ruleContent[0];
+          this.flowGroupsForm.installTimeType = item.ruleContent[1];
+          this.flowGroupsForm.installTimeSelect = item.ruleType + "";
+        }
+      });
+    },
+    async editUser() {
+      let resp = await updateAppPlatLink(this.editplatquery);
+      if (resp.code != 200) return;
+      this.editplatquerytemp = JSON.parse(JSON.stringify(this.editplatquery));
+      this.platAppId = this.editplatquery.platAppId;
+    },
+    // 代码位确认按钮
+    async handleSubmitForm() {
+      if (!this.isAdvanced) {
+        // 存下this指向
+        let _this = this;
+        this.temp.placeId = this.query.placeId;
+        this.query.slotId = this.temp.slotId;
+        this.$refs.form.validate(async (valid) => {
+          this.$refs.platLinkForm.validate(async (platvalid) => {
+            if (!valid || !platvalid) return;
+            if (platvalid && valid) {
+              // 修改账户
+              this.editUser();
+              this.editSource(_this);
+            }
+          });
+        });
+      } else {
+        let _this = this;
+        this.temp.placeId = this.query.placeId;
+        this.$refs.form.validate(async (valid) => {
+          if (valid) {
+            console.log(_this.temp);
+            let query = {
+              groupId: _this.query.groupId,
+              placeId: _this.query.placeId,
+              testId: _this.query.testId,
+              id: _this.temp.id,
+              name: _this.temp.name,
+              clickFreq: _this.temp.clickFreq,
+              clickInterval: _this.temp.clickInterval,
+              impressFreq: _this.temp.impressFreq,
+              impressFreqDay: _this.temp.impressFreqDay,
+              impressFreqHour: _this.temp.impressFreqHour,
+              impressInterval: _this.temp.impressInterval,
+              requestFreq: _this.temp.requestFreq,
+            };
+            let resp = await adsourceAdvancedSetup(query);
+            if (resp.code == 200) {
+              _this.dialogSourceVisible = false;
+              _this.getTableData(_this.query);
+              _this.isAdvanced = false;
+            }
+          }
+        });
+      }
+    },
+
+    async editSource(_this) {
+      _this.temp.testId = _this.query.testId;
+      let checkObj = {};
+      // 编辑、添加代码位校验
+      if (_this.dialogSourceType === 1) {
+        checkObj = {
+          id: _this.temp.id,
+          groupId: _this.temp.groupId,
+          platPlaceId: _this.temp.platPlaceId,
+          placeId: _this.temp.placeId,
+        };
+      } else if (_this.dialogSourceType === 0) {
+        checkObj = {
+          groupId: _this.temp.groupId,
+          platPlaceId: _this.temp.platPlaceId,
+          placeId: _this.temp.placeId,
+        };
+      }
+      let resp = await checkPlatPlaceId(checkObj);
+      let pass = false;
+      // 通过状态码判断是否继续确认
+      if (resp.code == 10001) {
+        await this.$confirm(resp.msg, "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning",
+        })
+          .then(() => {
+            pass = true;
+          })
+          .catch(() => {});
+      } else if (resp.code == 200) {
+        pass = true;
+      }
+      if (_this.dialogSourceType === 0 && pass) {
+        await addSource(_this.temp).then((res) => {
+          Message({
+            message: "操作成功！",
+            type: "success",
+            duration: 5 * 1000,
+          });
+
+          _this.dialogSourceVisible = false;
+          _this.getTableData(_this.query);
+          _this.temp.isDownload = "A";
+          _this.temp.slotId = "";
+          _this.temp.templateIds = [];
+          _this.temp.settleType = 0;
+        });
+      } else if (_this.dialogSourceType === 1 && pass) {
+        await updateSource(_this.temp).then((res) => {
+          Message({
+            message: "操作成功！",
+            type: "success",
+            duration: 5 * 1000,
+          });
+          _this.dialogSourceVisible = false;
+          _this.getTableData(_this.query);
+          _this.temp.isDownload = "A";
+          _this.temp.slotId = "";
+          _this.temp.settleType = 0;
+          _this.temp.templateIds = [];
+        });
+      }
+    },
+    // 流量分组/高级设置按钮点击事件
+    handleAggregateSetting() {
+      // 流量分组/高级设置页面
+      this.vueType = !this.vueType;
+      // 获取广告位时间
+      this.getGdverteTime();
+      setTimeout(() => {
+        this.initSort();
+      }, 1000);
+    },
+    // 返回主界面
+    goBack() {
+      // 获取流量分组
+      this.handleGetGroup();
+      this.vueType = !this.vueType;
+    },
+    // 状态按钮点击事件
+    handleUpdateSourceSts(row, sts) {
+      row.sts = sts;
+      row.groupId = this.query.groupId;
+      row.testId = this.query.testId;
+      updateGroupSourceSts(row).then(() => {
+        this.getTableData(this.query);
+      });
+    },
+    // 取消修改价格
+    cancelEdit(row) {
+      row.bidfloor = row.oriBidfloor;
+      row.edit = false;
+    },
+    // 确定修改价格
+    confirmEdit(row) {
+      row.edit = false;
+      row.oriBidfloor = row.bidfloor;
+      row.groupId = this.query.groupId;
+      row.testId = this.query.testId;
+      updateGroupSourcePrice(row).then(() => {
+        this.getTableData(this.query);
+      });
+    },
+    getAccounts(plat) {
+      getAccounts(plat).then((res) => {
+        this.accounts = res.data;
+      });
+    },
+    // 折叠按钮
+    expandTable(row) {
+      if (this.expand) {
+        this.listTemp.forEach((item) => {
+          if (item.sts && item.sts === "S") {
+            var index = this.listTemp.findIndex((e) => e.sts === "S");
+            this.listTemp = JSON.parse(JSON.stringify(this.listTemp));
+            this.listTemp.splice(index, 1);
+          }
+        });
+      } else {
+        this.listTemp = JSON.parse(JSON.stringify(this.list));
+        this.chooseAllS = false;
+      }
+      this.expand = !this.expand;
+    },
+    // 快速添加规则
+    itemClick(e, i) {
+      this.isBorder = true;
+      this.activeIndex = i;
+      this.channelShow = false;
+      this.areaShow = false;
+      this.equipmentId = false;
+      this.sdkShow = false;
+      this.dateShow = false;
+      this.timeShow = false;
+      this.brandShow = false;
+      this.nettypeShow = false;
+      this.sysVersionShow = false;
+      this.appVersionShow = false;
+      this.childchannelShow = false;
+      this.custShow = false;
+      this.installTimeShow = false;
+      this.pickDate = [[]];
+      this.flowGroupsForm.name = e.name;
+      this.disPoseAddOrEdit(e);
+    },
+    // 关闭流量分组弹框，初始化弹框数据
+    closeGroups() {
+      this.$refs.flowGroupsRef.resetFields();
+      this.channelShow = false;
+      this.areaShow = false;
+      this.equipmentId = false;
+      this.sdkShow = false;
+      this.dateShow = false;
+      this.timeShow = false;
+      this.brandShow = false;
+      this.isBorder = false;
+      this.nettypeShow = false;
+      this.sysVersionShow = false;
+      this.appVersionShow = false;
+      this.childchannelShow = false;
+      this.custShow = false;
+      this.installTimeShow = false;
+      this.pickDate = [[]];
+      this.flowGroupsForm = {
+        name: "", // 流量分组名称
+        equipVal: "",
+        channelVal: "",
+        areaVal: "",
+        sdk: "",
+        dateVal: "",
+        timeVal: [["00:00", "24:00"]],
+        brandVal: [],
+        nettypeVal: [],
+        sysVersion: "",
+        appVersion: "",
+        childchannelVal: "",
+        custVal: "",
+        installTime: "",
+        installTimeType: "h",
+        sdkSelect: "0",
+        equipSelect: "0",
+        channelSelect: "0",
+        areaSelect: "0",
+        dateSelect: "0",
+        timeSelect: "0",
+        brandSelect: "0",
+        nettypeSelect: "0",
+        sysVersionSelect: "0",
+        appVersionSelect: "0",
+        childchannelSelect: "0",
+        custSelect: "0",
+        installTimeSelect: "2",
+      };
+    },
+    // 列表操作删除广告
+    Adver(row) {
+      // 二次提示
+      this.$confirm("此操作将永久删除该代码位, 是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then(() => {
+          deladverte({ id: row.id }).then((res) => {
+            if (res.code !== 200) return this.$message.error("删除失败");
+            this.getTableData(this.query);
+            return this.$message.success("删除成功");
+          });
+        })
+        .catch(() => {});
+    },
+    // 高级设置/流量分组中的列表 删除流量分组
+    handleDelete(row) {
+      this.$confirm("此操作将永久删除该条流量分组, 是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then(() => {
+          delFlowGroups({ groupId: row.id }).then((res) => {
+            if (res.code != 200) return this.$message.error("删除失败");
+            this.handleGetGroup();
+            this.$message.success("删除成功");
+          });
+        })
+        .catch(() => {});
+    },
+    // 添加规则
+    addRules(val) {
+      switch (val) {
+        case "1":
+          this.sdkShow = true;
+          break;
+        case "2":
+          this.equipmentId = true;
+          break;
+        case "3":
+          this.channelShow = true;
+          break;
+        case "4":
+          this.areaShow = true;
+          break;
+        case "5":
+          this.dateShow = true;
+          break;
+        case "6":
+          this.timeShow = true;
+          break;
+        case "7":
+          this.brandShow = true;
+          break;
+        case "8":
+          this.nettypeShow = true;
+          break;
+        case "9":
+          this.sysVersionShow = true;
+          break;
+        case "10":
+          this.appVersionShow = true;
+          break;
+        case "11":
+          this.childchannelShow = true;
+          break;
+        case "12":
+          this.custShow = true;
+          break;
+        case "13":
+          this.installTimeShow = true;
+          break;
+        default:
+          return;
+      }
+    },
+    // 关闭创建流量分组的某一项
+    closeInput(val) {
+      switch (val) {
+        case 1:
+          this.sdkShow = false;
+          this.flowGroupsForm.sdk = "";
+          break;
+        case 2:
+          this.equipmentId = false;
+          this.flowGroupsForm.equipVal = "";
+          break;
+        case 3:
+          this.channelShow = false;
+          this.flowGroupsForm.channelVal = "";
+          break;
+        case 4:
+          this.areaShow = false;
+          this.flowGroupsForm.areaVal = "";
+          break;
+        case 5:
+          this.dateShow = false;
+          this.flowGroupsForm.dateVal = "";
+          break;
+        case 6:
+          this.timeShow = false;
+          this.flowGroupsForm.timeVal = [["00:00", "24:00"]];
+          break;
+        case 7:
+          this.brandShow = false;
+          this.flowGroupsForm.brandVal = [];
+          break;
+        case 8:
+          this.nettypeShow = false;
+          this.flowGroupsForm.nettypeVal = [];
+          break;
+        case 9:
+          this.sysVersionShow = false;
+          this.flowGroupsForm.sysVersion = "";
+          break;
+        case 10:
+          this.appVersionShow = false;
+          this.flowGroupsForm.appVersion = "";
+          break;
+        case 11:
+          this.childchannelShow = false;
+          this.flowGroupsForm.childchannelVal = "";
+          break;
+        case 12:
+          this.custShow = false;
+          this.flowGroupsForm.custVal = "";
+          break;
+        case 13:
+          this.custShow = false;
+          this.flowGroupsForm.installTime = "";
+          this.flowGroupsForm.installTimeType = "h";
+          break;
+        default:
+          return;
+      }
+    },
+    // 添加或编辑流量分组弹窗
+    handelAddOrEdit() {
+      this.$refs.flowGroupsRef.validate((val) => {
+        if (!val) return;
+        if (
+          !this.equipmentId &&
+          !this.channelShow &&
+          !this.sdkShow &&
+          !this.areaShow &&
+          !this.dateShow &&
+          !this.timeShow &&
+          !this.brandShow &&
+          !this.nettypeShow &&
+          !this.sysVersionShow &&
+          !this.appVersionShow &&
+          !this.childchannelShow &&
+          !this.custShow &&
+          !this.installTimeShow
+        ) {
+          return this.$message.error("至少选择一条规则");
+        }
+        let obj;
+        // 添加 流量分组
+        if (this.addOrEdit) {
+          let { placeId } = this.query;
+          obj = {
+            placeId,
+            name: this.flowGroupsForm.name,
+            segmentRule: [],
+          };
+          this.handelAddOEditData(obj);
+          addFlowGrow(obj).then((res) => {
+            if (res.code !== 200) return this.$message.err(res.msg);
+            this.handleGetGroup();
+            this.flowGroupsDialog = false;
+            this.$message.success("添加成功");
+          });
+        } else {
+          // 编辑 流量分组
+          let { placeId, groupId } = this.query;
+          obj = {
+            placeId,
+            groupId,
+            name: this.flowGroupsForm.name,
+            segmentRule: [],
+          };
+          this.handelAddOEditData(obj);
+
+          editFlowGrow(obj).then((res) => {
+            if (res.code !== 200) return this.$message.err(res.msg);
+            this.handleGetGroup();
+            this.flowGroupsDialog = false;
+            this.$message.success("编辑成功");
+          });
+        }
+      });
+    },
+    // 封装 添加流量分组 和编辑流量分组 数据处理
+    handelAddOEditData(obj) {
+      // sdk
+      if (this.sdkShow) {
+        let adkObj = {
+          ruleId: 2,
+          ruleType: this.flowGroupsForm.sdkSelect - 0,
+          ruleContent: this.flowGroupsForm.sdk.split(","),
+        };
+        obj.segmentRule.push(adkObj);
+      }
+      // 渠道
+      if (this.channelShow) {
+        let channelObj = {
+          ruleId: 1,
+          ruleType: this.flowGroupsForm.channelSelect - 0,
+          ruleContent: this.flowGroupsForm.channelVal.split(","),
+        };
+        obj.segmentRule.push(channelObj);
+      }
+      // 地区
+      if (this.areaShow) {
+        let areaStr = "";
+        this.flowGroupsForm.areaVal.forEach((item, index, array) => {
+          if (index + 1 != array.length) {
+            let tempStr = item.join("-");
+            areaStr = areaStr + tempStr + ",";
+          } else {
+            let tempStr = item.join("-");
+            areaStr = areaStr + tempStr;
+          }
+        });
+        let areaObj = {
+          ruleId: 4,
+          ruleType: this.flowGroupsForm.areaSelect - 0,
+          ruleContent: areaStr.split(","),
+        };
+        obj.segmentRule.push(areaObj);
+      }
+      // 设备id
+      if (this.equipmentId) {
+        let equipmentObj = {
+          ruleId: 3,
+          ruleType: this.flowGroupsForm.equipSelect - 0,
+          ruleContent: this.flowGroupsForm.equipVal.split(","),
+        };
+        obj.segmentRule.push(equipmentObj);
+      }
+      // 日期
+      if (this.dateShow) {
+        let arr = [];
+        this.pickDate.forEach((item) => {
+          if (item.length > 0) {
+            let str = item[0] + "-" + item[1];
+            arr.push(str);
+          }
+        });
+        let dateObj = {
+          ruleId: 5,
+          ruleType: this.flowGroupsForm.dateSelect - 0,
+          ruleContent: arr,
+        };
+        obj.segmentRule.push(dateObj);
+      }
+      // 时间
+      if (this.timeShow) {
+        let arr = [];
+        this.flowGroupsForm.timeVal.forEach((item) => {
+          if (item.length > 0) {
+            let str = item[0] + "-" + item[1];
+            arr.push(str);
+          }
+        });
+        let timeObj = {
+          ruleId: 6,
+          ruleType: this.flowGroupsForm.timeSelect - 0,
+          ruleContent: arr,
+        };
+        obj.segmentRule.push(timeObj);
+      }
+      // 设备品牌
+      if (this.brandShow) {
+        let brandObj = {
+          ruleId: 7,
+          ruleType: this.flowGroupsForm.brandSelect - 0,
+          ruleContent: this.flowGroupsForm.brandVal,
+        };
+        obj.segmentRule.push(brandObj);
+      }
+      // 网络类型
+      if (this.nettypeShow) {
+        let nettypeObj = {
+          ruleId: 8,
+          ruleType: this.flowGroupsForm.nettypeSelect - 0,
+          ruleContent: this.flowGroupsForm.nettypeVal,
+        };
+        obj.segmentRule.push(nettypeObj);
+      }
+      // 系统版本
+      if (this.sysVersionShow) {
+        let ruleContent;
+        if (
+          this.flowGroupsForm.sysVersionSelect == "2" ||
+          this.flowGroupsForm.sysVersionSelect == "3"
+        ) {
+          let arr = this.flowGroupsForm.sysVersion.split(/[,，]/g);
+          ruleContent = [arr[0]];
+        } else {
+          ruleContent = this.flowGroupsForm.sysVersion.split(/[,，]/g);
+        }
+        // 未完成
+        let sysVersionObj = {
+          ruleId: 9,
+          ruleType: this.flowGroupsForm.sysVersionSelect - 0,
+          ruleContent,
+        };
+        obj.segmentRule.push(sysVersionObj);
+      }
+      // 应用版本
+      if (this.appVersionShow) {
+        let ruleContent;
+        if (
+          this.flowGroupsForm.appVersionSelect == "2" ||
+          this.flowGroupsForm.appVersionSelect == "3"
+        ) {
+          let arr = this.flowGroupsForm.appVersion.split(/[,，]/g);
+          ruleContent = [arr[0]];
+        } else {
+          ruleContent = this.flowGroupsForm.appVersion.split(/[,，]/g);
+        }
+        // 未完成
+        let appVersionObj = {
+          ruleId: 10,
+          ruleType: this.flowGroupsForm.appVersionSelect - 0,
+          ruleContent,
+        };
+        obj.segmentRule.push(appVersionObj);
+      }
+      // 子渠道
+      if (this.childchannelShow) {
+        let childchannelObj = {
+          ruleId: 11,
+          ruleType: this.flowGroupsForm.childchannelSelect - 0,
+          ruleContent: this.flowGroupsForm.childchannelVal.split(","),
+        };
+        obj.segmentRule.push(childchannelObj);
+      }
+      if (this.custShow) {
+        let custValObj = {
+          ruleId: 12,
+          ruleType: this.flowGroupsForm.custSelect - 0,
+          ruleContent: [this.flowGroupsForm.custVal],
+        };
+        obj.segmentRule.push(custValObj);
+      }
+      if (this.installTimeShow) {
+        let installTimeObj = {
+          ruleId: 13,
+          ruleType: this.flowGroupsForm.installTimeSelect - 0,
+          ruleContent: [
+            this.flowGroupsForm.installTime,
+            this.flowGroupsForm.installTimeType,
+          ],
+        };
+        obj.segmentRule.push(installTimeObj);
+      }
+    },
+    // 编辑展示上限小时
+    editInputVal(row) {
+      if (!this.allowOperate) return;
+      if (
+        row.impressFreqHour < 0 ||
+        row.impressFreqDay < 0 ||
+        row.impressInterval < 0
+      ) {
+        return this.$message.error("最小值为1");
+      }
+      let { placeId } = this.query;
+      let groupId = row.id;
+      let { concurrentNum, impressFreqHour, impressFreqDay, impressInterval } =
+        row;
+      impressFreqHour = Number(row.impressFreqHour);
+      impressFreqDay = Number(row.impressFreqDay);
+      impressInterval = Number(row.impressInterval);
+      let obj = {
+        placeId,
+        groupId,
+        concurrentNum,
+        impressFreqHour,
+        impressFreqDay,
+        impressInterval,
+      };
+      editInput(obj).then((res) => {
+        if (res.code != 200) return this.$message.error(res.msg);
+      });
+    },
+    // 关闭添加代码位弹框
+    closeSourceDialog() {
+      this.isAdvanced = false;
+      this.active = 0;
+      this.platAppId = "";
+      this.temp.isDownload = "A";
+      this.temp.slotId = "";
+    },
+    // 添加广告位弹窗中的获取广告位id事件
+    getPlatAppId(e) {
+      this.platAppId = e;
+      this.platList.forEach((item) => {
+        if (this.temp.platId == item.id) {
+          this.platName = item.name;
+        }
+      });
+    },
+    getAccessType(e) {
+      this.accessType = e;
+    },
+    getSettleType(e) {
+      this.settleType = e;
+    },
+    selectAccount(account) {
+      this.editplatquery = account;
+    },
+    getId(e) {
+      this.id = e;
+    },
+    // 获取地区列表
+    initAreaptions() {
+      getArea().then((res) => {
+        this.areaOptions = res.data;
+        this.areaList = this.treeToList(this.areaOptions);
+      });
+    },
+    //  树转list
+    treeToList(tree) {
+      let res = [];
+      tree.forEach((country) => {
+        country.children.forEach((province) => {
+          res.push({ lable: province.label, value: province.value });
+          province.children.forEach(({ label, value }) => {
+            res.push({ lable: label, value: value });
+          });
+        });
+      });
+      return res;
+    },
+    // A/B测试
+    // 点击添加ab测试分组按钮
+    handleClickAdd() {
+      // 添加模式
+      this.addAbtest = true;
+      this.testquery = {
+        placeId: this.query.placeId,
+        groupId: this.query.groupId,
+        testName: "",
+        type: 0,
+        abTestList: [
+          {
+            groupName: "A组",
+            proportion: 50,
+            testId: "",
+            sts: "A",
+            max: 0,
+            min: 0,
+          },
+          {
+            groupName: "B组",
+            proportion: 50,
+            testId: "",
+            sts: "A",
+            max: 0,
+            min: 0,
+          },
+        ],
+      };
+      // 传入测试参数
+      this.showTestDialog = true;
+    },
+    // 关闭ab测试弹框
+    closeTestDialog() {
+      this.showTestDialog = false;
+      // 初始化测试参数
+      this.testquery = {
+        placeId: "",
+        groupId: "",
+        testName: "",
+        type: "",
+        abTestList: [
+          { groupName: "A组", proportion: 50, sts: "A", max: 0, min: 0 },
+          { groupName: "B组", proportion: 50, sts: "A", max: 0, min: 0 },
+        ],
+      };
+    },
+    // ab测试弹框确定按钮
+    async handleSubmitTestForm() {
+      // 重新获取分组
+      let res = await getPlaceGroup(this.query.placeId);
+      this.config = res.data;
+      this.config.groups.forEach((item) => {
+        if (item.id === this.query.groupId) {
+          this.group = JSON.parse(JSON.stringify(item));
+          this.abTestList = item.abTests;
+          this.query.testId = this.abTestList[0].testId;
+          this.testType = item.abTests[0].type;
+        }
+      });
+
+      this.handleGroup(this.query.groupId);
+      // 重新获取表格数据
+      let query = JSON.parse(JSON.stringify(this.query));
+      this.query = query;
+      this.addABTest = null;
+      this.showTestDialog = false;
+      this.getTableData(this.query);
+    },
+    // 选中AB测试分组时触发
+    changeabtest(testId) {
+      this.query.testId = testId;
+      this.getTableData(this.query);
+    },
+    // 修改ab测试分组配置
+    async editABTest() {
+      let resp = await getABTestList({
+        groupId: this.query.groupId,
+        placeId: this.query.placeId,
+      });
+      this.abTestList = resp.data;
+      this.testquery = {
+        placeId: this.query.placeId,
+        groupId: this.query.groupId,
+        testName: this.testName,
+        type: this.testType,
+        abTestList: JSON.parse(JSON.stringify(this.abTestList)),
+      };
+      this.addAbtest = false;
+      this.showTestDialog = true;
+    },
+    // 跳转ab测试数据页
+    linkToABData() {
+      this.$router.push({
+        path: "/traffic/abTestData",
+        query: {
+          appId: this.query.appId,
+          placeId: this.query.placeId,
+          groupId: this.query.groupId,
+        },
+      });
+    },
+    // 结束ab测试
+    endABTest() {
+      this.endquery = {
+        groupId: this.group.id,
+        placeId: this.query.placeId,
+        testId: "",
+      };
+      this.showEndTestDialog = true;
+    },
+    // 关闭结束测试窗口
+    closeEndTestDialog() {
+      this.showEndTestDialog = false;
+      this.endquery = {
+        groupId: "",
+        placeId: "",
+        testId: "",
+      };
+    },
+    // 提交结束测试表单
+    handleSubmitEndTest() {
+      this.$refs.endtestdialog.validate(async (val) => {
+        if (!val) return;
+        let resp = await shutdownTest(this.endquery);
+        if (resp.code !== 200) return;
+        this.$message.success("操作成功！");
+        this.showEndTestDialog = false;
+        let res = await getPlaceGroup(this.query.placeId);
+        this.config = res.data;
+        this.config.groups.forEach((item) => {
+          if (item.id === this.query.groupId) {
+            this.group = JSON.parse(JSON.stringify(item));
+          }
+        });
+        this.abTestList = [];
+        this.query.testId = "";
+        this.getTableData(this.query);
+      });
+    },
+    // 瀑布流设置
+    // 点击瀑布流设置按钮
+    handleSettingArgs() {
+      let concurrentNum = 0;
+      let timeout = 0;
+      let allTime = 0;
+      let apiTimeout = 0;
+      let cacheTime = 0;
+      let cacheSts = "S";
+      this.config.groups.forEach((item, i) => {
+        if (item.id === this.query.groupId) {
+          if (
+            this.config.groups[i].abTests &&
+            this.config.groups[i].abTests.length > 0
+          ) {
+            this.config.groups[i].abTests.forEach((child, c) => {
+              if (child.testId === this.query.testId) {
+                concurrentNum = +this.config.groups[i].abTests[c].concurrentNum;
+                timeout = +this.config.groups[i].abTests[c].timeout / 1000;
+                allTime = +this.config.groups[i].abTests[c].allTime / 1000;
+                apiTimeout =
+                  +this.config.groups[i].abTests[c].apiTimeout / 1000;
+                cacheTime = +this.config.groups[i].abTests[c].cacheTime;
+                cacheSts = this.config.groups[i].abTests[c].cacheSts;
+              }
+            });
+          } else {
+            concurrentNum = +this.config.groups[i].concurrentNum;
+            timeout = +this.config.groups[i].timeout / 1000;
+            allTime = +this.config.groups[i].allTime / 1000;
+            apiTimeout = +this.config.groups[i].apiTimeout / 1000;
+            cacheTime = +this.config.groups[i].cacheTime;
+            cacheSts = this.config.groups[i].cacheSts;
+          }
+        }
+      });
+      this.settingquery = {
+        groupId: this.query.groupId,
+        placeId: this.query.placeId,
+        testId: this.query.testId,
+        concurrentNum,
+        timeout,
+        allTime,
+        apiTimeout,
+        cacheTime,
+        cacheSts,
+      };
+      this.showSettingDialog = true;
+    },
+    // 瀑布流取消按钮
+    closeSettingDialog() {
+      this.showSettingDialog = false;
+      this.settingquery = {
+        groupId: "",
+        placeId: "",
+        testId: "",
+        concurrentNum: "",
+        timeout: "",
+        allTime: "",
+        apiTimeout: "",
+        cacheTime: "",
+        cacheSts: "",
+      };
+    },
+    // 瀑布流确定按钮
+    async handleSetting() {
+      let timeout = +this.settingquery.timeout * 1000;
+      let allTime = +this.settingquery.allTime * 1000;
+      let apiTimeout = +this.settingquery.apiTimeout * 1000;
+      let settingquery = JSON.parse(JSON.stringify(this.settingquery));
+      settingquery = { ...settingquery, timeout, allTime, apiTimeout };
+      let resp = await settingArgs(settingquery);
+      if (resp.code !== 200) return;
+      this.$message.success("操作成功！");
+      let res = await getPlaceGroup(this.query.placeId);
+      this.config = res.data;
+      this.getTableData(this.query);
+      this.showSettingDialog = false;
+    },
+    // table中瀑布流添加类名
+    tableRowClassName({ row, rowIndex }) {
+      // 开始索引
+      let startIndex = this.biddingNum + 1;
+      // 结束索引
+      let endIndex = startIndex + this.fallNum - 1;
+      // 索引在两者之间添加类名
+      if (rowIndex <= endIndex && rowIndex >= startIndex) {
+        // 瀑布流优先级
+        let index = rowIndex - startIndex + 1;
+        if (Math.ceil(index / this.concurrentNum) % 2 === 0) {
+          // group1
+          return "group1-row";
+        } else if (Math.ceil(index / this.concurrentNum) % 2 === 1) {
+          // group2
+          return "group2-row";
+        }
+      }
+      return "";
+    },
+    // 点击修改广告源appid
+    editplat() {
+      // 获取该广告源下的账号列表
+      setTimeout(() => {
+        this.getAccounts(this.temp.platId);
+      }, 0);
+      let appId = this.query.appId;
+      let appKey = this.editplatquerytemp.appKey;
+      let platAccountId = this.editplatquerytemp.platAccountId;
+      let platAppId = this.editplatquerytemp.platAppId;
+      let accessType = this.editplatquerytemp.accessType;
+      let platId = this.editplatquerytemp.platId;
+      this.editplatquery = {
+        appId,
+        appKey,
+        platAccountId,
+        platAppId,
+        accessType,
+        platId,
+      };
+      // this.ediaPlatDialog = true;
+    },
+    // 获取广告源信息
+    getplatrow(row) {
+      this.editplatquerytemp = JSON.parse(JSON.stringify(row));
+      this.editplatquerytemp.platId = this.editplatquerytemp.id;
+    },
+    // 修改广告源appid
+    handleEditPlat() {},
+    // 渲染可勾选列
+    handleSelectable(row, index) {
+      if (!row.name || row.name.includes("个代码位开启")) {
+        return false;
+      } else {
+        return true;
+      }
+    },
+    // 全选开启/关闭列数据
+    handleChooseA(val, sts) {
+      this.listTemp.forEach((item, index) => {
+        if (item.sts == sts) {
+          this.$refs.tableref.toggleRowSelection(this.listTemp[index], val);
+        }
+      });
+    },
+    // 选择列数据触发
+    handleSelectionChange(list) {
+      this.selectTableColumn = JSON.parse(JSON.stringify(list));
+    },
+    // 批量修改状态
+    async handleEditSts() {
+      if (this.selectTableColumn.length == 0) return;
+      let toAList = await [];
+      let toSList = [];
+      this.selectTableColumn.forEach((item) => {
+        if (item.sts == "A") {
+          toSList.push(item.id);
+        } else if (item.sts == "S") {
+          toAList.push(item.id);
+        }
+      });
+      // 改为S  toSList
+      let resp = null;
+      if (toSList.length > 0) {
+        resp = await this.batchChangeSts(toSList, "S");
+        if (toAList.length == 0 && resp.code == 200) {
+          this.$message.success("操作成功！");
+          this.getTableData(this.query);
+        }
+      }
+      // 改为A  toAList
+      let res = null;
+      if (toAList.length > 0) {
+        res = await this.batchChangeSts(toAList, "A");
+        if (res.code == 200) {
+          this.$message.success("操作成功！");
+          this.getTableData(this.query);
+        }
+      }
+    },
+    // 批量修改请求函数
+    async batchChangeSts(list, sts) {
+      let resp = await batchUpdateSourceSts({
+        sts: sts,
+        groupId: this.query.groupId,
+        placeId: this.query.placeId,
+        testId: this.query.testId,
+        ids: list,
+      });
+      return resp;
+    },
+    // 限制输入
+    proving(e) {
+      var val = e.target.value;
+      //限制只能输入一个小数点
+      if (val.indexOf(".") != -1) {
+        var str = val.substr(val.indexOf(".") + 1);
+        if (str.indexOf(".") != -1) {
+          val = val.substr(0, val.indexOf(".") + str.indexOf(".") + 1);
+        }
+      }
+      e.target.value = val.replace(/[^\d^\.]+/g, "");
+    },
+    showNewAccount() {
+      this.addAccountQuery = {
+        platId: this.editplatquery.platId,
+        openApiStatus: 0,
+        isDebug: "0",
+      };
+      this.addAccountDialog = true;
+    },
+    handlePlatForm() {
+      let _this = this;
+      this.$refs.account_form.validate(async (valid) => {
+        if (valid) {
+          await addPlatform(_this.addAccountQuery).then((res) => {
+            Message({
+              message: "创建成功!",
+              type: "success",
+              duration: 5 * 1000,
+            });
+            _this.addAccountDialog = false;
+            _this.getAccounts(_this.addAccountQuery.platId);
+            // _this.editplatquery.platAccountId = res.data;
+          });
+        }
+      });
+    },
+    copyId(id) {
+      let result = copy(id);
+      if (result === false) {
+        Message({
+          message: "不支持复制",
+          type: "error",
+          duration: 2 * 1000,
+        });
+      } else {
+        Message({
+          message: "复制成功",
+          type: "success",
+          duration: 2 * 1000,
+        });
+      }
+    },
+  },
+};
+</script>
+<style lang="scss" scoped>
+@import "~@/styles/aggregate/index.scss";
+</style>

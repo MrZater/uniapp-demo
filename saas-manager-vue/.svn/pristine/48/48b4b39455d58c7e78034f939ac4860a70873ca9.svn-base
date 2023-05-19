@@ -1,0 +1,31 @@
+<template>
+  <div class="ruoyi-doc-container">
+    <svg-icon class="svgicon" icon-class="question" @click="goto" />
+    <div />
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'RuoYiDoc',
+  data() {
+    return {
+      url: this.isMedPro() ? 'https://app.mediatom.cn/docs/#/' : 'https://cmedia.ads.cctv.com/help/console.html'
+    }
+  },
+  methods: {
+    isMedPro() {
+      return this.$store.getters.isMedPro
+    },
+    goto() {
+      window.open(this.url)
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+.ruoyi-doc-container {
+  width: 32px;
+}
+</style>

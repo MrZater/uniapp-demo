@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    /* * {
+        margin: 0;
+        padding: 0;
+    } */
+
+    body {
+        font-family: 'Courier New', Courier, monospace;
+    }
+
+    img {
+        width: 800px;
+        /* height: 500px; */
+    }
+
+    .title {
+        text-align: center;
+    }
+
+    .box {
+        width: 70%;
+        /* height: 100%; */
+        /* background-color: aqua; */
+        margin: 0 auto;
+    }
+</style>
+
+<body>
+    <div class="box">
+        <h1 class="title">上传第三方数据</h1>
+        <h2>从第三方平台导出数据</h2>
+        <h3>1.穿山甲</h3>
+        <p>* 登录穿山甲后台，选择数据 ->代码位数据</p>
+        <p>* 选择需要导入数据的时间段，最长不超过31天。选择完成后点击筛选，然后导出列表</p>
+        <p>* 下载的报告是xlsx格式，不需要做任何处理直接上传到Medpro后台即可<span
+                style="color: red;">（字段顺序为：日期、代码位名称、代码位ID、预估收益（¥）、曝光量、点击量、广告位请求量、广告位返回量）</span></p>
+
+        <p>穿山甲后台：</p>
+        <img src="https://creative.bxsnews.com/medpro/imgs/rule_1.png" alt="">
+
+        <h3>2.优量汇</h3>
+        <p>* 登录优量汇后台，选择数据收益->广告数据</p>
+        <p>* 选择需要导入数据的时间段，最长不超过31天</p>
+        <p>* 在拆解维度选择日期、广告位，自定义数据报表选择以下指标：</p>
+        <p>* 选择完成后点击查询，然后下载报告：</p>
+        <p>* 下载的报告是csv格式，不需要做任何处理直接上传到Medpro后台即可<span
+                style="color: red;">（字段顺序为：日期、广告位名称、广告位ID、预估收益（元）、广告位请求量、广告位返回量、曝光量、点击量）</span></p>
+
+        <img src="https://creative.bxsnews.com/medpro/imgs/rule_2.png" alt="">
+
+
+        <h3>3.快手联盟</h3>
+        <p>* 登录快手联盟后台，选择数据中心->广告数据</p>
+        <p>* 数据维度选择：日期、应用、广告位</p>
+        <p>* 选择需要导入数据的时间段，最长不超过31天。选择完成后点击查找，然后报表下载</p>
+        <p>* 下载的报告是csv格式，下载完成后 <span style="color: red;">字段保留顺序为 日期、应用ID、应用名称、广告位ID、广告位名称、展现量、点击量、预估收入</span>
+            ，然后删除其他列直接上传到Medpro后台即可</p>
+        <img src="https://creative.bxsnews.com/medpro/imgs/rule_3.png" alt="">
+
+
+        <h3>4.百度联盟</h3>
+        <p>* 登录百度联盟后台，选择应用合作->数据报告->代码位报告</p>
+        <p>* 选择需要导入数据的时间段，最长不超过31天。选择完成后点击查询，然后点击下载</p>
+        <p>* 下载的报告必需是csv格式，保存完成后 <span style="color: red;">字段保留顺序为 时间、APPID、APP名称、代码位ID、代码位、展现、点击、收入</span>
+            ，然后删除其他列直接上传到Medpro后台即可</p>
+        <img src="https://creative.bxsnews.com/medpro/imgs/bdwm.png" alt="">
+
+
+        <h3>5.Sigmob</h3>
+        <p>* 登录Sigmob后台，选择Sigmob分析</p>
+        <p>* 选择需要导入数据的时间段（最长不超过31天），选择需要导入的应用，选择完成后点击查询，然后点击下载</p>
+        <p>* 下载的报告必需是csv格式，保存完成后<span style="color: red;">字段保留顺序为 日期、应用id、A应用名称、广告单元id、广告单元、展现数、点击数、预估收入</span>
+                然后删除其他列直接上传到Medpro后台即可</p>
+        <img src="https://creative.bxsnews.com/medpro/imgs/sigmob_rule.png" alt="">
+
+
+        <h3>6.趣盟</h3>
+        <p>* 登录趣盟后台</p>
+        <p>* 选择需要导入数据的时间段（最长不超过31天），选择需要导入的媒体以及与Medpro平台代码位匹配的栏位</p>
+        <p>* 下载的报告是xlsx格式，下载完成后<span style="color: red;">字段保留顺序为 日期、栏位名称、栏位id、预估收入、广告展示量、点击、广告请求、广告填充</span>，然后删除其他列直接上传到Medpro后台即可</p>
+        <img src="https://creative.bxsnews.com/medpro/imgs/qm_rule.jpg" alt="">
+
+        <h3 style="color: red; margin: 40px 0 60px 0;">注：上传数据中的代码位必须是在聚合管理处已录入的。</h3>
+        
+    </div>
+    <div>
+        <p>&nbsp;&nbsp;&nbsp;尊敬的【账户名称】:</p><nav></nav><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;您好，感谢您注册使用Medpro广告聚合平台！</p><nav></nav><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+    </div>
+</body>
+
+</html>

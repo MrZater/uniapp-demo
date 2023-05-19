@@ -1,0 +1,635 @@
+<template>
+  <div class="edit-rules-container">
+    <div class="goback">
+      <span
+        class="goback"
+        @click="goback"
+      ><i class="el-icon-back">返回</i></span>
+    </div>
+    <div class="title">
+      <span>{{ isAdd ? "添加" : "编辑" }}预警规则</span>
+    </div>
+    <div class="form">
+      <el-form
+        ref="form"
+        :model="row"
+        :rules="rules"
+        label-width="120px"
+      >
+        <el-form-item
+          label="预警名称"
+          prop="name"
+        >
+          <el-input
+            v-model="row.name"
+            style="width: 300px"
+            placeholder="请填写预警名称"
+            :max-length="20"
+          />
+        </el-form-item>
+        <el-form-item
+          label="预警对象"
+          prop="target"
+        >
+          <el-select
+            v-model="row.target"
+            placeholder="请选择预警对象"
+            @change="handleSelectTarget"
+          >
+            <el-option
+              label="应用"
+              :value="'1'"
+            />
+            <el-option
+              label="广告位"
+              :value="'2'"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item
+          v-show="row.target"
+          :rules="{
+            required: row.target,
+            message: '请选择应用',
+            trigger: 'change',
+          }"
+          label="应用"
+          prop="appIdList"
+        >
+          <CustSelectApp
+            style="width: 200px"
+            :word="'应用'"
+            :width="450"
+            :model="row.appIdList"
+            :all-data="appList"
+            search-by-id
+            @selectListhandle="selectListhandleApp"
+          />
+        </el-form-item>
+        <el-form-item
+          v-show="row.target == 2 && row.appIdList.length > 0"
+          label="广告位"
+          prop="placeIdList"
+          :rules="{
+            required: row.target == 2,
+            message: '请选择广告位',
+            trigger: 'change',
+          }"
+        >
+          <CustSelectApp
+            style="width: 200px"
+            :word="'广告位'"
+            :width="450"
+            :model="row.placeIdList"
+            :all-data="placeList"
+            search-by-id
+            @selectListhandle="selectListhandlePlace"
+          />
+        </el-form-item>
+
+        <el-form-item
+          label="预警频率"
+          prop="frequency"
+        >
+          <el-radio-group
+            v-model="row.frequency"
+            @change="changeFrequency"
+          >
+            <el-radio :label="1">
+              天级
+            </el-radio>
+            <el-radio :label="2">
+              小时级
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item
+          label-width="200px"
+          :label="'预警条件（已添加' + ruleLen + '/5条）'"
+        />
+        <el-form-item
+          label=""
+          prop="triggerCondition"
+        >
+          <el-radio-group v-model="row.triggerCondition">
+            <el-radio :label="0">
+              满足以下所有条件时触发
+            </el-radio>
+            <el-radio :label="1">
+              满足以下任一条件时触发
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <div class="rulesbox">
+          <div
+            v-if="ruleLen > 1"
+            class="line"
+          >
+            <span>{{ row.triggerCondition == 0 ? "且" : "或" }}</span>
+          </div>
+          <template v-for="(item, index) in row.earlyWarningRuleList">
+            <div
+              :key="index"
+              class="rulesItem"
+            >
+              <el-form-item
+                label=""
+                :prop="'earlyWarningRuleList[' + index + '].ruleId'"
+                :rules="{
+                  required: true,
+                  message: '请选择数据指标',
+                  trigger: 'change',
+                }"
+              >
+                <span>
+                  <el-tag
+                    size="medium"
+                    :type="'info'"
+                    effect="plain"
+                    style="margin-right: 15px"
+                  >
+                    {{ row.frequency == 1 ? "昨天" : "今天" }}
+                  </el-tag></span>
+                <el-select
+                  v-model="item.ruleId"
+                  size="small"
+                  placeholder="请选择数据指标"
+                >
+                  <el-option
+                    v-if="row.frequency == 1 && row.target == 1"
+                    label="DAU"
+                    :value="1"
+                  />
+                  <el-option
+                    v-if="row.frequency == 1 && row.target == 1"
+                    label="ARPDAU"
+                    :value="2"
+                  />
+                  <el-option
+                    label="流量请求"
+                    :value="3"
+                  />
+                  <el-option
+                    label="流量填充率"
+                    :value="4"
+                  />
+                  <el-option
+                    label="展示"
+                    :value="5"
+                  />
+                  <el-option
+                    label="预估收益"
+                    :value="6"
+                  />
+                  <el-option
+                    label="展示率"
+                    :value="7"
+                  />
+                  <el-option
+                    v-if="row.target == 2"
+                    label="预估eCPM"
+                    :value="8"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item
+                label=""
+                :prop="'earlyWarningRuleList[' + index + '].ruleType'"
+                label-width="20px"
+              >
+                <el-select
+                  v-model="item.ruleType"
+                  size="small"
+                  placeholder="请选择规则类型"
+                  style="width: 80px"
+                >
+                  <el-option
+                    label="≤"
+                    :value="0"
+                  />
+                  <el-option
+                    label="≥"
+                    :value="1"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item
+                label=""
+                :prop="'earlyWarningRuleList[' + index + '].dateType'"
+                label-width="20px"
+              >
+                <el-select
+                  v-model="item.dateType"
+                  size="small"
+                  placeholder=""
+                  style="width: 100px"
+                >
+                  <el-option
+                    v-if="row.frequency == 1"
+                    label="前一天"
+                    :value="0"
+                  />
+                  <el-option
+                    v-if="row.frequency == 2"
+                    label="昨天"
+                    :value="1"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item
+                label=""
+                :prop="'earlyWarningRuleList[' + index + '].value'"
+                label-width="20px"
+                :rules="{
+                  required: true,
+                  message: '请选择数据指标',
+                  trigger: 'blur',
+                }"
+              >
+                <el-input
+                  v-model="item.value"
+                  style="width: 190px"
+                  placeholder="最多支持输入两位小数 "
+                  @keydown.native="handleInputValue"
+                >
+                  <span slot="suffix">%</span>
+                </el-input>
+              </el-form-item>
+              <span
+                v-if="ruleLen != 1"
+                class="deleteItem"
+                @click="delectItem(index)"
+              ><i class="el-icon-delete" /></span>
+            </div>
+          </template>
+        </div>
+        <div
+          v-if="ruleLen < 5"
+          class="addRuleItem"
+        >
+          <el-button
+            icon="el-icon-plus"
+            size="mini"
+            type="primary"
+            @click="handleAddItem"
+          >
+            添加条件
+          </el-button>
+        </div>
+        <el-form-item label="预警通知">
+          <span
+            v-if="row.frequency == 1"
+          >预警频率：预估"每天八点之前"发出预警</span>
+          <span
+            v-if="row.frequency == 2"
+          >预警频率：“每一小时” 对比预警一次</span>
+        </el-form-item>
+        <el-form-item
+          label="预警通知方式"
+          prop="noticeType"
+        >
+          <el-radio-group v-model="row.noticeType">
+            <el-radio :label="1">
+              站内信
+            </el-radio>
+            <el-radio :label="2">
+              邮箱
+            </el-radio>
+            <el-radio :label="3">
+              站内信+邮箱
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item
+          v-if="row.noticeType == 1 || row.noticeType == 3"
+          label="站内信"
+          prop="userIdList"
+        >
+          <el-select
+            v-model="row.userIdList"
+            multiple
+            placeholder="请选择站内信"
+            collapse-tags
+          >
+            <el-option
+              v-for="(item, index) in subList"
+              :key="index"
+              :label="item.name"
+              :value="'' + item.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item
+          v-if="row.noticeType == 2 || row.noticeType == 3"
+          label="邮箱"
+          prop="emailstext"
+        >
+          <el-input
+            v-model="row.emailstext"
+            style="width: 300px"
+            type="textarea"
+            :autosize="{ minRows: 6, maxRows: 6 }"
+            resize="none"
+            placeholder="多个邮箱请以英文逗号隔开"
+          />
+        </el-form-item>
+      </el-form>
+      <div class="btn">
+        <el-button
+          type=""
+          @click="handleClear"
+        >
+          重置
+        </el-button>
+        <el-button
+          type="primary"
+          @click="handleSubmilt"
+        >
+          确定
+        </el-button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import CustSelectApp from '@/components/CustSelectApp'
+
+import { getAppList } from '@/api/app.js'
+import { getPlaceList } from '@/api/place.js'
+import { getSubList } from '@/api/warning.js'
+import { updateWarning, addWarning } from '@/api/warning.js'
+import { appToAdvert } from '@/api/synthReport.js'
+
+export default {
+  name: 'EditRules',
+  components: { CustSelectApp },
+  data() {
+    return {
+      row: {},
+      rules: {
+        name: [{ required: true, message: '请输入预警名称', trigger: 'blur' }],
+        target: [
+          { required: true, message: '请选择预警对象', trigger: 'change' }
+        ],
+        appIdList: [
+          { required: true, message: '请选择应用', trigger: 'change' }
+        ],
+
+        frequency: [
+          { required: true, message: '请选择预警频率', trigger: 'change' }
+        ],
+        userIdList: [
+          { required: true, message: '请选择站内信', trigger: 'change' }
+        ],
+        emailstext: [
+          { required: true, message: '请输入邮箱', trigger: 'blur' }
+        ]
+      },
+      appList: [],
+      placeList: [],
+      subList: [],
+      isCreated: 0
+    }
+  },
+  computed: {
+    // 是否添加模式
+    isAdd() {
+      return this.$route.params.isAdd
+    },
+    // 预警规则长度
+    ruleLen() {
+      return this.row.earlyWarningRuleList.length
+    }
+  },
+  created() {
+    this.row = this.$route.params
+    this.$set(this.row, 'emailstext', '')
+    if (this.row.emailList) {
+      this.row.emailstext = this.row.emailList.join(',')
+    } else {
+      this.$set(this.row, 'emailList', [])
+    }
+    this.query = this.$route.params ? this.$route.params.query : {}
+  },
+
+  mounted() {
+    let row = this.$route.params
+    let applist = row.appIdList
+    let placelist = row.placeIdList
+    setTimeout(() => {
+      this.row.appIdList = applist
+      this.row.placeIdList = placelist
+    }, 500)
+    // setTimeout(() => {
+    //   this.isCreated = false;
+    // }, 1000);
+    this.getAppList()
+    this.getPlaceList()
+    this.getSubList()
+  },
+  methods: {
+    // 返回预警页
+    goback() {
+      this.$router.push({
+        path: 'warningReport',
+        name: 'warningReport',
+        params: { query: this.query }
+      })
+    },
+    // 获取应用列表
+    async getAppList() {
+      let resp = await getAppList()
+      this.appList = resp.data ? resp.data : []
+    },
+    async selectListhandleApp(val) {
+      this.row.appIdList = val
+      this.isCreated++
+      // 预警对象为应用时不做处理
+      if (this.row.target == 1) return
+      if (this.isCreated <= 2) return
+      if (val.length > 0) {
+        let resp = await appToAdvert(val)
+        this.placeList = resp.data ? resp.data : []
+        setTimeout(() => {
+          this.row.placeIdList = this.placeList.map((item) => {
+            return item.id
+          })
+        }, 0)
+      } else {
+        this.getPlaceList()
+      }
+    },
+    // 获取广告位列表
+    async getPlaceList() {
+      let resp = await getPlaceList()
+      this.placeList = resp.data ? resp.data : []
+    },
+    selectListhandlePlace(val) {
+      this.row.placeIdList = val
+    },
+    // 修改预警对象后将选中应用和选中广告位清空
+    async handleSelectTarget(val) {
+      if (val == 2) {
+        this.row.placeIdList = []
+        let resp = await appToAdvert(this.row.appIdList)
+        this.placeList = resp.data ? resp.data : []
+
+        setTimeout(() => {
+          this.row.placeIdList = this.placeList.map((item) => {
+            return item.id
+          })
+        }, 0)
+      }
+      this.row.earlyWarningRuleList.forEach((item) => {
+        item.ruleId = ''
+      })
+    },
+    // 通过正则过滤小数点后两位
+    handleInputValue(e) {
+      e.target.value = e.target.value.match(/^\d*(\.?\d{0,1})/g)[0] || null
+    },
+    // 删除预警子规则
+    delectItem(index) {
+      this.row.earlyWarningRuleList.splice(index, 1)
+    },
+    // 添加预警子规则
+    handleAddItem() {
+      if (this.ruleLen == 5) return
+      this.row.earlyWarningRuleList.push({
+        ruleId: '',
+        ruleType: this.row.earlyWarningRuleList[0].ruleType,
+        dateType: this.row.earlyWarningRuleList[0].dateType,
+        value: ''
+      })
+    },
+    // 修改预警频率时，修改子规则中的数据指标
+    changeFrequency(val) {
+      this.row.earlyWarningRuleList.forEach((item) => {
+        item.ruleId = ''
+        if (val == 1) {
+          item.dateType = 0
+        } else {
+          item.dateType = 1
+        }
+      })
+    },
+    // 获取子账号列表
+    async getSubList() {
+      let resp = await getSubList()
+      this.subList = resp.data ? resp.data : []
+    },
+    // 点击确定按钮
+    async handleSubmilt() {
+      this.$refs['form'].validate(async(val) => {
+        if (val) {
+          this.row.emailList = this.row.emailstext.split(',')
+          // 添加
+          if (this.isAdd) {
+            let resp = await addWarning(this.row)
+            if (resp.code == 200) {
+              this.$message.success('添加成功！')
+              this.goback()
+            }
+          } else {
+            // 编辑
+            let resp = await updateWarning(this.row)
+            if (resp.code == 200) {
+              this.$message.success('修改成功！')
+              this.goback()
+            }
+          }
+        }
+      })
+    },
+    // 点击重置按钮
+    handleClear() {
+      this.row = {
+        name: '',
+        target: '',
+        appIdList: [],
+        placeIdList: [],
+        frequency: 1,
+        triggerCondition: 0,
+        earlyWarningRuleList: [
+          {
+            ruleId: '',
+            ruleType: 1,
+            dateType: '',
+            value: ''
+          }
+        ],
+        noticeType: 1,
+        userIdList: [],
+        emailList: [],
+        query: this.row.query,
+        isAdd: this.row.isAdd
+      }
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+.edit-rules-container {
+  background-color: #fff;
+  padding: 15px 15px 0 15px;
+  .goback {
+    cursor: pointer;
+    display: inline-block;
+    &:hover {
+      color: #46a6ff;
+    }
+  }
+  .title {
+    margin-left: 20px;
+    font-size: 20px;
+    display: inline-block;
+    padding-top: 10px;
+    padding-bottom: 25px;
+  }
+  .form {
+    .rulesbox {
+      position: relative;
+      .line {
+        position: absolute;
+        border: 1px solid #ccc;
+        background-color: #ccc;
+        margin-left: 90px;
+        margin-top: 10px;
+        width: 0px;
+        height: 85%;
+        display: flex;
+        align-items: center;
+        span {
+          display: inline-block;
+          background-color: #fff;
+          margin-left: -8px;
+          font-size: 16px;
+          line-height: 30px;
+        }
+      }
+      .rulesItem {
+        display: flex;
+        .deleteItem {
+          color: red;
+          font-size: 20px;
+          line-height: 30px;
+          margin-left: 10px;
+          cursor: pointer;
+        }
+      }
+    }
+
+    .addRuleItem {
+      margin-left: 120px;
+    }
+  }
+  .btn {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding-bottom: 50px;
+  }
+}
+</style>

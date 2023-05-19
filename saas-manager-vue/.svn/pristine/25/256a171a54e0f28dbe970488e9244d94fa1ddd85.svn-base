@@ -1,0 +1,55 @@
+export const toDate = (n, type) => {
+    let time = new Date(n)
+    //年
+    let y = time.getFullYear()
+    // 月
+    let m = ((time.getMonth() + 1) + '').padStart('2', '0')
+    // 日
+    let d = (time.getDate() + '').padStart('2', '0')
+    // 时
+    let hh = (time.getHours() + '').padStart('2', '0')
+    // 分
+    let mm = (time.getMinutes() + '').padStart('2', '0')
+    // 秒
+    let ss = (time.getSeconds() + '').padStart('2', '0')
+    if (type == 'YYYY-MM-DD hh:mm:ss') {
+        return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
+    } else if (type == 'YYYY/MM/DD hh:dd:ss') {
+        return `${y}/${m}/${d} ${hh}:${mm}:${ss}`;
+    } else {
+        return `${y}-${m}-${d}`;
+    }
+}
+export function auto() {
+    return {
+        shortcuts: [
+            {
+                text: '最近一周',
+                onClick(picker) {
+                    const end = new Date()
+                    const start = new Date()
+                    start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
+                    picker.$emit('pick', [start, end])
+                },
+            },
+            {
+                text: '最近14天',
+                onClick(picker) {
+                    const end = new Date()
+                    const start = new Date()
+                    start.setTime(start.getTime() - 3600 * 1000 * 24 * 14)
+                    picker.$emit('pick', [start, end])
+                },
+            },
+            {
+                text: '最近一个月',
+                onClick(picker) {
+                    const end = new Date()
+                    const start = new Date()
+                    start.setTime(start.getTime() - 3600 * 1000 * 24 * 30)
+                    picker.$emit('pick', [start, end])
+                },
+            },
+        ],
+    }
+}

@@ -1,0 +1,212 @@
+import request from '@/utils/request'
+
+export function getSynthReport(data) {
+  return request({
+    url: '/report/fullReport',
+    method: 'post',
+    data
+  })
+}
+// 广告平台 
+export function advertPlatform() {
+  return request({
+    url: '/plat/platList',
+    method: 'get',
+    
+  })
+}
+export function platListByUser(data) {
+  return request({
+    url: '/plat/platListByUser',
+    method: 'post',
+    data
+    
+  })
+}
+//  流量分组
+export function flowGroups() {
+  return request({
+    url: '/aggregate/groupList',
+    method: 'get'
+  })
+}
+//  渠道
+export function getChannel() {
+  return request({
+    url: '/app/channelList',
+    method: 'get'
+  })
+}
+//  代码位
+export function codeBit() {
+  return request({
+    url: '/aggregate/sourceList',
+    method: 'get'
+  })
+}
+//  应用影响 流量分组
+export function appToFlow(data) {
+  return request({
+    url: '/aggregate/groupListByApp',
+    method: 'post',
+    data
+
+  })
+}
+//  应用影响 广告位
+export function appToAdvert(data) {
+  return request({
+    url: '/place/listByAppIds',
+    method: 'post',
+    data
+  })
+}
+//  应用影响 代码位
+export function appToCode(data) {
+  return request({
+    url: 'aggregate/sourceListByApp',
+    method: 'post',
+    data
+  })
+}
+//  广告位影响代码位
+export function advertToCode(data) {
+  return request({
+    url: '/aggregate/sourceListByAdplace',
+    method: 'post',
+    data
+  })
+}
+//  广告位影响流量分组
+export function advertToFlow(data) {
+  return request({
+    url: 'aggregate/groupListByAdplace',
+    method: 'post',
+    data
+  })
+}
+//用户行为报表
+// 应用 ->广告样式
+export function appToAdvertStyle(appId) {
+  return request({
+    url: `/place/position/${appId}`,
+    method: 'post',
+  })
+}
+// 曲线图
+export function userActionEcharts(data) {
+  return request({
+    url: `/report/trend`,
+    method: 'post',
+    data
+  })
+}
+export function userActionReport(data) {
+  return request({
+    url: '/report/userReport',
+    method: 'post',
+    data
+  })
+}
+// 人均启动次数报表
+export function perpeoAdvert(data) {
+  return request({
+    url: '/report/stratAvgReport',
+    method: 'post',
+    data
+  })
+}
+// 人均启动次数曲线
+export function perpeoCount(data) {
+  return request({
+    url: '/report/stratAvgTrend',
+    method: 'post',
+    data
+  })
+}
+// 展示频次 曲线
+export function showCount(data) {
+  return request({
+    url: '/report/impFrequencyTrend',
+    method: 'post',
+    data
+  })
+}
+// 展示 频次报表
+export function showTimes(data) {
+  return request({
+    url: '/report/impFrequencyReport',
+    method: 'post',
+    data
+  })
+}
+// 分小时 曲线 
+export function hoursEcharts(data) {
+  return request({
+    url: '/report/hourTrend',
+    method: 'post',
+    data
+  })
+}
+// 分小时报表
+export function hoursReport(data) {
+  return request({
+    url: '/report/hourReport',
+    method: 'post',
+    data
+  })
+}
+// 导入报表
+export function importReport(data) {
+  return request({
+    url: '/report/upload',
+    method: 'post',
+    data
+  })
+}
+// 报表上传记录
+export function ReportList(data) {
+  return request({
+    url: '/report/record',
+    method: 'post',
+    data
+  })
+}
+
+export function industrySelect(data) {
+  return request({
+    url: '/app/tradeList',
+    method: 'get',
+    data
+  })
+}
+//编辑审核信息
+export function editAudit(data) {
+  return request({
+    url: '/place/updateAudit',
+    method: 'post',
+    data
+  })
+}
+//获取媒体报表数据
+export function getMediaReport(data) {
+  return request({
+    url: '/report/getMediaReport',
+    method: 'post',
+    data
+  })
+}
+
+
+
+//获取综合报表图表数据
+export function getSynthReportData(data) {
+  return request({
+    url: '/report/chart',
+    method: 'post',
+    data
+  })
+}
+
+
+

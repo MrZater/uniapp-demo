@@ -1,0 +1,1100 @@
+<template>
+  <div class="app-container">
+    <div class="filter-container">
+      <el-row>
+        <el-col :lg="6">
+          <div class="datepicker">
+            <el-date-picker
+              style="width:90%"
+              v-model="date"
+              class="item"
+              type="daterange"
+              value-format="yyyy-MM-dd"
+              align="right"
+              unlink-panels
+              :clearable="false"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              :picker-options="pickerOptions"
+              @change="getSTime"
+            />
+          </div>
+        </el-col>
+        <el-col :lg="4"
+          ><el-select
+            style="width: 80%"
+            v-model="query.os"
+            placeholder="操作系统"
+            class="filter-item"
+            clearable
+            @clear="query.os = null"
+          >
+            <el-option label="全部" value="" />
+            <el-option label="Android" :value="1" />
+            <el-option label="iOS" :value="0" />
+          </el-select>
+        </el-col>
+        <el-col :lg="4">
+          <CustSelectApp
+            style="width: 100%"
+            :width="500"
+            :word="'应用'"
+            :allData="appOptions"
+            @selectListhandle="selectListhandleApp"
+          />
+        </el-col>
+        <el-col :lg="4">
+          <CustSelectApp
+            style="width: 100%"
+            :width="500"
+            :word="'广告位'"
+            :allData="placeOptions"
+            @selectListhandle="selectListhandlePlace"
+          />
+        </el-col>
+        <el-col :lg="4">
+          <!-- <CustSelectOne
+            style="width: 70%"
+            @handleSelect="handleSelectPosition"
+            :model="query.position"
+            :allData="positionOptions"
+            :width="190"
+            word="广告样式"
+          /> -->
+          <el-select
+            style="width: 80%"
+            v-model="query.position"
+            placeholder="广告样式"
+            class="filter-item"
+            clearable
+          >
+            <!-- <el-option label="广告样式" value="" /> -->
+            <el-option
+              v-for="item in positionOptions"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </el-col>
+        <el-col :lg="2"
+          ><el-button
+            v-waves
+            class="filter-item"
+            type="primary"
+            icon="el-icon-search"
+            size="mini"
+            @click="searchBtn"
+            >查询</el-button
+          >
+        </el-col>
+      </el-row>
+    </div>
+
+    <div class="body-container">
+      <div class="filter-container">
+        <el-button
+          v-waves
+          type="primary"
+          size="mini"
+          icon="el-icon-plus"
+          class="filter-item"
+          @click="handleAdd"
+          >广告位</el-button
+        >
+        <CustTag
+          class="custtag"
+          @handelConfirmDialog="handelConfirmDialog"
+          :FarTargetArr="targetArr"
+          :storageName="'placeData'"
+          :boxHeight="550"
+        />
+      </div>
+      <el-table
+        :header-cell-style="{ color: '#000', 'font-weight': '500' }"
+        :key="tableKey"
+        v-loading="listLoading"
+        :data="list"
+        fit
+        highlight-current-row
+      >
+        <el-table-column label="应用" fixed align="center" min-width="270">
+          <template slot-scope="{ row }">
+            <div class="app-td-container">
+              <div class="app-icon">
+                <el-image
+                  fit="contain"
+                  style="width: 40px; height: 40px; border-radius: 10px"
+                  :src="
+                    row.iconUrl
+                      ? getCreativeUrl(row.iconUrl)
+                      : 'https://creative.medproad.com/medpro/imgs/app-none.png'
+                  "
+                />
+              </div>
+              <div class="app-info-container">
+                <div class="app-name">
+                  <svg-icon :icon-class="row.os === 1 ? 'android' : 'ios'" />
+                  <span>{{ row.appName }}</span>
+                </div>
+                <div class="app-id">
+                  <span>ID:{{ row.appId }}</span>
+                  <el-popover trigger="hover" content="复制ID">
+                    <i
+                      slot="reference"
+                      class="el-icon-copy-document"
+                      style="cursor: pointer"
+                      @click="copyId(row.appId)"
+                    />
+                  </el-popover>
+                </div>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="广告位" fixed align="center" min-width="220">
+          <template slot-scope="{ row }">
+            <div class="app-info-container">
+              <div class="app-name">
+                <span>{{ row.name }}</span>
+              </div>
+              <div class="app-id">
+                <span>ID:{{ row.id }}</span>
+                <el-popover trigger="hover" content="复制ID">
+                  <i
+                    slot="reference"
+                    class="el-icon-copy-document"
+                    style="cursor: pointer"
+                    @click="copyId(row.id)"
+                  />
+                </el-popover>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="广告样式" fixed align="center" min-width="100">
+          <template slot-scope="{ row }">
+            <span>{{ getPositionNameById(row.position) }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" fixed align="center" width="120">
+          <template slot-scope="{ row }">
+            <el-tooltip content="聚合管理" placement="top" effect="light">
+              <div class="doicon">
+                <router-link
+                  :to="{
+                    path: '/traffic/aggregate',
+                    query: { appId: row.appId, placeId: row.id },
+                  }"
+                  ><svg-icon
+                    class="svgicon"
+                    style="color: #3685df"
+                    icon-class="aggregatebtn"
+                  ></svg-icon>
+                </router-link>
+              </div>
+            </el-tooltip>
+            <el-tooltip content="编辑" placement="top" effect="light">
+              <div
+                class="doicon"
+                style="
+                  padding-left: 10px;
+                  magin-right: 20px;
+                  display: inline-block;
+                "
+                @click="handleUpdate(row)"
+              >
+                <svg-icon
+                  class="svgicon"
+                  style="color: #3685df; font-size: 18px"
+                  icon-class="edit"
+                ></svg-icon>
+              </div>
+            </el-tooltip>
+          </template>
+        </el-table-column>
+
+        <template v-for="(item, i) in sureArr">
+          <el-table-column
+            :render-header="renderHeader"
+            :key="i"
+            :prop="item.prop"
+            :label="item.label"
+            :align="item.align"
+            :width="item.width"
+          >
+            <template slot-scope="{ row }">
+              <div v-if="item.prop == 'permeability'">
+                {{ row[item.prop] + "%" }}
+              </div>
+              <div v-else-if="item.prop == 'requestFilledRate'">
+                {{ row[item.prop] + "%" }}
+              </div>
+              <div v-else-if="item.prop == 'impressRate'">
+                {{ row[item.prop] + "%" }}
+              </div>
+              <div v-else-if="item.prop == 'advRequestFilledRate'">
+                {{ row[item.prop] + "%" }}
+              </div>
+              <div v-else-if="item.prop == 'clickRate'">
+                {{ row[item.prop] + "%" }}
+              </div>
+              <div v-else-if="item.prop == 'unitCtr'">
+                {{ row[item.prop] + "%" }}
+              </div>
+              <div v-else-if="item.type == 'GAP'">
+                {{ row[item.prop] + "%" }}
+              </div>
+
+              <div v-else>{{ row[item.prop] }}</div>
+            </template>
+          </el-table-column>
+        </template>
+      </el-table>
+
+      <el-pagination
+        :current-page="query.page"
+        :page-sizes="[5, 10, 20, 50, 100]"
+        :page-size="query.limit"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div>
+    <el-dialog
+      ref="dialog"
+      :title="dialogType === 0 ? '新增' : '编辑'"
+      :visible.sync="dialogVisible"
+      v-if="dialogVisible"
+    >
+      <el-form
+        ref="form"
+        :model="temp"
+        :rules="rules"
+        label-width="100px"
+        label-position="left"
+      >
+        <el-form-item label="应用" prop="appId">
+          <el-select
+            v-model="temp.appId"
+            placeholder="请选择应用"
+            :disabled="dialogType === 1"
+            filterable
+          >
+            <el-option
+              v-for="item in appOptionsAll"
+              :key="item.id"
+              :value="item.id"
+              :label="item.name"
+            >
+              <svg-icon :icon-class="item.os === 1 ? 'android' : 'ios'" />
+              <span>{{ item.name }}</span>
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="广告位名称" prop="name">
+          <el-input v-model="temp.name" maxlength="30" show-word-limit />
+        </el-form-item>
+        <el-form-item label="广告样式" prop="position">
+          <el-select v-model="temp.position" clearable filterable>
+            <el-option
+              v-for="item in positionOptions"
+              :key="item.id"
+              :value="item.id"
+              :label="item.name"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item
+          v-if="temp.position === 1 && $store.getters.skip === 1"
+          label="跳过"
+        >
+          <el-radio-group v-model="temp.skip">
+            <el-radio label="A">开启</el-radio>
+            <el-radio label="S">关闭</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item v-if="dialogType === 1" label="启用">
+          <el-radio-group v-model="temp.sts">
+            <el-radio label="A">启用</el-radio>
+            <el-radio label="S">停止</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="素材模板" v-if="isShowCreativeTemplate != -1">
+          <!-- <el-input v-model="temp.templateIds" /> -->
+          <el-select
+            multiple
+            v-model="temp.templateIds"
+            placeholder="请选择素材模板"
+          >
+            <el-option
+              v-for="item in materialTempList"
+              :key="item.id"
+              :value="item.id"
+              :label="item.sizeName"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="审核状态" v-if="$store.getters.creative === 1">
+          <el-switch
+            v-model="temp.auditSts"
+            active-value="A"
+            inactive-value="S"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+          />
+        </el-form-item>
+        <el-form-item label="投放等级" v-if="$store.getters.creative === 1">
+          <el-select v-model="temp.level" placeholder="请选择">
+            <el-option
+              v-for="item in levelOptions"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item
+          label="分成比例"
+          v-if="
+            $store.getters.roles[0] == 'SUPER_ADMIN' ||
+            ($store.getters.roles[0] == 'ADMIN' &&
+              $store.state.user.mediaAccess == 1)
+          "
+        >
+          <el-input
+            v-model="temp.divideIntoProportions"
+            placeholder="请输入分成比例（0-100）"
+          >
+          </el-input>
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="temp.remark" />
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSubmitForm">确定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import waves from "@/directive/waves";
+// import Pagination from '@/components/Pagination'
+import { Message } from "element-ui";
+import { getAppList, getApplistByUserIdAndOs } from "@/api/app";
+// import { editAudit } from "@/api/synthReport";
+import { materialTemp } from "@/api/MedproVersion";
+import {
+  addAdplace,
+  getPlaceList,
+  getPlacePager,
+  updateAdplace,
+} from "@/api/place";
+import { appToAdvert } from "@/api/synthReport";
+import { getPositionList } from "@/api/common";
+import { copy } from "@/utils/string";
+import { getPlatOptions } from "@/api/plat";
+import CustSelectApp from "@/components/CustSelectApp";
+import CustSelectOne from "@/components/CustSelectOne";
+
+import vuedraggable from "vuedraggable";
+import { placeDataArr } from "@/utils/targetArr";
+import CustTag from "@/components/CustTag";
+import { adminDateOotion } from "@/utils/options";
+import tips from "@/components/tips/HelpHint/HelpHint.vue";
+
+const HTTP_PREFIX = "http://creative.medproad.com/material/";
+export default {
+  name: "Adplace",
+  directives: { waves },
+  components: {
+    CustTag,
+    CustSelectApp,
+    vuedraggable,
+    tips,
+    CustSelectOne,
+  },
+  data() {
+    return {
+      // 自定义指标
+
+      targetArr: placeDataArr,
+      sureArr: [],
+
+      query: {
+        os: null,
+        appIds: [],
+        adplaceIds: [],
+        position: "",
+        page: 1,
+        limit: 10,
+        beginDate: "",
+        endDate: "",
+      },
+      Query: {
+        os: "",
+        appIds: [],
+        adplaceIds: [],
+        position: "",
+        page: 1,
+        limit: 10,
+      },
+      appOptions: [],
+      appOptionsAll: [],
+      placeOptions: [],
+      placeOptionsAll: [],
+      positionOptions: [],
+      platOptions: [],
+      tableKey: 0,
+      listLoading: false,
+      isShowCreativeTemplate: -1,
+      list: [],
+      total: 0,
+      temp: {
+        auditSts: "",
+        level: "",
+        skip: "S",
+        divideIntoProportions: 100,
+      },
+      materialTempList: [],
+      dialogType: 0,
+      dialogVisible: false,
+      levelOptions: [
+        { id: 1, name: "一级" },
+        { id: 2, name: "二级" },
+        { id: 3, name: "三级" },
+        { id: 4, name: "四级" },
+      ],
+      rules: {
+        appId: [{ required: true, message: "请选择APP", trigger: "change" }],
+        name: [{ required: true, message: "请输入名称", trigger: "blur" }],
+        position: [
+          { required: true, message: "请选择位置", trigger: "change" },
+        ],
+      },
+      date: [],
+      pickerOptions: adminDateOotion ? adminDateOotion : [],
+    };
+  },
+  computed: {
+    title() {
+      return this.$store.getters.title;
+    },
+  },
+  watch: {
+    "query.os": {
+      async handler(val) {
+        let resp = await getApplistByUserIdAndOs({ adminUser: "", os: val });
+        if (resp.code !== 200) return;
+        if (!resp.data) {
+          resp.data = [];
+        }
+        this.appOptions = resp.data;
+        let arr = this.appOptions.map((item) => {
+          return item.id;
+        });
+        let res = await appToAdvert(arr);
+        if (res.code !== 200) return;
+        this.placeOptions = res.data;
+      },
+    },
+  },
+  created() {
+    this.initpickerDate();
+    this.initAppOptions();
+    this.initPlaceOptions();
+    this.initPositionOptions();
+    this.getMaterialTemp();
+    this.initPlatOptions();
+    let appId = this.$route.query.appId;
+    if (appId && appId.trim().length > 0) {
+      this.Query.appIds.push(appId);
+      this.query.appIds.push(appId);
+    }
+
+    this.handleGetPager();
+    // 默认选中
+  },
+  mounted() {
+    this.initTargetArr();
+    this.initTableforTag();
+  },
+  methods: {
+    renderHeader(h, { column, $index }) {
+      // DAU
+      if (column.property === "dau") {
+        return this.$createElement("tips", {
+          props: {
+            content: `每天打开应用的独立用户数`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // DEU
+      if (column.property === "deu") {
+        return this.$createElement("tips", {
+          props: {
+            content: `每天观看过广告的独立用户数`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 渗透率
+      if (column.property === "permeability") {
+        return this.$createElement("tips", {
+          props: {
+            content: `每天观看过广告的用户占比，渗透率=DEU/DAU`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 人均收益
+      if (column.property === "arpu") {
+        return this.$createElement("tips", {
+          props: {
+            content: `人均收益，ARPU=收益/DAU`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 展示/DAU
+      if (column.property === "aipau") {
+        return this.$createElement("tips", {
+          props: {
+            content: `人均展示次数`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 展示/DEU
+      if (column.property === "aipu") {
+        return this.$createElement("tips", {
+          props: {
+            content: `观看过广告的用户人均展示次数`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 流量请求
+      if (column.property === "request") {
+        return this.$createElement("tips", {
+          props: {
+            content: `应用向${this.title}发送请求的次数，一次流量请求可能触发多次广告请求`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 流量填充率
+      if (column.property === "requestFilledRate") {
+        return this.$createElement("tips", {
+          props: {
+            content: `应用向${this.title}发送请求后，响应成功的占比`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 预估收益
+      if (column.property === "income") {
+        return this.$createElement("tips", {
+          props: {
+            content: `预估收益=SUM(代码位人工填写的eCPM价格*${this.title}统计的展示/1000)`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 预估eCPM
+      if (column.property === "estimatedRevenueEcpm") {
+        return this.$createElement("tips", {
+          props: {
+            content: `（预估收益/${this.title}统计的展示）*1000`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      //展示
+      if (column.property === "impress") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}统计的广告曝光次数，由于统计口径差异、网络丢包等因素，${this.title}统计的展示数据与广告平台展示数据可能存在差异`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 展示率
+      if (column.property === "impressRate") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}收到来自广告平台的广告返回后，展示成功的占比。公式为 展示率 = (展示/填充)`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 点击
+      if (column.property === "click") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}统计的广告点击数，由于部分广告平台不提供点击回调，${this.title}统计的点击数据与广告平台点击数据可能存在差异`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 点击率
+      if (column.property === "clickRate") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}统计的点击率，点击率=点击数/展示数`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 新用户占比
+      // if (column.property === "") {
+      //   return this.$createElement("tips", {
+      //     props: {
+      //       content: `首次使用应用的用户占比，计算公式：新增用户/DAU`,
+      //       title: column.label,
+      //       isShow: true,
+      //     },
+      //   });
+      // }
+      // 广告请求
+      if (column.property === "advRequest") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}向广告平台发送请求的次数。一次流量请求可能触发多次广告请求`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 广告填充率
+      if (column.property === "advRequestFilledRate") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}向广告平台发送请求后，返回成功的占比`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 展示Gap
+      if (column.property === "impressionGap") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}统计展示与广告平台统计展示的差异，公式为 展示Gap=(展示-展示API)/展示API`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 点击Gap
+      if (column.property === "clickGap") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}统计点击与广告平台统计点击的差异，公式为 点击Gap=(点击-点击API)/点击API`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 收益
+      if (column.property === "unitRevenue") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}通过Reporting API向广告平台拉取到的收益`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 展示API
+      if (column.property === "unitImpression") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}通过Reporting API向广告平台拉取到的展示`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 点击API
+      if (column.property === "unitClick") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}通过Reporting API向广告平台拉取到的点击`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // eCPM
+      if (column.property === "unitEcpm") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}通过Reporting API向广告平台拉取到的收益和展示API计算出eCPM API，公式：（收益/展示API）*1000`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 点击率API
+      if (column.property === "unitCtr") {
+        return this.$createElement("tips", {
+          props: {
+            content: `点击API/展示API`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 请求API
+      if (column.property === "unitRequest") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}通过Reporting API向广告平台拉取到的广告请求数，部分平台不提供此数据`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 填充率API
+      if (column.property === "unitFilledRate") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}通过Reporting API向广告平台拉取到的填充率，部分平台不提供此数据`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+
+      // // 聚合-请求
+      // if (column.property === "request") {
+      //   return this.$createElement("tips", {
+      //     props: {
+      //       content: `汇总行表示流量请求，即应用向${this.title}发起请求的次数；其他行表示广告请求，即${this.title}向广告平台发起请求的次数`,
+      //       title: column.label,
+      //       isShow: true,
+      //     },
+      //   });
+      // } // 聚合-填充率
+      // if (column.property === "advRequestFilledRate") {
+      //   return this.$createElement("tips", {
+      //     props: {
+      //       content: `汇总行表示流量填充率，即应用向${this.title}发送请求后返回成功的占比；其余行表示广告填充率，即${this.title}向广告平台发送请求后返回成功的占比`,
+      //       title: column.label,
+      //       isShow: true,
+      //     },
+      //   });
+      // }
+      // 其他
+      return this.$createElement("tips", {
+        props: {
+          content: ``,
+          title: column.label,
+          isShow: false,
+        },
+      });
+    },
+
+    // 获取指标列表数组
+    initTargetArr() {
+      if (!localStorage.getItem("placeData")) {
+        return;
+      } else {
+        this.targetArr = JSON.parse(localStorage.getItem("placeData"));
+      }
+    },
+    // 初始化显示列表
+    initTableforTag() {
+      this.targetArr.forEach((item) => {
+        if (item.checked) {
+          this.sureArr.push(JSON.parse(JSON.stringify(item)));
+        }
+      });
+    },
+    // 自定义指标确认事件
+    handelConfirmDialog(sureArr, targetArr) {
+      this.targetArr = JSON.parse(JSON.stringify(targetArr));
+      this.sureArr = JSON.parse(JSON.stringify(sureArr));
+    },
+    // 初始化时间
+    initpickerDate() {
+      let time = new Date().getTime() - 1000 * 60 * 60 * 24;
+      let year = new Date(time).getFullYear();
+      let month = new Date(time).getMonth() + 1;
+      let day = new Date(time).getDate();
+
+      let str = `${year}-${month < 10 ? "0" + month : month}-${
+        day < 10 ? "0" + day : day
+      }`;
+      this.date = [str, str];
+      this.query.endDate = str;
+      this.query.beginDate = str;
+    },
+    // 时间改变函数
+    getSTime() {
+      this.query.beginDate = this.date[0];
+      this.query.endDate = this.date[1];
+    },
+    selectListhandleApp(val) {
+      this.query.appIds = val;
+      this.changePlaceOptions(val);
+    },
+    selectListhandlePlace(val) {
+      this.query.adplaceIds = [...val];
+    },
+    handleSelectPosition(val) {
+      this.query.position = val;
+    },
+    async changePlaceOptions(val) {
+      this.query.appIds = val;
+      if (val && val.length > 0) {
+        this.placeOptions = this.placeOptionsAll.filter((item) => {
+          return !!~val.indexOf(item.appId);
+        });
+        if (this.query.placeIds && this.query.placeIds.length > 0) {
+          this.query.placeIds = this.query.placeIds.filter((id) => {
+            let flag = false;
+            this.placeOptions.forEach((place) => {
+              if (place.id === id) {
+                flag = true;
+              }
+            });
+            return flag;
+          });
+        }
+      } else {
+        let arr = this.appOptions.map((item) => {
+          return item.id;
+        });
+        let res = await appToAdvert(arr);
+        if (res.code !== 200) return;
+        this.placeOptions = res.data;
+        // this.placeOptions = this.placeOptionsAll;
+      }
+    },
+    async getMaterialTemp() {
+      const res = await materialTemp();
+      if (res.code == 200) {
+        this.materialTempList = res.data;
+      }
+    },
+    initAppOptions() {
+      getAppList().then((res) => {
+        this.appOptions = this.appOptionsAll = res.data;
+      });
+    },
+    initPlaceOptions() {
+      getPlaceList().then((res) => {
+        this.placeOptions = this.placeOptionsAll = res.data;
+      });
+    },
+    // 位置
+    initPositionOptions() {
+      getPositionList().then((res) => {
+        this.positionOptions = res.data;
+      });
+    },
+    initPlatOptions() {
+      getPlatOptions().then((res) => {
+        this.platOptions = res.data;
+        this.isShowCreativeTemplate = this.platOptions.findIndex(
+          (item) => item.accessType === "1"
+        );
+      });
+    },
+    filterAppIds(val) {
+      if (val) {
+        this.appOptions = this.appOptionsAll.filter((item) => {
+          return (
+            !!~item.id.toUpperCase().indexOf(val.toUpperCase()) ||
+            !!~item.name.toUpperCase().indexOf(val.toUpperCase())
+          );
+        });
+      } else {
+        this.appOptions = this.appOptionsAll;
+      }
+    },
+    filterPlaceIds(val) {
+      if (val) {
+        this.placeOptions = this.placeOptionsAll.filter((item) => {
+          return (
+            !!~item.id.toUpperCase().indexOf(val.toUpperCase()) ||
+            !!~item.name.toUpperCase().indexOf(val.toUpperCase())
+          );
+        });
+      } else {
+        this.placeOptions = this.placeOptionsAll;
+      }
+    },
+
+    async handleGetPager() {
+      this.listLoading = true;
+      // return
+      // this.query.page = this
+      let res = await getPlacePager(this.query);
+      if (res.code !== 200) return;
+      if (!res.data) {
+        this.total = 0;
+        this.listLoading = false;
+        return;
+      }
+      this.total = res.data.total;
+      this.list = res.data.items.map((item) => {
+        let reportData = item.reportData;
+        let obj = { ...item, ...reportData };
+        obj.appId = item.appId;
+        obj.appName = item.appName;
+        obj.os = item.os;
+
+        return obj;
+      });
+      this.listLoading = false;
+    },
+
+    handleAdd() {
+      this.temp = {};
+      if (this.$route.query && this.$route.query.appId) {
+        this.temp.appId = this.$route.query.appId;
+      }
+      this.dialogType = 0;
+      this.temp.skip = "S";
+      this.divideIntoProportions = 100;
+      // this.temp = { skip: "S", divideIntoProportions: 100 };
+      this.dialogVisible = true;
+    },
+    handleUpdate(row) {
+      this.temp.auditSts = row.auditSts;
+      this.temp.level = row.level;
+      this.temp.divideIntoProportions = row.divideIntoProportions;
+      this.dialogType = 1;
+      this.temp = JSON.parse(JSON.stringify(row));
+      this.dialogVisible = true;
+    },
+    handleSubmitForm() {
+      let _this = this;
+      this.$refs.form.validate(async (valid) => {
+        if (valid) {
+          if (_this.dialogType === 0) {
+            await addAdplace(_this.temp).then((res) => {
+              Message({
+                message: res.msg,
+                type: "success",
+                duration: 5 * 1000,
+              });
+            });
+          } else if (_this.dialogType === 1) {
+            await updateAdplace(_this.temp).then((res) => {
+              Message({
+                message: res.msg,
+                type: "success",
+                duration: 5 * 1000,
+              });
+            });
+          }
+          _this.dialogVisible = false;
+          _this.handleGetPager();
+        }
+      });
+    },
+    copyId(id) {
+      let result = copy(id);
+      if (result === false) {
+        Message({
+          message: "不支持复制",
+          type: "error",
+          duration: 2 * 1000,
+        });
+      } else {
+        Message({
+          message: "复制成功",
+          type: "success",
+          duration: 2 * 1000,
+        });
+      }
+    },
+    getCreativeUrl(url) {
+      if (url) {
+        return HTTP_PREFIX + url;
+      } else {
+        return null;
+      }
+    },
+    getPositionNameById(id) {
+      let target = this.positionOptions.find((item) => item.id === id);
+      return target ? target.name : "-";
+    },
+    handleSizeChange(val) {
+      this.query.limit = val;
+      this.Query.limit = val;
+      this.handleGetPager();
+    },
+    handleCurrentChange(val) {
+      this.query.page = val;
+      this.Query.page = val;
+
+      this.handleGetPager();
+    },
+    searchBtn() {
+      this.Query = Object.assign({}, this.query);
+      this.handleGetPager();
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.app-td-container {
+  display: flex;
+  padding-left: 20px;
+  .app-icon {
+    flex: 40px 0 1;
+  }
+  .app-info-container {
+    flex: 1;
+    padding-left: 20px;
+    text-align: left;
+  }
+}
+.custtag {
+  position: absolute;
+  right: 50px;
+}
+.doicon {
+  cursor: pointer;
+  display: inline-block;
+  .svgicon {
+    font-size: 18px;
+  }
+}
+::v-deep .app-container .el-table th.is-leaf {
+  border-bottom: 1.5px solid #dfe6ec;
+  // margin-top: -100px;
+}
+
+::v-deep.app-container .el-table__fixed {
+   box-shadow: 0 0 10px rgb(0 0 0 / 12%);
+}
+</style>

@@ -1,0 +1,299 @@
+<template>
+  <div class="message-inform-container">
+    <div class="operate">
+      <div class="btn">
+        <el-radio-group v-model="query.readSts" @change="handleChangeSts">
+          <el-radio-button :label="''">全部</el-radio-button>
+          <!-- <el-radio-button :label="1">已读</el-radio-button> -->
+          <el-radio-button :label="0">未读</el-radio-button>
+        </el-radio-group>
+      </div>
+      <div class="groupOperate">
+        <el-button
+          type=""
+          class="group_operate"
+          @click="handleGroupOperate"
+          :disabled="selectList.length == 0"
+          >批量设置为已读</el-button
+        >
+      </div>
+    </div>
+    <div class="table" v-if="tableList.length > 0">
+      <el-table
+        v-loading="isLoading"
+        :data="tableList"
+        tooltip-effect="dark"
+        style="width: 100%"
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column
+          :selectable="selectable"
+          type="selection"
+          width="120"
+          align="center"
+        >
+        </el-table-column>
+        <el-table-column
+          label="消息类型"
+          align="center"
+          prop="type"
+          width="100px"
+          ><template slot-scope="{ row }">
+            {{
+              row.type == 1
+                ? "平台通知"
+                : row.type == 2
+                ? "功能更新"
+                : row.type == 3
+                ? "运营活动"
+                : ""
+            }}
+          </template></el-table-column
+        >
+        <el-table-column label="消息内容" align="left" prop="title"
+          ><template slot-scope="{ row }">
+            <div class="title" @click="readMessage(row)">
+              <div :class="{ dot: true, isnotread: row.readSts == 0 }"></div>
+              {{ row.title }}
+            </div></template
+          ></el-table-column
+        >
+        <el-table-column
+          label="发布时间"
+          align="center"
+          prop="publishTime"
+          width="200px"
+        ></el-table-column>
+      </el-table>
+      <el-pagination
+        style="margin-top: 20px"
+        :current-page="query.page"
+        :page-sizes="[5, 10, 15]"
+        :page-size="query.limit"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div>
+    <Empty class="empty" v-else></Empty>
+    <div class="dialog">
+      <el-dialog @close="closeDialog" :visible.sync="dialogTableVisible">
+        <div slot="title" class="top">
+          <p class="title">{{ rowinfo.title }}</p>
+          <div class="date">{{ rowinfo.publishTime }}</div>
+        </div>
+
+        <div class="content" v-html="rowinfo.content"></div>
+      </el-dialog>
+    </div>
+  </div>
+</template>
+
+<script>
+import { getReadPage, updateReadSts } from "@/api/message.js";
+import Empty from "@/components/empty";
+
+export default {
+  name: "inform",
+  components: {
+    Empty,
+  },
+  data() {
+    return {
+      query: {
+        readSts: "",
+        page: 1,
+        limit: 10,
+      },
+      total: 0,
+      tableList: [],
+      selectList: [],
+      dialogTableVisible: false,
+      rowinfo: {},
+      isLoading: false,
+    };
+  },
+  watch: {
+    tableList: {
+      async handler(val) {
+        if (val && val.length > 0) {
+          // if (res.code != 200) return this.$message.error(res.msg);
+          // console.log(val[0].unReadMessage);
+          // if (val[0].unReadMessage == "1") {
+          //   this.$store.commit("user/SET_UNREADMESSAGE", "1");
+          // } else {
+          //   this.$store.commit("user/SET_UNREADMESSAGE", "0");
+          // }
+        }
+      },
+      deep: true,
+    },
+  },
+  computed: {
+    hasNoRead() {},
+  },
+  mounted() {
+    this.getReadPage();
+  },
+  methods: {
+    // 获取列表数据
+    handleChangeSts() {
+      this.query.page =1
+      this.getReadPage();
+    },
+    async getReadPage() {
+      this.isLoading = true;
+      let resp = await getReadPage(this.query);
+      if (resp.code != 200) {
+        this.isLoading = false;
+        return;
+      }
+      this.tableList = resp.data.items;
+      this.total = resp.data.total;
+      this.isLoading = false;
+      await this.$store.dispatch("user/getInfo");
+    },
+    // 点击批量操作
+    async handleGroupOperate() {
+      let arr = this.selectList.map((item) => {
+        return item.id;
+      });
+      let resp = await updateReadSts({ readSts: 1, messageId: arr });
+      if (resp.code !== 200) return;
+      this.$message.success("操作成功！");
+      this.getReadPage();
+    },
+    // 点击多选框
+    handleSelectionChange(val) {
+      this.selectList = val;
+    },
+    // 修改页容量
+    handleSizeChange(val) {
+      this.query.limit = val;
+      this.getReadPage();
+    },
+    // 修改页码
+    handleCurrentChange(val) {
+      this.query.page = val;
+      this.getReadPage();
+    },
+    selectable(row, index) {
+      if (row.readSts == 1) {
+        return false;
+      } else {
+        return true;
+      }
+    },
+    async readMessage(row) {
+   let str = row.content;
+      if (row.content) {
+        if (row.content.includes("<table")) {
+          str = row.content.replace(
+            "<table",
+            '<table border="1" borderSpacing="0" cellSpacing="0"'
+          );
+        }
+        if (row.content.includes(`colSpan="1"`)) {
+          str = str.replace(/colSpan=\"1\"/g, `align="center"`);
+        }
+        if (row.content.includes(`rowSpan="1"`)) {
+          str = str.replace(/rowSpan=\"1\"/g, "");
+        }
+      }
+      this.rowinfo = row;
+      this.rowinfo.content = str;
+      this.dialogTableVisible = true;
+      await updateReadSts({ readSts: 1, messageId: [row.id] });
+      await this.$store.dispatch("user/getInfo");
+    },
+    closeDialog() {
+      if (this.rowinfo.readSts == 0) {
+        this.getReadPage();
+      }
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.message-inform-container {
+  width: 100%;
+  .operate {
+    background-color: #fff;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    .group_operate.el-button {
+      color: #1890ff;
+      border-color: #badeff;
+      background-color: #e8f4ff;
+      &.is-disabled {
+        color: #ccc;
+        border-color: #ccc;
+        background-color: #fff;
+      }
+    }
+  }
+  .table {
+    background-color: #fff;
+    padding: 10px 10px 20px 10px;
+    .title {
+      width: 100%;
+      height: 100%;
+      line-height: 100%;
+      //   border: 1px solid #000;
+      display: flex;
+      overflow: hidden;
+      cursor: pointer;
+      .dot {
+        margin-top: 5px;
+        margin-right: 5px;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        &.isnotread {
+          background-color: red;
+        }
+      }
+    }
+  }
+  .empty {
+    background-color: #fff;
+    height: 80vh;
+  }
+  .dialog {
+    .top {
+    }
+    .title {
+      width: 100%;
+      font-size: 25px;
+      font-weight: 600;
+    }
+    .date {
+      width: 100%;
+      border-bottom: 1.4px solid #ccc;
+      padding-bottom: 20px;
+      padding-left: 20px;
+      color: #666;
+      margin: 10px 10px 0px 0px;
+    }
+    .content {
+      margin-top: -20px;
+      width: 100%;
+      height: 500px;
+      table {
+        tbody {
+          th {
+            border: 1px solid #000 !important;
+          }
+          td {
+            border: 1px solid #ccc;
+          }
+        }
+      }
+    }
+  }
+}
+</style>

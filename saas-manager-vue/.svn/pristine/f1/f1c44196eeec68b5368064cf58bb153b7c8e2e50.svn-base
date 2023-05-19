@@ -1,0 +1,314 @@
+<template>
+  <div class="media-report-contianer">
+    <div class="search">
+      <el-row>
+        <el-col :lg="6" style="width: 25%; height: 40px; margin-top: 10px">
+          <el-date-picker
+            :clearable="false"
+            style="width: 80%"
+            v-model="date"
+            type="daterange"
+            value-format="yyyy-MM-dd"
+            align="right"
+            unlink-panels
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            :picker-options="pickerOptions"
+            @change="getSTime"
+          />
+        </el-col>
+
+        <el-col :lg="6" style="width: 25%; height: 40px; margin-top: 10px">
+          <el-select
+            v-model="query.mediaIds"
+            multiple
+            collapse-tags
+            placeholder="请选择媒体"
+          >
+            <el-option
+              v-for="item in mediaList"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </el-col>
+
+        <el-col :lg="6" style="width: 25%; height: 40px; margin-top: 10px">
+          <CustSelectApp
+            style="width: 80%"
+            :width="500"
+            :allData="appList"
+            @selectListhandle="selectappListhandle"
+          />
+        </el-col>
+        <el-col :lg="6" style="width: 25%; height: 40px; margin-top: 10px">
+          <el-select
+            v-model="query.placeIdList"
+            placeholder="广告位"
+            multiple
+            collapse-tags
+            @change="adplaceIdchange"
+          >
+            <el-option
+              v-for="(item, index) in adplaceLsit"
+              :key="index"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </el-col>
+
+        <el-col :lg="6" style="width: 25%; height: 40px; margin-top: 10px">
+          <el-select
+            v-model="query.positionIdList"
+            multiple
+            collapse-tags
+            placeholder="广告样式"
+          >
+            <el-option
+              v-for="item in positionList"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </el-col>
+        <el-col :lg="6" style="width: 25%; height: 40px; margin-top: 10px">
+          <el-select
+            v-model="query.osIdList[0]"
+            collapse-tags
+            placeholder="操作系统"
+          >
+            <el-option :label="'安卓'" :value="1" />
+            <el-option :label="'ios'" :value="0" />
+          </el-select>
+        </el-col>
+        <el-col :lg="6" style="width: 25%; height: 40px; margin-top: 10px">
+          <el-button type="primary" icon="el-icon-search" @click="handleSearch"
+            >搜索</el-button
+          ></el-col
+        >
+      </el-row>
+    </div>
+    <div class="table">
+      <div class="group_box">
+        <h2 style="display: inline-block; margin-left: 30px">数据维度</h2>
+        <div style="display: inline-block; margin-left: 30px">
+          <el-checkbox v-model="showTable.media" medium
+            ><h3>媒体账户</h3></el-checkbox
+          >
+          <el-checkbox v-model="showTable.app" medium
+            ><h3>应用</h3></el-checkbox
+          >
+
+          <el-checkbox v-model="showTable.place" medium
+            ><h3>广告位</h3></el-checkbox
+          >
+          <el-checkbox v-model="showTable.position" medium
+            ><h3>广告样式</h3></el-checkbox
+          >
+          <el-checkbox v-model="showTable.os" medium
+            ><h3>操作系统</h3></el-checkbox
+          >
+        </div>
+      </div>
+
+      <div class="table_box" v-if="tableList.length > 0">
+        <el-table border stripe :data="tableList" v-loading="isLoading">
+          <el-table-column align="center" fixed prop="date" label="日期">
+          </el-table-column>
+        </el-table>
+      </div>
+      <Empty
+        v-else
+        :styleObj="{
+          fontSize: '20px',
+        }"
+      ></Empty>
+    </div>
+  </div>
+</template>
+
+<script>
+import CustSelectApp from "@/components/CustSelectApp";
+import { getAppList } from "@/api/app";
+import { getPlaceList } from "@/api/place";
+import { getPositionList, getRoleList } from "@/api/common";
+import { getMediaReport } from "@/api/synthReport";
+import Empty from "@/components/empty";
+
+export default {
+  name: "mediaReport",
+  components: { CustSelectApp, Empty },
+  data() {
+    return {
+      // 搜索参数
+      query: {
+        appIdList: [], //应用id
+        dateEnd: "", //结束时间
+        dateStart: "", //开始时间
+
+        placeIdList: [], // 广告位id
+        positionIdList: [], // 广告样式id
+        osIdList: [], //  操作系统
+        groupByList: [],
+        limit: 10, // 页容量
+        page: 1, // 页码
+        mediaIds: [],
+      },
+      isLoading: false,
+      tableList: [],
+      total: 0,
+      appList: [], // 应用列表
+      adplaceLsit: [], // 广告位列表
+      positionList: [], // 广告样式列表
+      mediaList: [], // 媒体列表
+      // 维度显示
+      showTable: {
+        app: false,
+        place: false,
+        position: false,
+        os: false,
+        media: false,
+      },
+      // 时间获取
+      date: [],
+      pickerOptions: {
+        shortcuts: [
+          {
+            text: "最近一周",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+              picker.$emit("pick", [start, end]);
+            },
+          },
+          {
+            text: "最近一个月",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+              picker.$emit("pick", [start, end]);
+            },
+          },
+          {
+            text: "最近三个月",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
+              picker.$emit("pick", [start, end]);
+            },
+          },
+        ],
+      },
+      adplaceSelectAll: false,
+    };
+  },
+  created() {
+    this.initDate();
+    this.getAppList();
+    this.getPlaceList();
+    this.getPositionList();
+    this.getMediaList();
+    this.getMediaReport();
+  },
+
+  methods: {
+    initDate() {
+      let time = new Date().getTime() - 1000 * 60 * 60 * 24;
+      let year = new Date(time).getFullYear();
+      let month = new Date(time).getMonth() + 1;
+      let day = new Date(time).getDate();
+
+      let str = `${year}-${month < 10 ? "0" + month : month}-${
+        day < 10 ? "0" + day : day
+      }`;
+      this.date = [str, str];
+      this.query.dateEnd = str;
+      this.query.dateStart = str;
+    },
+    // 时间改变事件
+    getSTime(val) {
+      this.query.dateStart = val[0];
+      this.query.dateEnd = val[1];
+    },
+    // 获取媒体账户列表
+    async getMediaList() {
+      let resp = await getRoleList({ role: 7 });
+      if (resp.code !== 200) return;
+      this.mediaList = resp.data;
+    },
+    // 选择appId事件
+    selectappListhandle(val) {
+      this.query.appIdList = val;
+    },
+    // 获取app列表
+    async getAppList() {
+      let resp = await getAppList();
+      if (resp.code !== 200) return;
+      this.appList = resp.data;
+    },
+    async getPlaceList() {
+      let resp = await await getPlaceList();
+      if (resp.code !== 200) return;
+      this.adplaceLsit = resp.data;
+    },
+    // 选择广告位事件
+    adplaceIdchange(val) {
+      this.query.placeIdList = val;
+    },
+    // 获取广告样式列表
+    async getPositionList() {
+      let resp = await getPositionList();
+      if (resp.code !== 200) return;
+      this.positionList = resp.data;
+    },
+    // 搜索按钮
+    handleSearch() {
+      console.log(this.query);
+      this.getMediaReport();
+    },
+    async getMediaReport() {
+      this.isLoading = true;
+      this.query.groupByList = [];
+      this.query.groupByList.push("date");
+      if (this.query.appIdList.length > 0) {
+        this.query.groupByList.push("app_id");
+      }
+      if (this.query.placeIdList.length > 0) {
+        this.query.groupByList.push("place_id");
+      }
+      if (this.query.positionIdList.length > 0) {
+        this.query.positionIdList.push("position_id");
+      }
+      if (this.query.osIdList[0] === "") {
+        this.query.osIdList = [];
+      }
+      console.log(1);
+      let resp = await getMediaReport(this.query);
+      console.log(resp);
+      if (resp.code !== 200) return;
+      this.tableList = resp.data.items;
+      this.total = resp.data.total;
+      this.isLoading = false;
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.media-report-contianer {
+  position: relative;
+  width: 100%;
+  .search {
+    margin: 30px 40px 40px 30px;
+    height: 100px;
+    width: 100%;
+  }
+}
+</style>

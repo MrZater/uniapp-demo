@@ -1,0 +1,42 @@
+<template>
+  <div>
+    <el-popover
+      :content="content"
+      v-if="isShow"
+      placement="top-start"
+      width="200"
+      trigger="hover"
+    >
+      <div slot="reference">
+        {{ title }}
+        <i class="iconfont icon-wenhao" style="cursor: pointer; margin-left: 5px" />
+      </div>
+    </el-popover>
+    <el-popover v-else :content="content" placement="top-start" width="200">
+      <div slot="reference">
+        {{ title }}
+        <i
+          v-show="isShow"
+          class=" iconfont icon-wenhao"
+          style="cursor: pointer; margin-left: 5px"
+        />
+      </div>
+    </el-popover>
+  </div>
+</template>
+<script>
+export default {
+  name: "HelpHint",
+  props: ["content", "title",'isShow'],
+  data() {
+    return {};
+  },
+};
+</script>
+<style scoped>
+.iconfont {
+  color: #ddd9d9;
+  /* font-size: 23px; */
+}
+</style>
+

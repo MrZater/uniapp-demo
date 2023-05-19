@@ -1,0 +1,85 @@
+import {
+    Message
+} from "element-ui";
+
+/**
+ *  get
+ * @param {object | array} obj  数据源
+ * @param {string} path 路径
+ * @param {*} defaultValue 默认参数
+ */
+export function get(obj, path, defaultValue = undefined) {
+    const travel = regexp =>
+        String.prototype.split
+        .call(path, regexp)
+        .filter(Boolean)
+        .reduce(
+            (res, key) => (res !== null && res !== undefined ? res[key] : res),
+            obj
+        );
+    const result = travel(/[,[\]]+?/) || travel(/[,[\].]+?/);
+    return result === undefined || result === obj ? defaultValue : result;
+}
+
+/**
+ *  格式化时间
+ * @param {*} date_time
+ * @param {*} format
+ */
+export function formatDate(date_time, format) {
+    let date_time_ls = parseInt(date_time);
+    if (date_time_ls == date_time) date_time = date_time_ls;
+    let date = new Date(date_time);
+    let formatDate = format || "yyyy-MM-dd hh:mm:ss";
+    if (/(y+)/.test(formatDate)) {
+        formatDate = formatDate.replace(
+            RegExp.$1,
+            (date.getFullYear() + "").substr(4 - RegExp.$1.length)
+        );
+    }
+    let o = {
+        "M+": date.getMonth() + 1,
+        "d+": date.getDate(),
+        "h+": date.getHours(),
+        "m+": date.getMinutes(),
+        "s+": date.getSeconds()
+    };
+    for (let k in o) {
+        if (new RegExp(`(${k})`).test(formatDate)) {
+            let str = o[k] + "";
+            formatDate = formatDate.replace(
+                RegExp.$1,
+                RegExp.$1.length === 1 ? str : ("00" + str).substr(str.length)
+            );
+        }
+    }
+    return formatDate;
+}
+/**
+ *  二级制数据转text
+ * @param {*} blob
+ */
+export const readerFile = blob => {
+    let reader = new FileReader();
+    return new Promise((resolve, reject) => {
+        reader.onload = function (e) {
+            resolve(reader.result);
+        };
+        reader.readAsText(blob, "utf-8");
+    });
+};
+
+/**
+ *  excel 验证
+ * @param {*} file
+ */
+export const validateExcel = file => {
+    return new Promise((resovle, reject) => {
+        if (/\.(?:xls|xlsx)$/.test(file.name.toLowerCase())) {
+            resovle(file);
+        } else {
+            reject(new Error("只能上传 xls/xlsx 文件！"));
+            Message.warning("只能上传 xls/xlsx 文件！");
+        }
+    });
+};

@@ -1,0 +1,285 @@
+<template>
+  <div class="rules-container">
+    <div class="search">
+      <div class="item">
+        <el-input placeholder="请输入预警名称" v-model="query.name" />
+      </div>
+      <div class="item">
+        <el-select
+          v-model="query.target"
+          placeholder="请选择预警对象"
+          clearable
+        >
+          <el-option :label="'应用'" :value="1" />
+          <el-option :label="'广告位'" :value="2" />
+        </el-select>
+      </div>
+      <div class="item">
+        <el-select v-model="query.sts" placeholder="请选择预警状态" clearable>
+          <el-option :label="'开启'" :value="'A'" />
+          <el-option :label="'关闭'" :value="'S'" />
+        </el-select>
+      </div>
+      <div class="item" v-if="$store.getters.roles[0] == 'SUPER_ADMIN'">
+        <el-select v-model="query.company" placeholder="请选择账户" clearable>
+          <el-option
+            v-for="(item, index) in adminList"
+            :key="index"
+            :value="item.id"
+            :label="item.company"
+          ></el-option>
+        </el-select>
+      </div>
+      <div class="btn">
+        <el-button type="primary" @click="handleSearch" icon="el-icon-search"
+          >查询</el-button
+        >
+      </div>
+    </div>
+    <div class="add_btn">
+      <el-button type="primary" @click="handleAdd" icon="el-icon-plus"
+        >预警规则</el-button
+      >
+    </div>
+    <div class="table" v-if="tableList.length > 0">
+      <el-table
+        :header-cell-style="{ 'background-color': '#f7f8fa', color: '#000' }"
+        stripe
+        :data="tableList"
+        v-loading="loading"
+      >
+        <el-table-column
+          align="center"
+          fixed
+          prop="name"
+          label="预警名称"
+        ></el-table-column>
+
+        <el-table-column
+          align="center"
+          fixed
+          prop="company"
+          label="创建账户"
+        ></el-table-column>
+        <el-table-column
+          align="center"
+          fixed
+          prop="noticeDate"
+          label="最近预警时间"
+          width="150px"
+          ><template slot-scope="{ row }">
+            {{ row.noticeDate ? row.noticeDate : "-" }}
+          </template></el-table-column
+        >
+        <el-table-column align="center" fixed prop="target" label="预警对象"
+          ><template slot-scope="{ row }">
+            {{ row.target == 1 ? "应用" : row.target == 2 ? "广告位" : "-" }}
+          </template></el-table-column
+        >
+        <el-table-column align="center" fixed prop="frequency" label="预警频率"
+          ><template slot-scope="{ row }">
+            {{
+              row.frequency == 1 ? "天级" : row.frequency == 2 ? "小时级" : "-"
+            }}
+          </template></el-table-column
+        >
+        <el-table-column
+          align="center"
+          fixed
+          prop="noticeType"
+          label="预警方式"
+        >
+          <template slot-scope="{ row }">
+            {{
+              row.noticeType == 1
+                ? "站内信"
+                : row.noticeType == 2
+                ? "邮箱"
+                : row.noticeType == 3
+                ? "站内信 + 邮箱"
+                : "-"
+            }}
+          </template></el-table-column
+        >
+        <el-table-column align="center" fixed prop="sts" label="预警状态">
+          <template slot-scope="{ row }">
+            <el-switch
+              v-model="row.sts"
+              active-value="A"
+              inactive-value="S"
+              active-color="#13ce66"
+              inactive-color="#ff4949"
+              @change="changTableSts($event, row)"
+            /> </template
+        ></el-table-column>
+        <el-table-column align="center" fixed label="操作">
+          <template slot-scope="{ row }">
+            <el-tooltip content="编辑" placement="top" effect="light">
+              <div class="doicon" @click="handleUpdate(row)">
+                <svg-icon
+                  style="color: #3685df"
+                  class="svgicon"
+                  icon-class="edit"
+                ></svg-icon>
+              </div>
+            </el-tooltip>
+
+            <el-tooltip content="删除" placement="top" effect="light">
+              <div class="doicon" @click="handleDelete(row)">
+                <svg-icon
+                  style="color: red; margin-right: 10px"
+                  class="svgicon"
+                  icon-class="delete"
+                ></svg-icon>
+              </div>
+            </el-tooltip>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        style="margin: 30px 0 0 0"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="query.page"
+        :page-sizes="[5, 10, 20, 50]"
+        :page-size="query.limit"
+        layout="total,sizes,prev,pager,next,jumper"
+        :total="total"
+      ></el-pagination>
+    </div>
+    <Empty v-else></Empty>
+  </div>
+</template>
+
+<script>
+import { getadminList } from "@/api/app.js";
+import { getWarningPage, updateWarning, deleteWarning } from "@/api/warning.js";
+
+import Empty from "@/components/empty";
+
+export default {
+  components: { Empty },
+  data() {
+    return {
+      query: {
+        limit: 10,
+        page: 1,
+        name: "",
+        target: "",
+        sts: "",
+        company: "",
+      },
+      total: 0,
+      adminList: [],
+      tableList: [],
+      loading: false,
+    };
+  },
+  mounted() {
+    if (this.$route.params && this.$route.params.query) {
+      this.query = JSON.parse(JSON.stringify(this.$route.params.query));
+    }
+    this.getadminList();
+    this.getTableData();
+  },
+  methods: {
+    async getadminList() {
+      let resp = await getadminList();
+      this.adminList = resp.data ? resp.data : [];
+    },
+    handleSearch() {
+      this.query.page = 1;
+      this.getTableData();
+    },
+    async getTableData() {
+      this.loading = true;
+      let resp = await getWarningPage(this.query);
+      this.total = resp.data ? resp.data.total : 0;
+      this.tableList = resp.data ? resp.data.items : [];
+      this.loading = false;
+    },
+    async changTableSts(val, row) {
+      let resp = await updateWarning(row);
+      if (resp.code != 200) return;
+      this.getTableData();
+    },
+    handleSizeChange(val) {
+      this.query.page = 1;
+      this.query.limit = val;
+      this.getTableData();
+    },
+    handleCurrentChange(val) {
+      this.query.page = val;
+      this.getTableData();
+    },
+    handleUpdate(row) {
+      this.$router.push({
+        name: "updateRules",
+        path: "updateRules",
+        params: { ...row, query: this.query, isAdd: false },
+      });
+    },
+    async handleDelete(row) {
+      console.log(row);
+      await deleteWarning({ id: row.id });
+      this.query.page = 1;
+      this.getTableData();
+    },
+    handleAdd() {
+      this.$router.push({
+        name: "updateRules",
+        path: "updateRules",
+        params: {
+          name: "",
+          target: "",
+          appIdList: [],
+          placeIdList: [],
+          frequency: 1,
+          triggerCondition: 0,
+          earlyWarningRuleList: [
+            {
+              ruleId: "",
+              ruleType: 1,
+              dateType: 0,
+              value: "",
+            },
+          ],
+          noticeType: 1,
+          userIdList: [],
+          emailList: [],
+          query: this.query,
+          isAdd: true,
+        },
+      });
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.rules-container {
+  .search {
+    display: flex;
+    .item,
+    .btn {
+      width: 20%;
+      margin: 15px;
+      .el-select {
+        width: 100%;
+      }
+    }
+  }
+  .add_btn {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    padding-left: 20px;
+  }
+  .table {
+    .doicon {
+      display: inline-block;
+      cursor: pointer;
+      font-size: 18px;
+    }
+  }
+}
+</style>

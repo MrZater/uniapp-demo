@@ -1,0 +1,761 @@
+<template>
+  <div class="abtest-data-container">
+    <div class="goback">
+      <el-page-header
+        content="A/B测试数据"
+        style="color: #2265ff"
+        @back="goBack"
+      />
+    </div>
+    <div class="header">
+      <div class="app item">
+        <p class="title">
+          应用
+        </p>
+        <p class="value">
+          {{ appName }}
+        </p>
+      </div>
+      <div class="place item">
+        <p class="title">
+          广告位
+        </p>
+        <p class="value">
+          {{ placeName }}
+        </p>
+      </div>
+      <div class="group item">
+        <p class="title">
+          流量分组
+        </p>
+        <p class="value">
+          {{ groupName }}
+        </p>
+      </div>
+      <div class="abtest item">
+        <p class="title">
+          A/B测试
+        </p>
+        <p class="value">
+          {{ abTestName }}
+        </p>
+      </div>
+      <div class="time item">
+        <p class="title">
+          生效时间
+        </p>
+        <p class="value">
+          {{ createTime }}
+        </p>
+      </div>
+    </div>
+    <div class="table">
+      <div class="control">
+        <el-date-picker
+          v-model="tableDate[0]"
+          align="right"
+          type="date"
+          placeholder="选择日期"
+          :clearable="false"
+          value-format="yyyy-MM-dd"
+          @change="changTableDate"
+        />
+        <el-button
+          type="primary"
+          @click="editABTest"
+        >
+          修改流量分配
+        </el-button>
+      </div>
+
+      <el-table
+        ref="tableref"
+        v-loading="tableLoading"
+        :header-cell-style="{ 'background-color': '#f7f8fa', color: '#000' }"
+        :data="tableList"
+        empty-text="-"
+        fit
+        highlight-current-row
+      >
+        <el-table-column
+          width=""
+          label="分组"
+          prop="testGroupName"
+          align="center"
+        />
+        <el-table-column
+          v-if="type == 0"
+          width=""
+          label="比例"
+          prop="proportion"
+          align="center"
+        >
+          <template slot-scope="{ row }">
+            <span>{{ row.proportion }}%</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          v-if="type == 1"
+          width=""
+          label="区间比例"
+          prop="proportion"
+          align="center"
+        >
+          <template slot-scope="{ row }">
+            <span
+              v-if="row.testId != 'default'"
+            >{{ getProportion(row) }}%</span>
+            <span v-else>0%</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          width=""
+          label="预估收益"
+          prop="income"
+          align="center"
+          :render-header="renderHeader"
+        />
+        <el-table-column
+          width=""
+          label="预估eCPM"
+          prop="estimatedRevenueEcpm"
+          align="center"
+          :render-header="renderHeader"
+        />
+        <el-table-column
+          width=""
+          label="流量请求"
+          prop="request"
+          align="center"
+          :render-header="renderHeader"
+        />
+        <el-table-column
+          width=""
+          label="流量填充率"
+          prop="requestFilledRate"
+          align="center"
+          :render-header="renderHeader"
+        >
+          <template slot-scope="{ row }">
+            {{ row.requestFilledRate }}%
+          </template>
+        </el-table-column>
+        <el-table-column
+          width=""
+          label="填充耗时"
+          prop="cacheTime"
+          align="center"
+          :render-header="renderHeader"
+        >
+          <template slot-scope="{ row }">
+            {{ row.cacheTime }}s
+          </template>
+        </el-table-column>
+        <el-table-column
+          width=""
+          label="展示"
+          prop="impress"
+          align="center"
+          :render-header="renderHeader"
+        />
+        <el-table-column
+          width=""
+          label="展示率"
+          prop="impressRate"
+          align="center"
+          :render-header="renderHeader"
+        >
+          <template slot-scope="{ row }">
+            {{ row.impressRate }}%
+          </template>
+        </el-table-column>
+        <el-table-column
+          width=""
+          label="展请率"
+          prop="impressRequestRate"
+          align="center"
+          :render-header="renderHeader"
+        >
+          <template slot-scope="{ row }">
+            {{ row.impressRequestRate }}%
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+
+    <div class="chart">
+      <div class="control">
+        <el-date-picker
+          v-model="chartDate"
+          :clearable="false"
+          type="daterange"
+          value-format="yyyy-MM-dd"
+          align="center"
+          unlink-panels
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          :picker-options="pickerOptions"
+          @change="getChartTime"
+        />
+        <el-select
+          v-model="chartQuery.targetType"
+          placeholder="请选择指标"
+          @change="changeType"
+        >
+          <el-option
+            :label="'预估eCPM'"
+            :value="'1'"
+          />
+          <el-option
+            :label="'流量请求'"
+            :value="'2'"
+          />
+          <el-option
+            :label="'流量填充率'"
+            :value="'3'"
+          />
+          <el-option
+            :label="'展示'"
+            :value="'4'"
+          />
+          <el-option
+            :label="'展示率'"
+            :value="'5'"
+          />
+          <el-option
+            :label="'填充耗时'"
+            :value="'6'"
+          />
+          <el-option
+            :label="'展请率'"
+            :value="'7'"
+          />
+        </el-select>
+      </div>
+      <div
+        ref="chart"
+        v-loading="chartLoading"
+        class="chartbox"
+      />
+    </div>
+
+    <div class="dialog">
+      <addABTestDialog
+        :show-test-dialog-temp="showTestDialog"
+        :add-abtest="false"
+        :testquery-temp="testquery"
+        :app-name="appName"
+        :place-name="placeName"
+        :group="group"
+        @closeTestDialog="showTestDialog = false"
+        @editSuccess="handleSubmitTestForm"
+      />
+    </div>
+  </div>
+</template>
+
+<script>
+import addABTestDialog from "../addABTest";
+
+import {
+  getAbTestReport,
+  getPlaceGroup,
+  getAbTestEchartsReport,
+} from "@/api/aggregate";
+import { adminDateOption } from "@/utils/options";
+import { toDate } from "@/utils/toTimer";
+import debounce from "@/utils/debounce.js";
+import tips from "@/components/tips/HelpHint/HelpHint.vue";
+const echarts = require("echarts");
+export default {
+  name: "AbTestData",
+  components: { addABTestDialog, tips },
+  data() {
+    return {
+      tableDate: ["", ""],
+      query: {
+        placeId: "",
+        groupId: "",
+        startDate: "",
+        endDate: "",
+      },
+      appName: "",
+      placeName: "",
+      groupName: "",
+      abTestName: "",
+      createTime: "",
+      type: "",
+      tableList: [],
+      tableLoading: false,
+      group: {},
+      showTestDialog: false,
+      testquery: {
+        placeId: "",
+        groupId: "",
+        testName: "",
+        type: 0,
+        abTestList: [
+          {
+            groupName: "A组",
+            proportion: 50,
+            testId: "",
+            sts: "A",
+            max: 0,
+            min: 0,
+          },
+          {
+            groupName: "B组",
+            proportion: 50,
+            testId: "",
+            sts: "A",
+            max: 0,
+            min: 0,
+          },
+        ],
+      },
+      chartDate: [],
+      pickerOptions: adminDateOption || [],
+      chartQuery: {
+        placeId: "",
+        groupId: "",
+        startDate: "",
+        endDate: "",
+        targetType: "1",
+      },
+      chartLoading: false,
+      chartOption: {
+        tooltip: {
+          trigger: "axis",
+          axisPointer: {
+            type: "cross",
+          },
+
+          extraCssText: "width: 200px",
+        },
+        legend: {
+          data: [],
+        },
+        grid: {
+          left: "3%",
+          right: "4%",
+          bottom: "3%",
+          containLabel: true,
+        },
+        xAxis: {
+          type: "category",
+          boundaryGap: false,
+          data: [],
+          axisLine: {
+            lineStyle: {
+              color: "#000",
+              width: 0.5,
+            },
+          },
+        },
+        yAxis: [
+          {
+            type: "value",
+            axisLabel: {
+              formatter: "{value}",
+            },
+            position: "",
+            axisLine: {
+              lineStyle: {
+                color: "#666",
+                width: 0.5,
+              },
+            },
+            axisTick: {
+              show: true,
+            },
+            splitLine: {
+              show: true,
+            },
+
+            axisLabel: {
+              show: true,
+            },
+          },
+        ],
+        series: [
+          {
+            name: "",
+            type: "line",
+            smooth: true,
+            yAxisIndex: 0,
+            data: [],
+            symbol: "circle", // 设定为实心点
+            symbolSize: 6, // 设定实心点的大小
+            itemStyle: {
+              normal: {
+                color: "#0055ff",
+                lineStyle: {
+                  color: "#0055ff",
+                  width: 2,
+                },
+              },
+            },
+          },
+        ],
+      },
+      myEcharts: null,
+      colorList: [
+        "#0055ff",
+        "#ffab31",
+        "#39da61",
+        "#ff6688",
+        "#a8a8ff",
+        "#de7af9",
+        "rgb(0, 118, 143)",
+        "rgb(76, 180, 231)",
+        "rgb(255, 192, 159)",
+        "rgb(145, 78, 0)",
+        "#ff746c",
+      ],
+      iscreat: true,
+      targetName: "",
+    };
+  },
+  computed: {
+    title() {
+      return this.$store.getters.title;
+    },
+  },
+  destroyed() {
+    this.myEcharts.dispose();
+    window.removeEventListener("resize", debounce(this.getSize, 100));
+  },
+  mounted() {
+    this.initTableDate();
+    this.query.appId = this.$route.query.appId;
+    this.query.placeId = this.$route.query.placeId;
+    this.query.groupId = this.$route.query.groupId;
+    this.chartQuery.placeId = this.$route.query.placeId;
+    this.chartQuery.groupId = this.$route.query.groupId;
+    this.getTableData();
+    this.getGroup();
+    this.initChartDate();
+    this.getChartData();
+    window.addEventListener("resize", debounce(this.getSize, 100));
+    this.getSize();
+  },
+  methods: {
+    getProportion(row) {
+      let proportion = 0;
+      row.intervalList = !row.intervalList ? [] : row.intervalList;
+      row.intervalList.forEach((item) => {
+        let p = item[1] - item[0] + 1;
+        proportion += p;
+      });
+      console.log(row);
+      return proportion;
+    },
+    goBack() {
+      this.$router.push({
+        path: "/traffic/aggregate",
+        query: {
+          appId: this.query.appId,
+          placeId: this.query.placeId,
+        },
+      });
+    },
+    initTableDate() {
+      // 初始化时间
+      let time = new Date().getTime();
+      let year = new Date(time).getFullYear();
+      let month = new Date(time).getMonth() + 1;
+      let day = new Date(time).getDate();
+      let str = `${year}-${month < 10 ? "0" + month : month}-${
+        day < 10 ? "0" + day : day
+      }`;
+      this.tableDate[0] = this.tableDate[1] = str;
+      this.query.endDate = str;
+      this.query.startDate = str;
+    },
+    changTableDate(val) {
+      this.tableDate[1] = val;
+      this.query.endDate = val;
+      this.query.startDate = val;
+      this.getTableData();
+    },
+    async getTableData() {
+      this.tableLoading = true;
+      let resp = await getAbTestReport(this.query);
+      this.appName = resp.data.appName;
+      this.placeName = resp.data.placeName;
+      this.groupName = resp.data.groupName;
+      this.abTestName = resp.data.testName;
+      this.createTime = resp.data.takeEffectTime;
+      this.tableList = resp.data.abTestReportDataList;
+      this.tableLoading = false;
+    },
+    // 渲染table表头提示
+    renderHeader(h, { column, $index }) {
+      if (column.property == "income") {
+        return this.$createElement("tips", {
+          props: {
+            content: `预估收益=SUM(代码位人工填写的eCPM价格*${this.title}统计的展示/1000)`,
+            title: "预估收益",
+            isShow: true,
+          },
+        });
+      } else if (column.property == "estimatedRevenueEcpm") {
+        return this.$createElement("tips", {
+          props: {
+            content: `（预估收益/${this.title}统计的展示）*1000`,
+            title: "预估eCPM",
+            isShow: true,
+          },
+        });
+      } else if (column.property == "request") {
+        return this.$createElement("tips", {
+          props: {
+            content: `应用向${this.title}发送请求的次数，一次流量请求可能触发多次广告请求`,
+            title: "流量请求",
+            isShow: true,
+          },
+        });
+      } else if (column.property == "requestFilledRate") {
+        return this.$createElement("tips", {
+          props: {
+            content: `汇总行表示流量填充率，即应用向${this.title}发送请求后返回成功的占比；其余行表示广告填充率，即${this.title}向广告平台发送请求后返回成功的占比`,
+            title: "流量填充率",
+            isShow: true,
+          },
+        });
+      } else if (column.property == "cacheTime") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title} SDK向广告源发送请求到填充成功的平均耗时`,
+            title: "填充耗时",
+            isShow: true,
+          },
+        });
+      } else if (column.property == "impress") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}统计的广告曝光次数，由于统计口径差异、网络丢包等因素，${this.title}统计的展示数据与广告平台展示数据可能存在差异`,
+            title: "展示",
+            isShow: true,
+          },
+        });
+      } else if (column.property == "impressRate") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}收到来自广告平台的广告返回后，展示成功的占比。公式为 展示率 = (展示/填充)`,
+            title: "展示率",
+            isShow: true,
+          },
+        });
+      } else if (column.property == "impressRequestRate") {
+        return this.$createElement("tips", {
+          props: {
+            content: `展示 / 流量请求`,
+            title: "展请率",
+            isShow: true,
+          },
+        });
+      }
+      // 其他
+      return this.$createElement("tips", {
+        props: {
+          content: ``,
+          title: "-",
+          isShow: false,
+        },
+      });
+    },
+    async getGroup() {
+      let resp = await getPlaceGroup(this.query.placeId);
+      resp.data.groups.forEach((item) => {
+        if (item.id == this.query.groupId) {
+          this.group = item;
+          this.type = this.group.abTests[0].type;
+        }
+      });
+    },
+    editABTest() {
+      this.getGroup();
+      this.showTestDialog = true;
+      this.testquery.placeId = this.query.placeId;
+      this.testquery.groupId = this.query.groupId;
+      this.testquery.testName = this.group.abTests[0].testName;
+      this.testquery.type = this.group.abTests[0].type;
+      this.testquery.abTestList = this.group.abTests;
+    },
+    handleSubmitTestForm() {
+      this.showTestDialog = false;
+      this.getTableData();
+      this.getGroup();
+    },
+    initChartDate() {
+      let today = toDate(Date.now());
+      // 7天前
+      let day7Before = toDate(Date.now() - 6 * 24 * 60 * 60 * 1000);
+      this.chartDate = [day7Before, today];
+      this.chartQuery.startDate = this.chartDate[0];
+      this.chartQuery.endDate = this.chartDate[1];
+    },
+    getChartTime(val) {
+      this.chartQuery.startDate = val[0];
+      this.chartQuery.endDate = val[1];
+      this.getChartData();
+    },
+    changeType() {
+      this.getChartData();
+    },
+    async getChartData() {
+      this.chartLoading = true;
+      let resp = await getAbTestEchartsReport(this.chartQuery);
+      this.targetName =
+        this.chartQuery.targetType == 1
+          ? "预估eCPM"
+          : this.chartQuery.targetType == 2
+          ? "流量请求"
+          : this.chartQuery.targetType == 3
+          ? "流量填充率"
+          : this.chartQuery.targetType == 4
+          ? "展示"
+          : this.chartQuery.targetType == 5
+          ? "展示率"
+          : this.chartQuery.targetType == 6
+          ? "填充耗时"
+          : this.chartQuery.targetType == 7
+          ? "展请率"
+          : "";
+      this.chartOption.xAxis.data = resp.data.dateList;
+      this.chartOption.tooltip.formatter = (params) => {
+        let str = "";
+        params.forEach((item, index) => {
+          let temp = {};
+          if (this.chartQuery.targetType == "1") {
+            temp.value = "￥" + item.value;
+          } else if (
+            this.chartQuery.targetType == "3" ||
+            this.chartQuery.targetType == "5" ||
+            this.chartQuery.targetType == "7"
+          ) {
+            temp.value = item.value + "%";
+          } else if (this.chartQuery.targetType == "6") {
+            temp.value = item.value + "s";
+          } else {
+            temp.value = item.value;
+          }
+
+          str += ` <div style='width:100%;display:flex;justify-content:space-between'><span>${item.marker}${item.seriesName}</span>${temp.value}</div>`;
+        });
+
+        return (
+          `<div style='width:100%;display:flex;justify-content:space-between'><span>${params[0].axisValue}</span>${this.targetName}</div>` +
+          str
+        );
+      };
+      this.chartOption.series = [];
+      this.chartOption.legend.data = [];
+      resp.data.abTestReportDataList.forEach((item, index) => {
+        this.chartOption.legend.data.push(item.testGroupName);
+        this.chartOption.series.push({
+          name: item.testGroupName,
+          type: "line",
+          smooth: true,
+          yAxisIndex: 0,
+          data: item.values,
+          symbol: "circle", // 设定为实心点
+          symbolSize: 6, // 设定实心点的大小
+          itemStyle: {
+            normal: {
+              color: this.colorList[index] ? this.colorList[index] : "#f40",
+              lineStyle: {
+                color: this.colorList[index] ? this.colorList[index] : "#f40",
+                width: 2,
+              },
+            },
+          },
+        });
+      });
+      this.echartsInit();
+      this.chartLoading = false;
+    },
+    echartsInit() {
+      let myEcharts = echarts.init(this.$refs.chart);
+      myEcharts.setOption(this.chartOption);
+      this.myEcharts = myEcharts;
+    },
+    getSize() {
+      // 判断是否是created时调用
+      if (!this.iscreat) {
+        this.myEcharts.resize();
+      }
+      this.iscreat = false;
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.abtest-data-container {
+  width: 100%;
+  padding-bottom: 30px;
+  .goback {
+    padding-top: 15px;
+    width: 100%;
+    background-color: #fff;
+  }
+  .header {
+    width: 100%;
+    background-color: #fff;
+    height: 120px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    .item {
+      line-height: 2em;
+      .title {
+        font-size: 16px;
+        font-weight: bold;
+      }
+      .value {
+        font-size: 14px;
+      }
+    }
+  }
+  .table {
+    margin-top: 15px;
+    background-color: #fff;
+    padding: 15px;
+    width: 100%;
+    .control {
+      width: 400px;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+    }
+  }
+  .chart {
+    padding-top: 30px;
+    margin-top: 15px;
+    background-color: #fff;
+    padding-bottom: 30px;
+    .control {
+      width: 500px;
+      padding-left: 30px;
+      padding-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+    }
+    width: 100%;
+    .chartbox {
+      width: 100%;
+      height: 400px;
+    }
+  }
+}
+.test {
+  width: 100px;
+  height: 100px;
+  background: red;
+  transition: width 2s;
+  transition-timing-function: cubic-bezier(0.1, 0.7, 1, 0.1);
+}
+</style>

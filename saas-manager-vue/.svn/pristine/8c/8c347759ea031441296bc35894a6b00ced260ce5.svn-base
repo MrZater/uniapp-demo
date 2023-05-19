@@ -1,0 +1,1038 @@
+<template>
+  <div class="app-main">
+    <el-card class="head_card">
+      <div class="head">
+        <div class="item">
+          <el-date-picker
+            v-model="time"
+            :clearable="false"
+            type="daterange"
+            align="right"
+            unlink-panels
+            value-format="yyyy-MM-dd"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            :picker-options="pickerOptions"
+            @change="DateChange"
+          />
+        </div>
+        <div class="item">
+          <CustSelectOne
+            @handleSelect="handleSelectApp"
+            style="
+              display: inline-block;
+              width: 12rem;
+              margin-left: 5px;
+              margin-right: 5px;
+            "
+            :model="echartsParams.appId"
+            :allData="appList"
+            :width="190"
+            word="广告位"
+          />
+        </div>
+        <div class="item">
+          <!-- <el-select
+            v-model="department1"
+            class="item"
+            placeholder="渠道"
+            multiple
+            collapse-tags
+            @change="getSelectDep1"
+          >
+            <div style="padding-left: 10px">
+              <el-checkbox
+                v-model="checkedThing1"
+                :style="selfstyle"
+                @change="selectAllThing1"
+                >全选</el-checkbox
+              >
+              <el-option
+                v-for="(item, index) in departments1"
+                :key="index"
+                :label="item"
+                :value="item"
+              />
+            </div>
+          </el-select> -->
+          <CustSelectApp
+            @selectListhandle="handleSelectChannel"
+            :allData="departments1"
+            :width="450"
+            word="渠道"
+          />
+        </div>
+        <div class="item">
+          <el-button
+            type="primary"
+            size="small"
+            icon="el-icon-search"
+            @click="searchUserAction"
+            >搜索</el-button
+          >
+        </div>
+      </div>
+    </el-card>
+    <el-card class="tabs1_card">
+      <div v-loading="tabs1Loading" class="tabs1">
+        <el-tabs
+          v-model="activeIndex"
+          type="border-card"
+          @tab-click="tabs1Click()"
+        >
+          <el-tab-pane label="整体">
+            <div class="tabs_item1">
+              <div class="app-logo">
+                <div class="img" />
+                <div class="app_text">
+                  {{ appName }}<br />
+                  <svg-icon icon-class="android" />
+                  <span class="app_name">Andriod</span>
+                </div>
+              </div>
+            </div>
+          </el-tab-pane>
+          <el-tab-pane
+            v-for="(e, i) in advertStyleTabs"
+            :key="i"
+            :label="e.name"
+          >
+            <div class="tabs_item2">
+              <div class="app-logo">
+                <div class="img" />
+                <div class="app_text">
+                  {{ appName }} <br />
+                  <svg-icon icon-class="android" />
+                  <span class="app_name">Andriod</span>
+                </div>
+              </div>
+              <!-- 下拉 -->
+              <el-select
+                v-if="e.name !== '整体'"
+                v-model="echartsParams.adPlaceId"
+                placeholder="请选择"
+                @change="handlePlaceId"
+              >
+                <el-option
+                  v-for="(item, index) in e.name === '插屏'
+                    ? cpArr
+                    : e.name === '开屏'
+                    ? kpArr
+                    : e.name === '激励视频'
+                    ? jlArr
+                    : e.name === '横幅'
+                    ? hfArr
+                    : e.name === '原生自渲染'
+                    ? ysArr
+                    : e.name === '原生模版'
+                    ? mbArr
+                    : []"
+                  :key="index"
+                  :label="item.name"
+                  :value="item.id"
+                />
+              </el-select>
+            </div>
+          </el-tab-pane>
+        </el-tabs>
+      </div>
+    </el-card>
+    <el-card class="tabs2_card">
+      <div class="tabs2">
+        <el-tabs
+          v-model="activeIndex1"
+          type="border-card"
+          @tab-click="tabs2Click()"
+        >
+          <el-tab-pane v-if="activeIndex != '0'" label="DEU" />
+          <el-tab-pane v-else label="DAU" />
+          <el-tab-pane label="渗透率" />
+          <el-tab-pane label="展示/DAU" />
+          <el-tab-pane label="展示/DEU" />
+          <el-tab-pane v-if="activeIndex === '0'" label="人均启动次数" />
+          <el-tab-pane v-else label="展示频次" />
+        </el-tabs>
+        <div v-loading="loadingEcharts" class="box_echarts">
+          <div v-if="true" id="box" />
+          <Empty v-if="false" />
+        </div>
+      </div>
+    </el-card>
+    <el-card class="table_card">
+      <!-- 报表 -->
+      <div class="tableData">
+        <el-card>
+          <div class="export_btn">
+            <el-button
+              class="el-icon-download"
+              size="small"
+              type="primary"
+              @click="exportReport"
+              >导出报表</el-button
+            >
+          </div>
+          <div v-loading="loadingTable" class="table_box">
+            <el-table
+              v-if="!isEmptyTable"
+              :data="tableData"
+              style="width: 100%"
+              border
+              :header-cell-style="{ background: '#f7f8fa' }"
+            >
+              <el-table-column
+                v-for="(e, i) in list"
+                :key="i"
+                align="center"
+                :prop="e.name"
+                :label="e.lable"
+                :render-header="renderHeader"
+              />
+            </el-table>
+            <Empty v-else />
+          </div>
+          <el-pagination
+            :current-page="echartsParams.page"
+            :page-sizes="[10, 20, 30, 40]"
+            :page-size="echartsParams.limit"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+          />
+        </el-card>
+      </div>
+    </el-card>
+  </div>
+</template>
+<script>
+import { toDate } from "@/utils/toTimer";
+import { getAppList } from "@/api/app";
+import tips from "@/components/tips/HelpHint/HelpHint.vue";
+import echarts from "echarts";
+import {
+  getChannel,
+  appToAdvertStyle,
+  userActionEcharts,
+  userActionReport,
+  perpeoAdvert,
+  perpeoCount,
+  showTimes,
+  showCount,
+} from "@/api/synthReport";
+import { getPlaceListByAppId } from "@/api/place";
+import request from "@/utils/request";
+import Empty from "@/components/empty";
+import CustSelectOne from "@/components/CustSelectOne";
+import CustSelectApp from "@/components/CustSelectApp";
+
+export default {
+  name: "UserAction",
+  components: {
+    Empty,
+    tips,
+    CustSelectOne,
+    CustSelectApp,
+  },
+  data() {
+    return {
+      time: [],
+      loadingEcharts: false,
+      loadingTable: false,
+      tabs1Loading: false,
+      total: 0,
+      isEmptyTable: false,
+      list: [],
+      appList: [],
+      appName: null,
+      isShow: true,
+      activeIndex1: "0",
+      activeIndex: "0",
+      echartsData: [],
+
+      cpArr: [],
+      kpArr: [],
+      jlArr: [],
+      hfArr: [],
+      ysArr: [],
+      mbArr: [],
+
+      tableData: [],
+      departments1: [],
+      department1: [],
+      advertStyleTabs: [], // 广告样式
+      checkedThing1: false,
+      selfstyle: {
+        textAlign: "right",
+        paddingRight: "10px",
+      },
+      echartsParams: {
+        page: 1,
+        limit: 20,
+        dateStart: "",
+        dateEnd: "",
+        dateStart: "",
+        dateEnd: "",
+        appId: "",
+        adPlaceId: "",
+        channelList: [],
+      },
+      pickerOptions: {
+        shortcuts: [
+          {
+            text: "最近一周",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+              picker.$emit("pick", [start, end]);
+            },
+          },
+          {
+            text: "最近14天",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 14);
+              picker.$emit("pick", [start, end]);
+            },
+          },
+          {
+            text: "最近一个月",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+              picker.$emit("pick", [start, end]);
+            },
+          },
+        ],
+      },
+      dauArr: [],
+      deuArr: [],
+      stlArr: [],
+      zsdauArr: [],
+      zsdeuArr: [],
+      xLabel: [],
+      option: {
+        color: ["#0055ff"],
+        tooltip: {
+          trigger: "axis",
+        },
+        grid: {
+          left: "3%",
+          right: "4%",
+          bottom: "3%",
+          containLabel: true,
+        },
+        xAxis: {
+          type: "category",
+          boundaryGap: false,
+          data: [],
+          axisLine: {
+            lineStyle: {
+              color: "#000",
+              width: 0.5,
+            },
+          },
+        },
+        yAxis: {
+          type: "value",
+          axisLine: {
+            lineStyle: {
+              color: "#000",
+              width: 0.5,
+            },
+          },
+        },
+        series: [
+          {
+            name: "",
+            type: "line",
+            stack: "Total",
+            data: [],
+            smooth: true,
+            symbol: "circle", // 设定为实心点
+            symbolSize: 6, // 设定实心点的大小
+            itemStyle: {
+              normal: {
+                color: "#5756d5",
+                lineStyle: {
+                  color: "#5756d5",
+                  width: 3,
+                },
+              },
+            },
+          },
+        ],
+      },
+      first: true,
+    };
+  },
+  watch: {},
+  async mounted() {
+    await this.getDate();
+    await this.getApp();
+    await this.getChannelData();
+    await this.userEcharts();
+    await this.userReport();
+  },
+  methods: {
+    // 获取图表数据
+    async userEcharts() {
+      this.loadingEcharts = true;
+      let res = await userActionEcharts(this.echartsParams);
+      if (res.code != 200) return;
+      setTimeout(() => {
+        this.loadingEcharts = false;
+      }, 400);
+      this.handleEcharts(res.data);
+    },
+    handleEcharts(obj) {
+      this.option.series[0].name = this.appName;
+      this.xLabel = obj.lable;
+      obj.list.forEach((e) => {
+        if (e.name === "dau") {
+          this.dauArr = e.data;
+        } else if (e.name === "deu") {
+          this.deuArr = e.data;
+        } else if (e.name === "渗透率") {
+          this.stlArr = e.data;
+        } else if (e.name === "展示/dau") {
+          this.zsdauArr = e.data;
+        } else if (e.name === "展示/deu") {
+          this.zsdeuArr = e.data;
+        }
+      });
+      // DAU
+      if (this.activeIndex == "0" && this.activeIndex1 == "0") {
+        this.option.series[0].data = this.dauArr;
+      }
+      // DEU
+      if (this.activeIndex !== "0" && this.activeIndex1 == "0") {
+        this.option.series[0].data = this.deuArr;
+      }
+      this.option.xAxis.data = this.xLabel;
+      this.echartsInit();
+    },
+    echartsInit() {
+      let myEcharts = echarts.init(document.getElementById("box"));
+      myEcharts.setOption(this.option);
+    },
+    // 用户行为报表
+    async userReport() {
+      this.loadingTable = true;
+      let res = await userActionReport(this.echartsParams);
+      if (res.code != 200) return;
+      setTimeout(() => {
+        this.loadingTable = false;
+      }, 400);
+      if (res.data.items.length === 0) {
+        this.isEmptyTable = true;
+      } else {
+        this.isEmptyTable = false;
+        for (let i = 0; i < res.data.items.length; i++) {
+          for (let key in res.data.items[i]) {
+            if (key === "permeability" && res.data.items[i][key]) {
+              res.data.items[i][key] = res.data.items[i][key] + "%";
+            }
+            if (res.data.items[i][key] === null) {
+              res.data.items[i][key] = "-";
+            }
+          }
+        }
+        this.tableData = res.data.items;
+        this.total = res.data.total;
+        this.list = [
+          {
+            lable: "日期",
+            name: "date",
+          },
+          {
+            lable: "DAU",
+            name: "dau",
+          },
+          {
+            lable: "DEU",
+            name: "deu",
+          },
+          {
+            lable: "渗透率",
+            name: "permeability",
+          },
+          {
+            lable: "展示",
+            name: "impress",
+          },
+          {
+            lable: "展示/DAU",
+            name: "aipau",
+          },
+          {
+            lable: "展示/DEU",
+            name: "aipu",
+          },
+        ];
+      }
+    },
+    async getChannelData() {
+      let res = await getChannel();
+      this.departments1 = res.data.map((item) => {
+        return { name: item, id: item };
+      });
+    },
+    async getApp() {
+      let res = await getAppList();
+      this.appList = res.data;
+      this.echartsParams.appId = res.data[0].id;
+      this.appName = res.data[0].name;
+      // 应用对应广告样式
+      this.getAppToAdvert();
+      //  应用获取广告位
+      this.getAdverPosition();
+    },
+    async getAppToAdvert() {
+      this.tabs1Loading = true;
+      let res = await appToAdvertStyle(this.echartsParams.appId);
+      if (res.code != 200) return;
+      setTimeout(() => {
+        this.tabs1Loading = false;
+      }, 400);
+      this.advertStyleTabs = res.data;
+    },
+    async getAdverPosition() {
+      let res = await getPlaceListByAppId(this.echartsParams.appId);
+      // position =1  开屏
+      // position =2   横幅
+      // position =3  插屏
+      // position =4  原生端渲染
+      // position =5  激励视频
+      // position =6  原生模板
+      let kpArr = [];
+      let hfArr = [];
+      let cpArr = [];
+      let ysArr = [];
+      let jlArr = [];
+      let mbArr = [];
+
+      res.data.forEach((e) => {
+        if (e.position === 1) {
+          kpArr.push(e);
+        }
+        if (e.position === 2) {
+          hfArr.push(e);
+        }
+        if (e.position === 3) {
+          cpArr.push(e);
+        }
+        if (e.position === 4) {
+          ysArr.push(e);
+        }
+        if (e.position === 5) {
+          jlArr.push(e);
+        }
+        if (e.position === 6) {
+          mbArr.push(e);
+        }
+      });
+      this.kpArr = kpArr;
+      this.hfArr = hfArr;
+      this.cpArr = cpArr;
+      this.ysArr = ysArr;
+      this.jlArr = jlArr;
+      this.mbArr = mbArr;
+    },
+    getDate() {
+      // 昨天
+      let today = toDate(Date.now() - 24 * 60 * 60 * 1000);
+      // 13天前
+      let day13Before = toDate(Date.now() - 14 * 24 * 60 * 60 * 1000);
+      this.time = [day13Before, today];
+      this.echartsParams.dateStart = this.time[0];
+      this.echartsParams.dateEnd = this.time[1];
+    },
+    DateChange() {
+      if (this.time) {
+        this.echartsParams.dateStart = this.time[0];
+        this.echartsParams.dateEnd = this.time[1];
+      } else {
+        this.echartsParams.dateStart = "";
+        this.echartsParams.dateEnd = "";
+        this.time = [];
+      }
+    },
+    handleSelectChannel(val) {
+      this.department1 = val;
+      this.getSelectDep1(val);
+    },
+    // 渠道单选
+    getSelectDep1(department) {
+      if (department.length === this.departments1.length) {
+        this.checkedThing1 = true;
+      } else {
+        this.checkedThing1 = false;
+      }
+      this.echartsParams.channelList = department;
+    },
+    //  渠道全选
+    selectAllThing1() {
+      this.department1 = [];
+      if (this.checkedThing1) {
+        this.departments1.map((item) => {
+          this.department1.push(item);
+        });
+      } else {
+        this.department1 = [];
+      }
+      this.echartsParams.channelList = this.department1;
+    },
+    handleSelectApp(val) {
+      this.handleSelect();
+      this.echartsParams.appId = val;
+    },
+    // 应用下拉
+    async handleSelect() {
+      if (this.echartsParams.appId) {
+        this.activeIndex = "0";
+        this.activeIndex1 = "0";
+        this.echartsParams.adPlaceId = "";
+        // 应用对应广告样式
+        await this.getAppToAdvert();
+        //  应用获取广告位
+        await this.getAdverPosition();
+
+        this.appList.forEach((e) => {
+          if (this.echartsParams.appId === e.id) {
+            this.appName = e.name;
+          }
+        });
+      }
+      await this.userEcharts();
+      await this.userReport();
+    },
+    // 广告位id下拉
+    handlePlaceId() {
+      this.userEcharts();
+      this.userReport();
+    },
+    tabs2Click() {
+      // DAU
+      if (this.activeIndex1 === "0" && this.activeIndex === "0") {
+        this.option.series[0].data = this.dauArr;
+        this.echartsInit();
+        this.userReport();
+      }
+      // DEU
+      if (this.activeIndex1 === "0" && this.activeIndex !== "0") {
+        this.option.series[0].data = this.deuArr;
+        this.echartsInit();
+        this.userReport();
+      }
+      // 渗透率
+      if (this.activeIndex1 === "1") {
+        this.option.series[0].data = this.stlArr;
+        this.echartsInit();
+        this.userReport();
+      }
+      // 展示/DAU
+      if (this.activeIndex1 === "2") {
+        this.option.series[0].data = this.zsdauArr;
+
+        this.echartsInit();
+        this.userReport();
+      }
+      // 展示/DEU
+      if (this.activeIndex1 === "3") {
+        this.option.series[0].data = this.zsdeuArr;
+        this.echartsInit();
+        this.userReport();
+      }
+      // 人均启动次数
+      if (this.activeIndex1 === "4" && this.activeIndex === "0") {
+        this.echartsParams.page = 1;
+        this.echartsParams.limit = 20;
+        // 人均启动次数 折现   报表
+        this.perpeoCountEchart();
+        this.peopleAverage();
+      }
+      // 点击展示频次
+      if (this.activeIndex1 === "4" && this.activeIndex !== "0") {
+        this.echartsParams.page = 1;
+        this.echartsParams.limit = 20;
+        // 展示 频次    报表 曲线
+        this.showCountEcharts();
+        this.showTimesReport();
+      }
+    },
+    // 展示 频次报表
+    async showTimesReport() {
+      this.loadingTable = true;
+      let res = await showTimes(this.echartsParams);
+      if (res.code != 200) return;
+      if (res.data.items.length === 0) {
+        this.isEmptyTable = true;
+      } else {
+        this.isEmptyTable = false;
+        this.tableData = res.data.items;
+        this.total = res.data.total;
+        this.list = [
+          {
+            lable: "日期",
+            name: "date",
+            width: "300",
+          },
+          {
+            lable: "dau",
+            name: "dau",
+            width: "300",
+          },
+          {
+            lable: "展示",
+            name: "impress",
+            width: "300",
+          },
+          {
+            lable: "展示频次",
+            name: "impFrequency",
+            width: "300",
+          },
+        ];
+      }
+      setTimeout(() => {
+        this.loadingTable = false;
+      }, 400);
+    },
+    // 展示 频次曲线
+    async showCountEcharts() {
+      this.loadingEcharts = true;
+      let res = await showCount(this.echartsParams);
+      if (res.code != 200) return;
+      setTimeout(() => {
+        this.loadingEcharts = false;
+      }, 400);
+      this.option.series[0].data = res.data.list[0].data;
+      this.echartsInit();
+    },
+    // 人均启动次数  图表
+    async perpeoCountEchart() {
+      this.loadingEcharts = true;
+      let res = await perpeoCount(this.echartsParams);
+      if (res.code != 200) return;
+      setTimeout(() => {
+        this.loadingEcharts = false;
+      }, 400);
+      this.option.series[0].data = res.data.list[0].data;
+      this.echartsInit();
+    },
+    // 人均启动次数 报表
+    async peopleAverage() {
+      this.loadingTable = true;
+      let res = await perpeoAdvert(this.echartsParams);
+      if (res.code != 200) return;
+      setTimeout(() => {
+        this.loadingTable = false;
+      }, 400);
+      this.tableData = res.data.items;
+      this.tatal = res.data.tatal;
+      this.list = [
+        {
+          lable: "日期",
+          name: "date",
+          width: "300",
+        },
+        {
+          lable: "启动次数",
+          name: "startApp",
+          width: "300",
+        },
+        {
+          lable: "展示/启动次数",
+          name: "impStartApp",
+          width: "300",
+        },
+        {
+          lable: "人均启动次数",
+          name: "startAppDau",
+          width: "300",
+        },
+      ];
+    },
+    async tabs1Click() {
+      if (this.activeIndex != 0) {
+        let name = this.advertStyleTabs[this.activeIndex - 1].name;
+        if (name === "插屏") {
+          this.echartsParams.adPlaceId = this.cpArr[0].id;
+        } else if (name === "开屏") {
+          this.echartsParams.adPlaceId = this.kpArr[0].id;
+        } else if (name === "激励视频") {
+          this.echartsParams.adPlaceId = this.jlArr[0].id;
+        } else if (name === "原生模版") {
+          this.echartsParams.adPlaceId = this.mbArr[0].id;
+        } else if (name === "横幅") {
+          this.echartsParams.adPlaceId = this.hfArr[0].id;
+        } else if (name === "原生自渲染") {
+          this.echartsParams.adPlaceId = this.ysArr[0].id;
+        }
+      } else {
+        this.echartsParams.adPlaceId = "";
+      }
+      this.activeIndex1 = "0";
+      await this.userEcharts();
+      await this.userReport();
+    },
+    // 搜索
+    async searchUserAction() {
+      this.activeIndex1 = "0";
+      this.activeIndex = "0";
+      await this.userEcharts();
+      await this.userReport();
+    },
+    async exportReport() {
+      try {
+        const res = await this.exportToExcel();
+        await excel(res, `sheetjs.xlsx`);
+      } catch (e) {
+        console.log(e, "导出excel错误信息");
+      }
+    },
+    exportToExcel() {
+      let url;
+      if (this.activeIndex === "0" && this.activeIndex1 === "0") {
+        // 用户行为报表
+        url = "/report/downloadUserReport";
+      } else if (this.activeIndex === "0" && this.activeIndex1 === "4") {
+        // 人均启动次数报表
+        url = "/report/downloadStratAvgReport";
+      } else if (this.activeIndex !== "0" && this.activeIndex1 === "4") {
+        // 展示频次报表
+        url = "report/downloadImpFrequencyReport";
+      }
+      return request.post(global.BASE_URL + url, this.echartsParams, {
+        responseType: "blob",
+      });
+    },
+    handleSizeChange(val) {
+      this.echartsParams.limit = val;
+      if (this.activeIndex1 !== "4") {
+        this.userReport();
+      } else if (this.activeIndex === "0" && this.activeIndex1 === "4") {
+        this.peopleAverage();
+      } else if (this.activeIndex !== "0" && this.activeIndex1 === "4") {
+        this.showTimesReport();
+      }
+    },
+    handleCurrentChange(val) {
+      this.echartsParams.page = val;
+      if (this.activeIndex === "0" && this.activeIndex1 === "0") {
+        this.userReport();
+      } else if (this.activeIndex === "0" && this.activeIndex1 === "4") {
+        this.peopleAverage();
+      } else if (this.activeIndex !== "0" && this.activeIndex1 === "4") {
+        this.showTimesReport();
+      }
+    },
+    renderHeader(h, { column, $index }) {
+      if (column.property === "dau") {
+        return this.$createElement("tips", {
+          props: {
+            content: `每天打开应用的独立用户数`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "deu") {
+        return this.$createElement("tips", {
+          props: {
+            content: `每天观看过广告的独立用户数`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "impress") {
+        return this.$createElement("tips", {
+          props: {
+            content: `Medpro统计的广告曝光次数，由于统计口径差异、网络丢包等因素，Medpro统计的展示数据与广告平台展示数据可能存在差异`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "permeability") {
+        return this.$createElement("tips", {
+          props: {
+            content: `每天观看过广告的用户占比，渗透率=DEU/DAU`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "aipau") {
+        return this.$createElement("tips", {
+          props: {
+            content: `人均展示次数`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      if (column.property === "aipu") {
+        return this.$createElement("tips", {
+          props: {
+            content: `观看过广告的用户人均展示次数`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      return this.$createElement("tips", {
+        props: {
+          content: ``,
+          title: column.label,
+          isShow: false,
+        },
+      });
+    },
+  },
+};
+</script>
+<style lang="scss" scoped>
+.app-main {
+  background-color: #e9ebee;
+  .head_card {
+    margin: 15px 0;
+  }
+  .tabs2_card {
+    margin: 0 0 15px 0;
+  }
+  .head {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 60px;
+    padding: 0 30px;
+    .item {
+      flex: 1;
+      &:nth-child(2) {
+        text-align: center;
+      }
+    }
+  }
+  .tabs1 {
+    width: 95%;
+    margin: 0 auto;
+    margin-top: 30px;
+    /deep/ .el-tabs--border-card {
+      box-shadow: 0px 0px 0px 0px;
+    }
+    /deep/ .el-tabs--border-card {
+      border: none;
+    }
+    /deep/.el-tabs__header {
+      background-color: transparent;
+      border-bottom: none;
+      border-bottom: 1px solid rgb(228, 225, 225);
+    }
+    .el-tabs {
+      border: 1px solid rgb(226, 212, 212);
+
+      /deep/ .el-tabs__item {
+        width: 120px;
+        text-align: center;
+        border-top: none;
+        border-bottom: 2px solid transparent;
+      }
+      /deep/ .el-tabs__content {
+        min-height: 90px;
+      }
+      /deep/ .el-tabs__item.is-active {
+        border-bottom: 2px solid #1890ff;
+        background-color: #f6f8ff;
+      }
+
+      .tabs_item1,
+      .tabs_item2,
+      .tabs_item3 {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        .app-logo {
+          display: flex;
+          align-items: center;
+          width: 180px;
+          height: 50px;
+          .app_name {
+            color: rgb(129, 124, 124);
+            font-size: 12px;
+          }
+          .app_text {
+            font-size: 13px;
+            color: #333;
+            margin-bottom: 4px;
+          }
+          .img {
+            width: 50px;
+            height: 50px;
+          }
+          .app_text {
+          }
+        }
+      }
+    }
+  }
+  .tabs2 {
+    width: 95%;
+    border: 1px solid #d4d4d4;
+    margin: 0 auto;
+    margin-top: 30px;
+    /deep/ .el-tabs__item.is-active {
+      border-bottom: 2px solid #1890ff;
+      background-color: #f6f8ff;
+    }
+    /deep/ .el-tabs--border-card {
+      box-shadow: 0px 0px 0px 0px;
+    }
+    /deep/ .el-tabs--border-card {
+      border: none;
+    }
+    .box_echarts {
+      height: 400px;
+      #box {
+        width: 100%;
+        height: 400px;
+      }
+    }
+  }
+  /deep/ .el-tabs__item {
+    width: 120px;
+    text-align: center;
+    border: none;
+    border-top: 2px solid transparent;
+  }
+
+  .tableData {
+    overflow: hidden;
+    width: 100%;
+    height: 400px;
+    margin-top: 15px;
+
+    /deep/ .el-table--border th {
+      border-right: none;
+    }
+    /deep/ .el-table--border td {
+      border-right: none;
+    }
+    .el-pagination {
+      margin: 20px 0 0 20px;
+    }
+    .export_btn {
+      display: flex;
+      justify-content: flex-end;
+      width: 100%;
+      padding-right: 20px;
+      margin: 20px 0;
+    }
+  }
+}
+</style>

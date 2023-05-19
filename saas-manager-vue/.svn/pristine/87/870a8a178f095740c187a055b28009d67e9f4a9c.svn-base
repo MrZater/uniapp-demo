@@ -1,0 +1,415 @@
+<template>
+  <div>
+    <el-card>
+      <el-row class="box" :gutter="24">
+        <el-col :span="5"
+          ><div class="grid-content bg-purple">
+            <el-input
+              v-model="subAccount.name"
+              clearable
+              placeholder="子账号名称"
+              @clear="clear"
+              @keyup.native="trimName('subAccount', 'name')"
+            />
+          </div>
+        </el-col>
+        <el-col :span="5"
+          ><div class="grid-content bg-purple">
+            <el-input
+              v-model="subAccount.loginId"
+              placeholder="子账号登录邮箱"
+              clearable
+              @keyup.native="trimName('subAccount', 'loginId')"
+              @clear="clear"
+            />
+          </div>
+        </el-col>
+        <el-col :span="4"
+          ><div class="grid-content bg-purple">
+            <el-select
+              v-model="subAccount.role"
+              placeholder="权限"
+              clearable
+              @clear="clear"
+            >
+              <el-option
+                v-for="item in options"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select></div
+        ></el-col>
+        <el-col :span="4"
+          ><div class="grid-content bg-purple">
+            <el-select
+              v-model="subAccount.sts"
+              placeholder="状态"
+              clearable
+              @clear="clear"
+            >
+              <el-option
+                v-for="item in options1"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select></div
+        ></el-col>
+        <el-col :span="4"
+          ><div class="grid-content bg-purple">
+            <el-button type="primary" plain @click="searchAccount"
+              >搜索</el-button
+            >
+          </div></el-col
+        >
+      </el-row>
+    </el-card>
+    <el-card>
+      <el-button
+        plain
+        type="primary"
+        class="addAccount"
+        icon="el-icon-plus"
+        @click="addAccount"
+        >子账户</el-button
+      >
+
+      <el-table :data="AccountTable" style="width: 100%">
+        <el-table-column
+          align="center"
+          prop="name"
+          label="子账号名称"
+          width="180"
+        />
+        <el-table-column
+          align="center"
+          prop="loginId"
+          label="子账号登录邮箱"
+          width="180"
+        />
+        <el-table-column align="center" prop="role" label="权限">
+          <template slot-scope="{ row }">
+            <div>
+              <span v-if="row.role === 3">运营</span>
+              <span v-if="row.role === 4">报表</span>
+              <span v-if="row.role === 5">审核</span>
+            </div>
+            <template /></template
+        ></el-table-column>
+        <el-table-column prop="sts" label="状态" align="center">
+          <template slot-scope="{ row }">
+            <div>
+              <el-tag v-if="row.sts === 'A'">启用</el-tag>
+              <el-tag v-if="row.sts === 'S'" type="danger">停用</el-tag>
+            </div>
+            <template /></template
+        ></el-table-column>
+        <el-table-column prop="sts" label="操作" align="center">
+          <template slot-scope="{ row }">
+            <div>
+              <el-button
+                size="mini"
+                type="primary"
+                plain
+                @click="editAccount(row)"
+                >编辑</el-button
+              >
+              <el-button
+                size="mini"
+                type="danger"
+                plain
+                @click="delAccount(row)"
+                >删除</el-button
+              >
+            </div>
+            <template /> </template
+        ></el-table-column>
+      </el-table>
+    </el-card>
+    <!-- 添加 -->
+    <el-dialog
+      :title="isAdd ? '添加子账户' : '编辑子账户'"
+      :visible.sync="accountDialogVisible"
+      width="50%"
+      @close="closeDialog"
+    >
+      <el-form
+        ref="ruleForm"
+        :rules="rules"
+        :model="accountForm"
+        label-width="130px"
+      >
+        <el-form-item label="子账号名称" prop="name">
+          <el-input
+            v-model="accountForm.name"
+            maxlength="30"
+            placeholder="子账号名称"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="子账号登录邮箱" prop="loginId">
+          <el-input
+            v-model="accountForm.loginId"
+            :disabled="!isAdd"
+            placeholder="子账号登录邮箱"
+          />
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input
+            v-model="accountForm.password"
+            placeholder="密码"
+            type="password"
+            show-password
+          />
+        </el-form-item>
+        <el-form-item label="应用范围" prop="">
+          <el-select
+            v-model="department"
+            placeholder="选择应用"
+            multiple
+            collapse-tags
+            @change="getSelectDep"
+          >
+            <div style="padding-left: 10px">
+              <el-checkbox
+                v-model="checkedThing"
+                :style="selfstyle"
+                @change="selectAllThing"
+                >全选</el-checkbox
+              >
+            </div>
+            <el-option
+              v-for="(item, index) in departments"
+              :key="index"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="权限" prop="role">
+          <el-radio-group v-model="accountForm.role">
+            <el-radio :label="3">运营</el-radio>
+            <el-radio :label="4">报表</el-radio>
+            <el-radio :label="5">审核</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <!-- <el-form-item label="备注" prop="password">
+          <el-input
+            v-model="accountForm.sts"
+            maxlength="50"
+            placeholder="请输入备注"
+            show-word-limit
+          />
+        </el-form-item> -->
+        <el-form-item v-if="!isAdd" label="状态" prop="sts">
+          <el-select v-model="accountForm.sts" placeholder="请选择">
+            <el-option
+              v-for="item in options1"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="accountDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="handelAddAccount">确 定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+<script>
+import {
+  accountList,
+  addAccount,
+  delSonAccount,
+  updateAccount,
+} from "@/api/advanced";
+import { getAppList } from "@/api/app";
+// import { mapGetters} from 'vuex'
+export default {
+  computed: {
+    // ...mapGetters(['roles'])
+  },
+  data() {
+    return {
+      subAccount: {
+        name: "",
+        loginId: "",
+        role: "",
+        sts: "",
+      },
+      accountDialogVisible: false,
+      AccountTable: [],
+      isAdd: true,
+      options: [
+        {
+          value: "3",
+          label: "运营",
+        },
+        {
+          value: "4",
+          label: "报表",
+        },
+        {
+          value: "5",
+          label: "审核",
+        },
+      ],
+      accountForm: {
+        name: "",
+        loginId: "",
+        password: "",
+        appList: [],
+        role: "",
+        sts: "",
+      },
+      checkedThing: false,
+      department: [],
+      selfstyle: {
+        textAlign: "right",
+        paddingRight: "10px",
+      },
+      options1: [
+        {
+          value: "A",
+          label: "启用",
+        },
+        {
+          value: "S",
+          label: "暂停",
+        },
+      ],
+      tableData: [],
+      departments: [],
+      rules: {
+        name: [
+          { required: true, message: "请输入子账号名称", trigger: "blur" },
+        ],
+        loginId: [
+          { required: true, message: "请输入子账号登录邮箱", trigger: "blur" },
+        ],
+        role: [{ required: true, message: "请选择权限", trigger: "blur" }],
+        sts: [{ required: true, message: "请选择状态", trigger: "blur" }],
+        password: [{ required: true, message: "请输入密码", trigger: "blur" }],
+      },
+    };
+  },
+
+  mounted() {
+    this.getAccountList();
+    this.getAppList();
+  },
+  methods: {
+    clear() {
+      this.getAccountList();
+    },
+    // 去中间空格
+    trimName(val, value) {
+      this[val][value] = this[val][value].replace(/\s+/g, "");
+    },
+    getAccountList() {
+      accountList(this.subAccount).then((res) => {
+        if (res.code != 200) return;
+        this.AccountTable = res.data.items;
+        this.total = res.data.total;
+      });
+    },
+    getAppList() {
+      getAppList().then((res) => {
+        this.departments = res.data;
+      });
+    },
+    addAccount() {
+      this.accountDialogVisible = true;
+      this.isAdd = true;
+    },
+    // 编辑 数据回显
+    editAccount(row) {
+      this.isAdd = false;
+      this.accountDialogVisible = true;
+      row = JSON.parse(JSON.stringify(row));
+      this.accountForm = row;
+      this.department = row.appList;
+    },
+    searchAccount() {
+      this.getAccountList();
+    },
+    // 删除
+    delAccount(row) {
+      this.$confirm("你确定要删除这条子账户吗？", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then(() => {
+          delSonAccount({ id: row.id }).then((res) => {
+            if (res.code != 200) return;
+            this.getAccountList();
+            this.$message.success("删除成功");
+          });
+        })
+        .catch(() => {});
+    },
+    handelAddAccount() {
+      this.$refs.ruleForm.validate((val) => {
+        if (!val) return;
+        // 添加
+        if (this.isAdd) {
+          addAccount(this.accountForm).then((res) => {
+            if (res.code != 200) return this.$message.error(res.msg);
+            this.$message.success("添加成功");
+            this.getAccountList();
+            this.accountDialogVisible = false;
+          });
+        } else {
+          updateAccount(this.accountForm).then((res) => {
+            if (res.code != 200) return this.$message.error(res.msg);
+            this.$message.success("编辑成功");
+            this.getAccountList();
+            this.accountDialogVisible = false;
+          });
+        }
+      });
+    },
+    getSelectDep(department) {
+      if (department.length === this.departments.length) {
+        this.checkedThing = true;
+      } else {
+        this.checkedThing = false;
+      }
+      this.accountForm.appList = department;
+    },
+    // 应用全选
+    selectAllThing() {
+      this.department = [];
+      if (this.checkedThing) {
+        this.departments.map((item) => {
+          this.department.push(item.id);
+        });
+      } else {
+        this.department = [];
+      }
+      this.accountForm.appList = this.department;
+    },
+    closeDialog() {
+      this.$refs.ruleForm.resetFields();
+      this.department = [];
+      this.checkedThing = false;
+    },
+  },
+};
+</script>
+<style lang="scss" scoped>
+.box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 60px;
+}
+.addAccount {
+  margin-bottom: 20px;
+}
+</style>

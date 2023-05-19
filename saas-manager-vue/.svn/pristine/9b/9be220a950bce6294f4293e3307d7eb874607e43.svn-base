@@ -1,0 +1,35 @@
+const state = {
+    title: process.env.NODE_ENV === 'development' ?
+        'MedPro' : window.location.host == 'medpro.ydmob.com:7001' ?
+        'MedPro' : window.location.host == 'medpro.ydmob.com' ?
+        'MedPro' : window.location.host.includes('medpro') ? 'MedPro' : 'CMedia',
+    
+        origin: process.env.NODE_ENV === 'development' ?
+        '/images/medpro' : window.location.host == 'medpro.ydmob.com:7001' ?
+        '/images/medpro' : window.location.host == 'medpro.ydmob.com' ?
+        '/images/medpro' : window.location.host.includes('medpro') ? '/images/medpro' : '/images',
+
+        allowRegister: process.env.NODE_ENV === 'development' ?
+        true : window.location.host == 'medpro.ydmob.com:7001' ?
+        true : window.location.host == 'medpro.ydmob.com' ?
+        true : window.location.host.includes('medpro') ? true : false
+}
+const mutations = {
+    CHANGE_TITLE: (state, value) => {
+        state.title = value
+    },
+}
+
+const actions = {
+    changeTitle({
+        commit
+    }, data) {
+        commit('CHANGE_TITLE', data)
+    }
+}
+export default {
+    namespaced: true,
+    state,
+    mutations,
+    actions
+}

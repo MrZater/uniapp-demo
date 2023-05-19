@@ -1,0 +1,721 @@
+<template>
+  <div class="batch-add-container">
+    <div class="header">
+      <span class="goback" @click="goback"
+        ><i class="el-icon-back">返回</i></span
+      >
+      <h3>批量导入代码位</h3>
+    </div>
+    <!-- 内容区 -->
+    <div class="content">
+      <!-- 表头标题 -->
+      <div class="title">
+        <div class="title_app">
+          <div class="image">
+            <el-image
+              :src="iconUrl ? getCreativeUrl(iconUrl) : '/images/app-none.png'"
+              :fit="'fill'"
+            />
+          </div>
+          <div class="titlebox">
+            <p class="name">
+              <span class="label">
+                <svg-icon
+                  :icon-class="os === 1 ? 'android' : os === 0 ? 'ios' : ''"
+                />{{ appName }}</span
+              >
+            </p>
+            <p class="id"><span class="label"></span>{{ appId }}</p>
+          </div>
+        </div>
+        <div class="title_place">
+          <div class="titlebox">
+            <p class="name">
+              <span class="label">{{ placeName }}</span>
+            </p>
+            <p class="id">
+              <span class="label">{{ placeId }}</span>
+            </p>
+          </div>
+        </div>
+        <div class="title_position">
+          <div class="titlebox">
+            <p class="name position">
+              <span class="label">{{ positionName }}</span>
+            </p>
+          </div>
+        </div>
+      </div>
+      <!-- 广告源 -->
+      <div class="platform" v-if="appId">
+        <div class="label">广告源：</div>
+        <div class="platformbox">
+          <AppPlatform
+            class="appplatform"
+            :isBatch="true"
+            :app-id="appId"
+            :linked-show="false"
+            :active="null"
+            :disabled="false"
+            :is-edit="false"
+            @getplatrow="getplatrow"
+          />
+        </div>
+      </div>
+      <el-form
+        ref="platLinkForm"
+        :model="editplatquery"
+        label-width="120px"
+        label-position="left"
+        :rules="editplatrules"
+      >
+        <!-- 账户 -->
+        <el-form-item label="账户" prop="platAccountId">
+          <el-select v-model="editplatquery.platAccountId">
+            <el-option
+              v-for="account in accounts"
+              :key="account.id"
+              :label="account.name"
+              :value="account.id"
+            >
+            </el-option>
+          </el-select>
+
+          <span v-if="editplatquery.platId"
+            >创建<span
+              style="color: #338aff; cursor: pointer"
+              class="text-a"
+              @click="showNewAccount"
+              >新账户</span
+            ></span
+          >
+        </el-form-item>
+        <!-- appid -->
+        <el-form-item
+          label="AppId"
+          :prop="editplatquery.accessType == 1 ? '' : 'platAppId'"
+        >
+          <el-input
+            v-model.trim="editplatquery.platAppId"
+            placeholder="请输入"
+            style="width: 300px"
+          />
+          <p style="color: red; font-size: 12px">
+            注意：修改AppID后，该应用下的所有广告位配置都会同步生效！
+          </p>
+        </el-form-item>
+        <!-- appkey -->
+        <el-form-item
+          label="AppKey"
+          prop="appKey"
+          v-if="editplatquery.platId == 7 || editplatquery.platId == 11"
+        >
+          <el-input
+            v-model.trim="editplatquery.appKey"
+            placeholder="请输入"
+            style="width: 300px"
+          />
+        </el-form-item>
+      </el-form>
+    </div>
+
+    <div class="export_btn">
+      <el-form
+        ref="form"
+        :model="query"
+        label-width="120px"
+        label-position="left"
+        :rules="rules"
+      >
+        <el-form-item label="下载模板" v-if="platName"
+          ><div class="download_btn">
+            <el-button
+              :loading="downLoading"
+              size="small"
+              type="primary"
+              @click="handleDownload"
+              >下载【{{ platName }}】模板</el-button
+            >
+          </div></el-form-item
+        >
+        <el-form-item label="文件上传" prop="fileList">
+          <el-upload
+            ref="upload"
+            accept=".xlsx"
+            action=""
+            :with-credentials="true"
+            :http-request="httpRequest"
+            :on-change="uploadFile"
+            :on-remove="removeFile"
+            :file-list="query.fileList"
+            :auto-upload="false"
+            :limit="1"
+          >
+            <el-button slot="trigger" size="small" type="success"
+              >选取文件</el-button
+            >
+            <div
+              slot="tip"
+              class="el-upload__tip"
+              style="display: inline-block; margin-left: 20px"
+            >
+              只能上传xlsx格式的 excel文件
+            </div>
+          </el-upload>
+        </el-form-item>
+      </el-form>
+    </div>
+    <div class="submit_btn">
+      <el-button
+        type="primary"
+        :disabled="query.fileList.length == 0"
+        @click="handleSubmit"
+        >提交</el-button
+      >
+    </div>
+    <div>
+      <el-dialog
+        title="创建新账户"
+        :visible.sync="addAccountDialog"
+        append-to-body
+      >
+        <el-form
+          ref="account_form"
+          :model="addAccountQuery"
+          :rules="addAccountRules"
+          label-width="120px"
+          label-position="left"
+        >
+          <el-form-item label="广告源">
+            <span>{{ editplatquery.name }}</span>
+          </el-form-item>
+          <el-form-item label="账户名称" prop="name">
+            <el-input
+              v-model="addAccountQuery.name"
+              placeholder="输入名称以区分不同账号"
+              maxlength="30"
+              show-word-limit
+            />
+          </el-form-item>
+          <el-form-item
+            v-if="
+              editplatquery.platId == '993' ||
+              editplatquery.platId == '992' ||
+              editplatquery.platId == '991' ||
+              editplatquery.platId == '998' ||
+              editplatquery.platId == '996' ||
+              editplatquery.platId == '1000'
+            "
+            :label="
+              editplatquery.platId == '993'
+                ? 'MID'
+                : editplatquery.platId == '992'
+                ? 'ChannleId'
+                : editplatquery.platId == '991'
+                ? '发布商Id'
+                : editplatquery.platId == '998'
+                ? 'token'
+                : editplatquery.platId == '996'
+                ? '渠道ID'
+                : editplatquery.platId == '1000'
+                ? 'MID'
+                : ''
+            "
+            prop="mid"
+          >
+            <el-input
+              v-model="addAccountQuery.mid"
+              :placeholder="
+                editplatquery.platId == '993'
+                  ? '请输入MID'
+                  : editplatquery.platId == '992'
+                  ? '请输入ChannleId'
+                  : editplatquery.platId == '991'
+                  ? '请输入发布商Id'
+                  : editplatquery.platId == '998'
+                  ? '请输入token'
+                  : editplatquery.platId == '996'
+                  ? '请输入渠道ID'
+                  : editplatquery.platId == '1000'
+                  ? '请输入MID'
+                  : ''
+              "
+            />
+          </el-form-item>
+          <el-form-item
+            label="密钥Id  "
+            prop="keyId"
+            v-if="editplatquery.platId == '991'"
+          >
+            <el-input
+              v-model="addAccountQuery.keyId"
+              placeholder="请输入密钥Id "
+              prop="keyId"
+            />
+          </el-form-item>
+          <el-form-item
+            label="密钥  "
+            prop="signKey"
+            v-if="editplatquery.platId == '991'"
+          >
+            <el-input
+              v-model="addAccountQuery.signKey"
+              placeholder="请输入密钥 "
+              prop="signKey"
+            />
+          </el-form-item>
+          <el-form-item
+            label="请求环境"
+            v-if="
+              editplatquery.platId == 5 ||
+              (editplatquery.platId >= 900 && editplatquery.platId != 989)
+            "
+          >
+            <el-radio-group v-model="addAccountQuery.isDebug">
+              <el-radio :label="'1'" border>测试</el-radio>
+              <el-radio :label="'0'" border>正式</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="请求地址" v-if="editplatquery.platId == 989">
+            <el-input
+              placeholder="请输入请求地址"
+              v-model="editplatquery.requestUrl"
+            />
+          </el-form-item>
+          <el-form-item
+            label="报表API"
+            v-if="
+              editplatquery.accessType &&
+              editplatquery.accessType != '1' &&
+              editplatquery.accessType != '2'
+            "
+          >
+            <el-radio-group
+              v-model="addAccountQuery.openApiStatus"
+              :value="addAccountQuery.openApiStatus"
+              size="small"
+            >
+              <el-radio :label="1" border>已开通</el-radio>
+              <el-radio :label="0" border>未开通</el-radio>
+            </el-radio-group>
+          </el-form-item>
+
+          <el-form-item
+            v-if="addAccountQuery.openApiStatus && showUserId"
+            :label="'账户' + userIdLabel"
+            prop="accountId"
+          >
+            <el-input
+              v-model="addAccountQuery.accountId"
+              :placeholder="'请输入账户' + userIdLabel"
+              maxlength="30"
+              show-word-limit
+            />
+          </el-form-item>
+
+          <el-form-item
+            v-if="addAccountQuery.openApiStatus === 1 && showAccessKey"
+            :label="accessKeyLabel"
+            prop="accessKey"
+          >
+            <el-input
+              v-model="addAccountQuery.accessKey"
+              :placeholder="'请输入' + accessKeyLabel"
+            />
+          </el-form-item>
+          <el-form-item
+            v-if="addAccountQuery.openApiStatus && editplatquery.platId != 17"
+            :label="secretLabel"
+            prop="secretKey"
+          >
+            <el-input
+              v-model="addAccountQuery.secretKey"
+              :placeholder="'请输入' + secretLabel"
+            />
+          </el-form-item>
+        </el-form>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="addAccountDialog = false">取消</el-button>
+          <el-button type="primary" @click="handlePlatForm">确定</el-button>
+        </span>
+      </el-dialog>
+    </div>
+  </div>
+</template>
+
+<script>
+import AppPlatform from "@/components/Platform";
+import { getAppInfoById } from "@/api/aggregate";
+import { updateAppPlatLink } from "@/api/app";
+import { getAccounts, addPlatform } from "@/api/plat";
+import excel from "@/utils/1";
+import request from "@/utils/request";
+import {
+  getAccessKeyLabel,
+  getSecretLabel,
+  getUserIdLabel,
+  getshowUserId,
+  getShowAccessKey,
+} from "@/utils/autoPlatLabel";
+
+const HTTP_PREFIX = "http://creative.medproad.com/material/";
+export default {
+  name: "batchAdd",
+  components: {
+    AppPlatform,
+  },
+  data() {
+    const accessKeyValidator = (rule, value, callback) => {
+      if (!value || value === "") {
+        return callback(new Error("请输入" + this.accessKeyLabel));
+      } else {
+        callback();
+      }
+    };
+    const accountIdValidator = (rule, value, callback) => {
+      if (!value || value === "") {
+        return callback(new Error("请输入" + this.userIdLabel));
+      } else {
+        callback();
+      }
+    };
+    const secretKeyValidator = (rule, value, callback) => {
+      if (!value || value === "") {
+        return callback(new Error("请输入" + this.secretLabel));
+      } else {
+        callback();
+      }
+    };
+
+    return {
+      query: { fileList: [] },
+      appId: "",
+      appName: "",
+      placeId: "",
+      placeName: "",
+      positionId: "",
+      positionName: "",
+      iconUrl: "",
+      os: "",
+      settleType: "",
+      platName: "",
+      platId: "",
+      testId: "",
+      groupId: "",
+      editplatquery: {
+        platAccountId: "",
+        platId: "",
+        platAppId: "",
+        appKey: "",
+        appId: "",
+        id: "",
+        accessType: "",
+      },
+      accounts: [],
+      editplatrules: {
+        platAccountId: [
+          { required: true, message: "请选择账户", trigger: "change" },
+        ],
+        platAppId: [
+          { required: true, message: "请输入AppID", trigger: "blur" },
+        ],
+      },
+      rules: {
+        fileList: [{ required: true, message: "请上传文件" }],
+      },
+      addAccountDialog: false,
+      addAccountQuery: {
+        platId: "",
+        openApiStatus: 0,
+        isDebug: "0",
+      },
+      addAccountRules: {
+        name: [{ required: true, message: "请输入账户名称", trigger: "blur" }],
+        mid: [{ required: true, message: "请输入ID", trigger: "blur" }],
+        keyId: [{ required: true, message: "请输入密钥Id", trigger: "blur" }],
+        signKey: [{ required: true, message: "请输入密钥", trigger: "blur" }],
+        accountId: [
+          { required: true, validator: accountIdValidator, trigger: "blur" },
+        ],
+        secretKey: [
+          { required: true, validator: secretKeyValidator, trigger: "blur" },
+        ],
+        accessKey: [
+          { required: true, validator: accessKeyValidator, trigger: "blur" },
+        ],
+        // m_id: [{ required: true, message: "请输入渠道ID", trigger: "blur" }],
+      },
+      downLoading: false,
+    };
+  },
+  computed: {
+    // secretKey适应label
+    secretLabel() {
+      let label = getSecretLabel(this.editplatquery.platId);
+      return label;
+    },
+    // 是否显示accessKey输入框
+    showAccessKey() {
+      let isShow = getShowAccessKey(this.editplatquery.platId);
+      return isShow;
+    },
+    // 是否显示账户id输入框
+    showUserId() {
+      let isShow = getshowUserId(this.editplatquery.platId);
+      return isShow;
+    },
+    // accessKey适应label
+    accessKeyLabel() {
+      let label = getAccessKeyLabel(this.editplatquery.platId);
+      return label;
+    },
+    // 账户id适应label
+    userIdLabel() {
+      let label = getUserIdLabel(this.editplatquery.platId);
+      return label;
+    },
+  },
+  mounted() {
+    if (this.$route.query) {
+      this.appId = this.$route.query.appId ? this.$route.query.appId : "";
+      this.placeId = this.$route.query.placeId ? this.$route.query.placeId : "";
+      this.groupId = this.$route.query.groupId ? this.$route.query.groupId : "";
+      this.testId = this.$route.query.testId ? this.$route.query.testId : "";
+    }
+    this.getAppInfoById();
+  },
+  methods: {
+    handlePlatForm() {
+      let _this = this;
+      this.$refs.account_form.validate(async (valid) => {
+        if (valid) {
+          await addPlatform(_this.addAccountQuery).then((res) => {
+            this.$message({
+              message: "创建成功!",
+              type: "success",
+              duration: 5 * 1000,
+            });
+            _this.addAccountDialog = false;
+            _this.getAccounts(_this.addAccountQuery.platId);
+          });
+        }
+      });
+    },
+    showNewAccount() {
+      this.addAccountQuery = {
+        platId: this.editplatquery.platId,
+        openApiStatus: 0,
+        isDebug: "0",
+      };
+      this.addAccountDialog = true;
+    },
+    getAccounts(plat) {
+      getAccounts(plat).then((res) => {
+        this.accounts = res.data;
+      });
+    },
+    async getAppInfoById() {
+      let resp = await getAppInfoById({
+        id: this.appId,
+        placeId: this.placeId,
+      });
+      this.appName = resp.data[0] ? resp.data[0].name : "";
+      this.placeName = resp.data[0] ? resp.data[0].placeName : "";
+      this.positionId = resp.data[0] ? resp.data[0].position : "";
+      this.positionName = resp.data[0] ? resp.data[0].positionName : "";
+      this.iconUrl = resp.data[0] ? resp.data[0].iconUrl : "";
+      this.os = resp.data[0] ? resp.data[0].os : "";
+    },
+    getCreativeUrl(url) {
+      if (url) {
+        return HTTP_PREFIX + url;
+      } else {
+        return null;
+      }
+    },
+
+    getplatrow(row) {
+      this.getAccounts(row.id);
+      this.platId = row.id;
+      this.platName = row.name;
+      this.settleType = row.settleType;
+      this.editplatquery = {
+        name: row.name,
+        appId: this.appId,
+        platAccountId: row.platAccountId,
+        platId: row.id,
+        platAppId: row.platAppId,
+        appKey: row.appKey,
+        accessType: row.accessType,
+      };
+    },
+    goback() {
+      this.$router.push({
+        path: "/traffic/aggregate",
+        query: { appId: this.appId, placeId: this.placeId },
+      });
+    },
+
+    async handleDownload() {
+      this.downLoading = true;
+      try {
+        const res = await this.exportToExcel();
+        await excel(res, `【${this.platName}】代码位模板.xlsx`);
+        this.downLoading = false;
+      } catch (e) {
+        console.log(e, "导出excel错误信息");
+        this.downLoading = false;
+      }
+    },
+    exportToExcel() {
+      return request.post(
+        "/aggregate/downloadAdsourceTemplate",
+        { platId: this.platId },
+        {
+          responseType: "blob",
+        }
+      );
+    },
+    uploadFile(file) {
+      this.query.fileList = [];
+      this.query.fileList[0] = file;
+    },
+    removeFile(file) {
+      this.query.fileList = [];
+    },
+
+    // param是自带参数。 this.$refs.upload.submit() 会自动调用 httpRequest方法.在里面取得file
+    httpRequest(param) {
+      console.log(param);
+      let fileObj = param.file; // 相当于input里取得的files
+      let fd = new FormData(); // FormData 对象
+      fd.append("file", fileObj); // 文件对象
+      let parameter = {
+        placeId: this.placeId,
+        platId: this.platId,
+        groupId: this.groupId,
+        testId: this.testId,
+      };
+      fd.append("parameter", JSON.stringify(parameter));
+
+      let url = "/aggregate/bulkImportAdsource";
+      let config = {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      };
+      request.post(url, fd, config).then((res) => {
+        if (res.code == 200) {
+          this.$message.success("导入成功！");
+          this.goback();
+        }
+      });
+    },
+    async editUser() {
+      let resp = await updateAppPlatLink(this.editplatquery);
+      if (resp.code != 200) return;
+      this.editplatquerytemp = JSON.parse(JSON.stringify(this.editplatquery));
+      this.platAppId = this.editplatquery.platAppId;
+      this.$refs.upload.submit();
+    },
+    handleSubmit() {
+      if (!this.platId) {
+        this.$message.error("请选择广告源！");
+      }
+      this.$refs.form.validate(async (valid) => {
+        if (!valid) return;
+        this.$refs.platLinkForm.validate(async (platVal) => {
+          if (!platVal) return;
+          this.editUser();
+        });
+      });
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.batch-add-container {
+  width: 100%;
+  background-color: #fff;
+  .header {
+    padding: 10px;
+    display: flex;
+    .goback {
+      font-size: 16px;
+      margin-right: 30px;
+      cursor: pointer;
+      h3 {
+        font-size: 16px;
+      }
+      &:hover {
+        color: blue;
+      }
+    }
+  }
+  .appplatform {
+    margin-bottom: 20px;
+  }
+  .content {
+    padding-left: 30px;
+    width: 100%;
+    .title {
+      margin-top: 30px;
+      width: 100%;
+      display: flex;
+      .title_app,
+      .title_place {
+        line-height: 50px;
+        width: 320px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        .image {
+          width: 40px;
+          height: 40px;
+          overflow: hidden;
+          margin-right: 5px;
+        }
+      }
+      .titlebox {
+        .name {
+          font-size: 14px;
+          line-height: 30px;
+        }
+        .id {
+          font-size: 13px;
+          line-height: 20px;
+        }
+        .label {
+        }
+        .name.position {
+          line-height: 50px;
+        }
+      }
+    }
+    .platform {
+      margin-top: 40px;
+      display: flex;
+      .label {
+        width: 6%;
+        color: #666;
+      }
+      .platformbox {
+        width: 90%;
+      }
+    }
+  }
+
+  .export_btn {
+    margin-left: 30px;
+    width: 400px;
+    margin-top: 30px;
+  }
+  .submit_btn {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding-bottom: 30px;
+  }
+}
+</style>

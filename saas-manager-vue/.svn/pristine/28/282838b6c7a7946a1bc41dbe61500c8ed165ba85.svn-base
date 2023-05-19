@@ -1,0 +1,10 @@
+import request from '@/utils/request'
+
+// 消息通知列表
+export function messagePage(data) {
+    return request({
+        url: '/message/page',
+        method: 'post',
+        data
+    })
+}

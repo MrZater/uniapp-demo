@@ -1,0 +1,640 @@
+<template>
+  <div class="funnel-report-container">
+    <div class="search">
+      <el-row class="searchRow" :gutter="0">
+        <el-col :span="6" class="search_item"
+          ><el-date-picker
+            style="width: 90%"
+            v-model="date"
+            :clearable="false"
+            class="item"
+            type="daterange"
+            value-format="yyyy-MM-dd"
+            align="right"
+            unlink-panels
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            :picker-options="pickerOptions"
+            @change="getSTimeChange"
+        /></el-col>
+        <el-col :span="6" class="search_item">
+          <CustSelectApp
+            style="width: 90%"
+            :word="'应用'"
+            :width="450"
+            :allData="appList"
+            @selectListhandle="selectListhandleApp"
+            searchById
+          />
+        </el-col>
+        <el-col :span="6" class="search_item">
+          <CustSelectApp
+            style="width: 90%"
+            :word="'广告位'"
+            :width="450"
+            :allData="placeList"
+            @selectListhandle="selectListhandlePlace"
+            searchById
+          />
+        </el-col>
+        <el-col :span="6" class="search_item">
+          <CustSelectApp
+            style="width: 90%"
+            :word="'广告样式'"
+            :width="450"
+            :allData="positionList"
+            @selectListhandle="selectListhandlePosition"
+          />
+        </el-col>
+
+        <el-col :span="6" class="search_item">
+          <CustSelectApp
+            style="width: 90%"
+            :word="'流量分组'"
+            :width="450"
+            :allData="groupList"
+            @selectListhandle="selectListhandleGroup"
+          />
+        </el-col>
+        <el-col :span="6" class="search_item">
+          <CustSelectApp
+            style="width: 90%"
+            :word="'渠道'"
+            :width="450"
+            :allData="channelList"
+            @selectListhandle="selectListhandleChannel"
+        /></el-col>
+
+        <el-col :span="6" class="search_item">
+          <el-input
+            style="width: 90%"
+            placeholder="请输入SDK版本号"
+            v-model="query.sdkVersion"
+          />
+        </el-col>
+      </el-row>
+      <div class="searchBtn">
+        <el-button
+          style="float: right"
+          type="primary"
+          size="small"
+          icon="el-icon-search"
+          @click="searchBtn"
+          >搜索</el-button
+        >
+      </div>
+    </div>
+    <Funnel :funnelData="funnelData" class="funnel"></Funnel>
+    <div class="table" v-if="tableList.length > 1">
+      <el-table
+        v-loading="isLoading"
+        ref="box"
+        :header-cell-style="{ 'background-color': '#f7f8fa', color: '#000' }"
+        :data="tableList"
+        style="width: 100%"
+      >
+        <el-table-column
+          align="center"
+          prop="date"
+          label="日期"
+          fixed
+        ></el-table-column>
+        <el-table-column
+          align="center"
+          prop="startApp"
+          label="应用启动"
+          width="120px"
+          fixed
+          :render-header="renderHeader"
+        ></el-table-column>
+        <el-table-column
+          align="center"
+          prop="configNum"
+          label="获取配置"
+          width="120px"
+          fixed
+          :render-header="renderHeader"
+        ></el-table-column>
+        <el-table-column
+          align="center"
+          prop="request"
+          label="流量请求"
+          width="120px"
+          :render-header="renderHeader"
+        ></el-table-column>
+        <el-table-column
+          align="center"
+          prop="requestFilledRate"
+          label="流量填充率"
+          width="120px"
+          :render-header="renderHeader"
+          ><template slot-scope="{ row }">{{
+            row.requestFilledRate || row.requestFilledRate == 0
+              ? row.requestFilledRate + "%"
+              : "-"
+          }}</template></el-table-column
+        >
+        <el-table-column
+          align="center"
+          prop="triggerImpress"
+          label="触发展示"
+          width="120px"
+          :render-header="renderHeader"
+          ><template slot-scope="{ row }">{{
+            row.triggerImpress || row.triggerImpress == 0
+              ? row.triggerImpress
+              : "-"
+          }}</template></el-table-column
+        >
+        <el-table-column
+          align="center"
+          prop="advTriggerRate"
+          label="广告触发率"
+          :render-header="renderHeader"
+          width="120px"
+          ><template slot-scope="{ row }">{{
+            row.advTriggerRate || row.advTriggerRate == 0
+              ? row.advTriggerRate + "%"
+              : "-"
+          }}</template></el-table-column
+        >
+
+        <el-table-column
+          align="center"
+          prop="impressSuccessRate"
+          label="展示成功率"
+          width="120px"
+          :render-header="renderHeader"
+          ><template slot-scope="{ row }">{{
+            row.impressSuccessRate || row.impressSuccessRate == 0
+              ? row.impressSuccessRate + "%"
+              : "-"
+          }}</template></el-table-column
+        >
+        <el-table-column
+          align="center"
+          prop="impress"
+          label="展示"
+          width="80px"
+          :render-header="renderHeader"
+          ><template slot-scope="{ row }">{{
+            row.impress || row.impress == 0 ? row.impress : "-"
+          }}</template></el-table-column
+        >
+        <el-table-column
+          align="center"
+          prop="unitImpression"
+          label="展示API"
+          width="100px"
+          :render-header="renderHeader"
+          ><template slot-scope="{ row }">{{
+            row.unitImpression || row.unitImpression == 0
+              ? row.unitImpression
+              : "-"
+          }}</template></el-table-column
+        >
+        <el-table-column
+          align="center"
+          prop="impressionGap"
+          label="展示GAP"
+          width="110px"
+          :render-header="renderHeader"
+          ><template slot-scope="{ row }">{{
+            row.impressionGap || row.impressionGap == 0
+              ? row.impressionGap + "%"
+              : "-"
+          }}</template></el-table-column
+        >
+        <el-table-column
+          align="center"
+          prop="click"
+          label="点击"
+          width="80px"
+          :render-header="renderHeader"
+          ><template slot-scope="{ row }">{{
+            row.click || row.click == 0 ? row.click : "-"
+          }}</template></el-table-column
+        >
+        <el-table-column
+          align="center"
+          prop="clickRate"
+          label="点击率"
+          width="100px"
+          :render-header="renderHeader"
+          ><template slot-scope="{ row }">{{
+            row.clickRate || row.clickRate == 0 ? row.clickRate + "%" : "-"
+          }}</template></el-table-column
+        >
+      </el-table>
+      <el-pagination
+        style="margin-top: 20px"
+        :current-page="query.page"
+        :page-sizes="[10, 20, 30, 40]"
+        :page-size="query.limit"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div>
+    <Empty class="empty" v-else />
+  </div>
+</template>
+
+<script>
+import { adminDateOotion } from "@/utils/options";
+import Funnel from "./funnel/index.vue";
+import CustSelectApp from "@/components/CustSelectApp";
+import Empty from "@/components/empty";
+import tips from "@/components/tips/HelpHint/HelpHint.vue";
+
+import { getAppList } from "@/api/app";
+import { getPlaceList } from "@/api/place";
+import { getPositionList } from "@/api/common";
+import {
+  flowGroups,
+  getChannel,
+  appToAdvert,
+  appToFlow,
+  appToCode,
+} from "@/api/synthReport";
+import { funnelReport } from "@/api/funnelReport";
+
+export default {
+  name: "funnelReport",
+  components: { Funnel, CustSelectApp, Empty, tips },
+  data() {
+    return {
+      // 日期选择器参数
+      pickerOptions: adminDateOotion ? adminDateOotion : [],
+      // 日期
+      date: [],
+
+      query: {
+        page: 1, // 页数
+        limit: 10, // 页容量
+        dateStart: "", // 开始日期
+        dateEnd: "", // 结束日期
+        appIdList: [], // 应用id数组
+        appIdListExclude: 1,
+        placeIdList: [], // 广告位id数组
+        placeIdListExclude: 1,
+        positionIdList: [], // 广告样式数组
+        positionIdListExclude: 1,
+        groupIdList: [], // 流量分组
+        groupIdListExclude: 1,
+        channelIdList: [], // 渠道分组
+        channelIdListExclude: 1,
+        platIdList: [], // 广告源id数组
+        platIdListExclude: 1,
+        sourceIdList: [], // 代码位数组
+        sourceIdListExclude: 1,
+        groupByList: ["date"], // 维度
+        sdkVersion: "", // sdk版本号
+        adminUserIds: [], // 用户id数组
+        groupBy: "", // 图标维度对比必填
+      },
+      total: 0,
+      appList: [], // 应用列表
+      placeList: [], // 广告位列表
+      // 广告样式列表
+      positionList: [],
+      // 流量分组
+      groupList: [],
+      //  渠道列表
+      channelList: [],
+      funnelData: {},
+      tableList: [],
+      isLoading: false,
+    };
+  },
+  mounted() {
+    this.initDate();
+    this.getApp();
+    this.getPlace();
+    this.getPosition();
+    this.getFlowGroups();
+    this.getChannelData();
+    this.getTableList();
+  },
+  computed: {
+    title() {
+      return this.$store.getters.title;
+    },
+  },
+  methods: {
+    // 初始化时间
+    initDate() {
+      let time1 = new Date().getTime() - 1000 * 60 * 60 * 24;
+      let year1 = new Date(time1).getFullYear();
+      let month1 = new Date(time1).getMonth() + 1;
+      let day1 = new Date(time1).getDate();
+      let time2 = new Date().getTime() - 1000 * 60 * 60 * 24 * 8;
+      let year2 = new Date(time2).getFullYear();
+      let month2 = new Date(time2).getMonth() + 1;
+      let day2 = new Date(time2).getDate();
+      let str1 = `${year1}-${month1 < 10 ? "0" + month1 : month1}-${
+        day1 < 10 ? "0" + day1 : day1
+      }`;
+      let str2 = `${year2}-${month2 < 10 ? "0" + month2 : month2}-${
+        day2 < 10 ? "0" + day2 : day2
+      }`;
+      this.date = [str2, str1];
+      this.query.dateEnd = str1;
+      this.query.dateStart = str2;
+    },
+    // 日期改变事件
+    getSTimeChange() {
+      this.query.dateEnd = this.date[1];
+      this.query.dateStart = this.date[0];
+    },
+    // 获取应用列表
+    getApp() {
+      getAppList().then((res) => {
+        if (res.code !== 200) return;
+        if (!res.data) {
+          res.data = [];
+        }
+        this.appList = res.data;
+      });
+    },
+    // 应用列表改变事件
+    selectListhandleApp(val) {
+      if (this.query.appIdList.length !== val.length) {
+        this.query.appIdList = val;
+        this.changeAppList(val);
+      }
+    },
+    async changeAppList(val) {
+      if (val.length > 0) {
+        let appList = val;
+        //   广告位
+        let resp1 = await appToAdvert(appList);
+        this.placeList = resp1.data ? resp1.data : [];
+        //   流量分组
+        let resp2 = await appToFlow(appList);
+        this.groupList = resp2.data ? resp2.data : [];
+      } else {
+        this.getPlace();
+        this.getFlowGroups();
+      }
+    },
+    // 获取广告位列表
+    getPlace() {
+      getPlaceList().then((res) => {
+        if (res.code !== 200) return;
+        if (!res.data) {
+          res.data = [];
+        }
+        this.placeList = res.data;
+      });
+    },
+    // 广告位列表改变事件
+    selectListhandlePlace(val) {
+      if (this.query.placeIdList.length !== val.length) {
+        this.query.placeIdList = val;
+      }
+    },
+    // 获取广告样式列表
+    getPosition() {
+      getPositionList().then((res) => {
+        if (res.code !== 200) return;
+        if (!res.data) {
+          res.data = [];
+        }
+        this.positionList = res.data;
+      });
+    },
+    // 广告样式改变事件
+    selectListhandlePosition(val) {
+      this.query.positionIdList = val;
+    },
+    // 获取流量分组
+    getFlowGroups() {
+      flowGroups().then((res) => {
+        if (res.code !== 200) return;
+        if (!res.data) {
+          res.data = [];
+        }
+        this.groupList = res.data;
+      });
+    },
+    // 流量分组列表改变事件
+    selectListhandleGroup(val) {
+      this.query.groupIdList = val;
+    },
+    // 获取渠道列表
+    getChannelData() {
+      getChannel().then((res) => {
+        if (res.code !== 200) return;
+        if (!res.data) {
+          res.data = [];
+        }
+        this.channelList = res.data.map((item) => {
+          return { id: item, name: item };
+        });
+      });
+    },
+    // 渠道改变事件
+    selectListhandleChannel(val) {
+      this.query.channelIdList = val;
+    },
+
+    // 搜索按钮事件
+    searchBtn() {
+      this.query.page = 1;
+      this.getTableList();
+    },
+    async getTableList() {
+      this.isLoading = true;
+      let resp = await funnelReport(this.query);
+      this.funnelData = resp.data ? resp.data.aggregate : {};
+      if (resp.data && resp.data.items && resp.data.aggregate) {
+        resp.data.aggregate.date = "汇总";
+        resp.data.items.unshift(resp.data.aggregate);
+      }
+      this.tableList = resp.data ? resp.data.items : [];
+      this.total = resp.data.total;
+      this.isLoading = false;
+    },
+    handleSizeChange(limit) {
+      this.query.page = 1;
+      this.query.limit = limit;
+      this.getTableList();
+    },
+    handleCurrentChange(page) {
+      this.query.page = page;
+      this.getTableList();
+    },
+    renderHeader(h, { column, $index }) {
+      // 流量请求
+      if (column.property === "request") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}向广告平台发起请求的次数`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 流量填充率
+      if (column.property === "requestFilledRate") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}向广告平台发送请求后返回成功的占比`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      //展示
+      if (column.property === "impress") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}统计的广告曝光次数，由于统计口径差异、网络丢包等因素，${this.title}统计的展示数据与广告平台展示数据可能存在差异`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 点击
+      if (column.property === "click") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}统计的广告点击数，由于部分广告平台不提供点击回调，${this.title}统计的点击数据与广告平台点击数据可能存在差异`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 点击率
+      if (column.property === "clickRate") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}统计的点击率，点击率=点击数/展示数`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 展示Gap
+      if (column.property === "impressionGap") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}统计展示与广告平台统计展示的差异，公式为 展示Gap=(展示-展示API)/展示API`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 展示API
+      if (column.property === "unitImpression") {
+        return this.$createElement("tips", {
+          props: {
+            content: `${this.title}通过Reporting API向广告平台拉取到的展示`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 应用启动
+      if (column.property === "startApp") {
+        return this.$createElement("tips", {
+          props: {
+            content: `应用启动并成功初始化${this.title} SDK`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 获取配置
+      if (column.property === "configNum") {
+        return this.$createElement("tips", {
+          props: {
+            content: `应用向${this.title}服务器请求广告位配置策略`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 触发展示
+      if (column.property === "triggerImpress") {
+        return this.$createElement("tips", {
+          props: {
+            content: `应用调用${this.title} 的Show接口(原生、横幅广告为触发三方广告的展示逻辑)`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 展示成功率
+      if (column.property === "impressSuccessRate") {
+        return this.$createElement("tips", {
+          props: {
+            content: `触发展示/流量填充*100%`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 广告触发率
+      if (column.property === "advTriggerRate") {
+        return this.$createElement("tips", {
+          props: {
+            content: `展示 / 触发展示 * 100%`,
+            title: column.label,
+            isShow: true,
+          },
+        });
+      }
+      // 其他
+      return this.$createElement("tips", {
+        props: {
+          content: ``,
+          title: column.label,
+          isShow: false,
+        },
+      });
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.funnel-report-container {
+  position: relative;
+  width: 100%;
+
+  .search {
+    padding: 30px;
+    background-color: #fff;
+    .searchRow {
+      margin-top: 10px;
+      margin-bottom: 10px;
+      .search_item {
+        margin-top: 10px;
+      }
+    }
+    .searchBtn {
+      margin-top: 20px;
+      width: 100%;
+      display: flex;
+      flex-direction: row-reverse;
+      padding-right: 60px;
+    }
+  }
+  .funnel {
+    background-color: #fff;
+    margin-top: 15px;
+    width: 100%;
+  }
+  .table,
+  .empty {
+    margin-top: 15px;
+    padding: 20px;
+    background-color: #fff;
+    margin-bottom: 50px;
+  }
+}
+</style>

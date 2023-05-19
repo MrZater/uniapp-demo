@@ -1,0 +1,20 @@
+const getters = {
+  sidebar: state => state.app.sidebar,
+  size: state => state.app.size,
+  device: state => state.app.device,
+  token: state => state.user.token,
+  mediaAccess: state => state.user.mediaAccess,
+  name: state => state.user.name,
+  username: state => state.user.username,
+  roles: state => state.user.roles,
+  menus: state => state.user.menus,
+  skip: state => state.user.skip,
+  creative: state => state.user.creative,
+  permission_routes: state => state.permission.routes,
+  title: state => state.autoweb.title,
+  unReadMessage: state => state.user.unReadMessage,
+  origin: state => state.autoweb.origin,
+  allow_register: state => state.autoweb.allowRegister,
+  // errorLogs: state => state.errorLog.logs
+}
+export default getters

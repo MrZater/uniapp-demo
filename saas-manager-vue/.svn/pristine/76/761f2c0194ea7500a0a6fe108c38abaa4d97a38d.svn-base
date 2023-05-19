@@ -1,0 +1,879 @@
+<template>
+  <div class="tab-container">
+    <el-row :gutter="40" class="panel-group">
+      <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
+        <div class="card-panel">
+          <div class="card-panel-icon-wrapper icon-yesterday">
+            <svg-icon icon-class="money" class-name="card-panel-icon" />
+          </div>
+          <div class="card-panel-description">
+            <div class="card-panel-text">昨天({{ income.yesterdayLabel }})</div>
+            <div class="box">{{ income.yesterday }}</div>
+            <!-- <count-to :start-val="0" :end-val="income.yesterday" /> -->
+          </div>
+        </div>
+      </el-col>
+      <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
+        <div class="card-panel">
+          <div class="card-panel-icon-wrapper icon-last-seven-day">
+            <svg-icon icon-class="money" class-name="card-panel-icon" />
+          </div>
+          <div class="card-panel-description">
+            <div class="card-panel-text">
+              前天({{ income.beforeYesterdayLabel }})
+            </div>
+            <div class="box">{{ income.beforeYesterday }}</div>
+            <!-- <count-to :start-val="0" :end-val="income.sevenDay" /> -->
+          </div>
+        </div>
+      </el-col>
+      <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
+        <div class="card-panel">
+          <div class="card-panel-icon-wrapper icon-month">
+            <svg-icon icon-class="money" class-name="card-panel-icon" />
+          </div>
+          <div class="card-panel-description">
+            <div class="card-panel-text">本月({{ income.monthLabel }})</div>
+            <div class="box">{{ income.month }}</div>
+            <!-- <count-to :start-val="0" :end-val="income.month" /> -->
+          </div>
+        </div>
+      </el-col>
+
+      <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
+        <div class="card-panel">
+          <div class="card-panel-icon-wrapper icon-all">
+            <svg-icon icon-class="money" class-name="card-panel-icon" />
+          </div>
+          <div class="card-panel-description">
+            <div class="card-panel-text">上月({{ income.lastMonthLabel }})</div>
+            <div class="box">{{ income.lastMonth }}</div>
+            <!-- <count-to :start-val="0" :end-val="income.all" /> -->
+          </div>
+        </div>
+      </el-col>
+    </el-row>
+
+    <!-- 日期 -->
+
+    <el-date-picker
+      v-model="time"
+      :clearable="false"
+      class="item"
+      type="daterange"
+      value-format="yyyy-MM-dd"
+      align="right"
+      unlink-panels
+      range-separator="至"
+      start-placeholder="开始日期"
+      end-placeholder="结束日期"
+      :picker-options="pickerOptions"
+      @change="getSTime"
+    />
+    <!-- 应用 -->
+
+    <el-select
+      v-model="department1"
+      class="item"
+      placeholder="应用"
+      multiple
+      collapse-tags
+      @change="getSelectDep1"
+    >
+      <div style="padding-left: 10px">
+        <el-radio v-model="echartsParams.appIdListExclude" :label="1"
+          >包括</el-radio
+        >
+        <el-radio v-model="echartsParams.appIdListExclude" :label="0"
+          >不包括</el-radio
+        >
+        <el-checkbox
+          v-model="checkedThing1"
+          :style="selfstyle"
+          @change="selectAllThing1"
+          >全选</el-checkbox
+        >
+
+        <el-option
+          v-for="(item, index) in departments1"
+          :key="index"
+          :label="item.name"
+          :value="item.id"
+        /></div
+    ></el-select>
+
+    <!-- 广告位 -->
+    <el-select
+      v-model="department2"
+      class="item"
+      placeholder="广告位"
+      multiple
+      collapse-tags
+      @change="getSelectDep2"
+    >
+      <div style="padding-left: 10px">
+        <el-radio v-model="echartsParams.placeIdListExclude" :label="1"
+          >包括</el-radio
+        >
+        <el-radio v-model="echartsParams.placeIdListExclude" :label="0"
+          >不包括</el-radio
+        >
+        <el-checkbox
+          v-model="checkedThing2"
+          :style="selfstyle"
+          @change="selectAllThing2"
+          >全选</el-checkbox
+        >
+      </div>
+      <el-option
+        v-for="(item, index) in departments2"
+        :key="index"
+        :label="item.name"
+        :value="item.id"
+      />
+    </el-select>
+
+    <!-- 广告样式 -->
+    <el-select
+      v-model="echartsParams.positionIdList"
+      class="item"
+      multiple
+      collapse-tags
+      style="margin-left: 20px"
+      placeholder="广告样式"
+    >
+      <el-option
+        v-for="item in options1"
+        :key="item.value"
+        :label="item.name"
+        :value="item.id"
+      />
+    </el-select>
+
+    <!-- 广告平台-->
+    <el-select
+      v-model="department3"
+      class="item"
+      placeholder="广告平台"
+      multiple
+      collapse-tags
+      @change="getSelectDep3"
+    >
+      <div style="padding-left: 10px">
+        <el-radio v-model="echartsParams.platIdListExclude" :label="1"
+          >包括</el-radio
+        >
+        <el-radio v-model="echartsParams.platIdListExclude" :label="0"
+          >不包括</el-radio
+        >
+        <el-checkbox
+          v-model="checkedThing3"
+          :style="selfstyle"
+          @change="selectAllThing3"
+          >全选</el-checkbox
+        >
+      </div>
+      <el-option
+        v-for="(item, index) in departments3"
+        :key="index"
+        :label="item.name"
+        :value="item.id"
+      />
+    </el-select>
+
+    <!-- 系统平台 -->
+    <el-select
+      v-model="echartsParams.osIdList"
+      class="item"
+      multiple
+      placeholder="系统平台"
+    >
+      <el-option
+        v-for="item in systemPlatformOptions"
+        :key="item.value"
+        :label="item.label"
+        :value="item.value"
+      />
+    </el-select>
+    <el-button type="primary" icon="el-icon-search" @click="handleSearch"
+      >搜索</el-button
+    >
+    <div class="earcth">
+      <div ref="box" v-loading="loadingEcharts" class="eartch_left" />
+      <div class="data_right">
+        <el-checkbox-group v-model="checkList" @change="changeEcharts">
+          <h3>指标</h3>
+          <ul>
+            <li><el-checkbox label="unitRevenue">收益</el-checkbox></li>
+            <li><el-checkbox label="impression">展示</el-checkbox></li>
+            <li><el-checkbox label="dau">DAU</el-checkbox></li>
+            <!-- <li><el-checkbox label="ecpm">ecpm</el-checkbox></li> -->
+            <li><el-checkbox label="arpu">人均收益</el-checkbox></li>
+            <li><el-checkbox label="aipau">展示 / DAU</el-checkbox></li>
+            <li>
+              <el-checkbox label="estimatedRevenue">预估收益</el-checkbox>
+            </li>
+            <li>
+              <el-checkbox label="estimatedRevenueEcpm">预估eCPM</el-checkbox>
+            </li>
+          </ul>
+        </el-checkbox-group>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { incomeData, homeEcharts } from "@/api/index";
+import { getPlaceList } from "@/api/place";
+import { getAppList } from "@/api/app";
+import { getPositionList } from "@/api/common";
+import { toDate } from "@/utils/toTimer";
+import { advertPlatform, appToAdvert } from "@/api/synthReport";
+import echarts from "echarts";
+export default {
+  name: "Admin",
+  components: {},
+  data() {
+    return {
+      loadingEcharts: false,
+      echartsParams: {
+        dateStart: "",
+        dateEnd: "",
+        appIdList: [], // 应用id数组
+        appIdListExclude: 1,
+        placeIdList: [],
+        placeIdListExclude: 1,
+        positionIdList: [],
+        positionIdListExclude: 1,
+        platIdList: [],
+        platIdListExclude: 1,
+        osIdList: [],
+        osIdListExclude: 1,
+      },
+      time: [],
+      income: {
+        beforeYesterday: 0,
+        beforeYesterdayLabel: "",
+        lastMonth: 0,
+        lastMonthLabel: "",
+        month: 0,
+        monthLabel: "",
+        yesterday: 0,
+        yesterdayLabel: "",
+      },
+
+      chartOption: {},
+      chartData: null,
+      pickerOptions: {
+        shortcuts: [
+          {
+            text: "最近一周",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+              picker.$emit("pick", [start, end]);
+            },
+          },
+          {
+            text: "最近14天",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 14);
+              picker.$emit("pick", [start, end]);
+            },
+          },
+          {
+            text: "最近一个月",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+              picker.$emit("pick", [start, end]);
+            },
+          },
+        ],
+      },
+      checkList: ["unitRevenue", "impression"],
+      ecjartsList: [],
+      option: {
+        tooltip: {
+          trigger: "axis",
+          formatter: (params) => {
+            let str = "";
+            params.forEach((item, index) => {
+              let temp = {};
+              if (
+                item.seriesName == "收益" ||
+                item.seriesName == "eCPM" ||
+                item.seriesName == "预估收益" ||
+                item.seriesName == "人均收益"
+              ) {
+                temp.value = "￥" + item.value;
+              } else {
+                temp.value = item.value;
+              }
+              str += item.marker + item.seriesName + ": " + temp.value + "<br>";
+            });
+            return params[0].axisValue + "<br>" + str;
+          },
+        },
+        legend: {
+          data: [],
+        },
+        grid: {
+          left: "4%",
+          right: "4%",
+          bottom: "3%",
+          containLabel: true,
+        },
+        xAxis: {
+          type: "category",
+          boundaryGap: false,
+          data: [],
+          axisLine: {
+            lineStyle: {
+              color: "#000",
+              width: 0.5,
+            },
+          },
+        },
+        yAxis: [
+          {
+            type: "value",
+            axisLabel: {
+              formatter: "￥{value}",
+            },
+            position: "left",
+            axisLine: {
+              lineStyle: {
+                color: "#000",
+                width: 0.5,
+              },
+            },
+          },
+          {
+            type: "value",
+            position: "right",
+            axisLine: {
+              lineStyle: {
+                color: "#000",
+                width: 0.5,
+              },
+            },
+          },
+        ],
+        series: [
+          {
+            name: "",
+            type: "line",
+            smooth: true,
+            data: [],
+            symbol: "circle", // 设定为实心点
+            symbolSize: 6, // 设定实心点的大小
+            itemStyle: {
+              normal: {
+                color: "#0055ff",
+                lineStyle: {
+                  color: "#0055ff",
+                  width: 3,
+                },
+              },
+            },
+          },
+          {
+            name: "",
+            type: "line",
+            smooth: true,
+            yAxisIndex: 1,
+            data: [],
+            symbol: "circle", // 设定为实心点
+            symbolSize: 6, // 设定实心点的大小
+            itemStyle: {
+              normal: {
+                color: "#ffab31",
+                lineStyle: {
+                  color: "#ffab31",
+                  width: 3,
+                },
+              },
+            },
+          },
+          {
+            name: "",
+            type: "line",
+            smooth: true,
+            data: [],
+            symbol: "circle", // 设定为实心点
+            symbolSize: 6, // 设定实心点的大小
+            itemStyle: {
+              normal: {
+                color: "#39da61",
+                lineStyle: {
+                  color: "#39da61",
+                  width: 3,
+                },
+              },
+            },
+          },
+          {
+            name: "",
+            type: "line",
+            smooth: true,
+            data: [],
+            symbol: "circle", // 设定为实心点
+            symbolSize: 6, // 设定实心点的大小
+            itemStyle: {
+              normal: {
+                color: "#ff6688",
+                lineStyle: {
+                  color: "#ff6688",
+                  width: 3,
+                },
+              },
+            },
+          },
+
+          {
+            name: "",
+            type: "line",
+            smooth: true,
+            data: [],
+            symbol: "circle", // 设定为实心点
+            symbolSize: 6, // 设定实心点的大小
+            itemStyle: {
+              normal: {
+                color: "#a8a8ff",
+                lineStyle: {
+                  color: "#a8a8ff",
+                  width: 3,
+                },
+              },
+            },
+          },
+          {
+            name: "",
+            type: "line",
+            smooth: true,
+            data: [],
+            symbol: "circle", // 设定为实心点
+            symbolSize: 6, // 设定实心点的大小
+            itemStyle: {
+              normal: {
+                color: "#de7af9",
+                lineStyle: {
+                  color: "#de7af9",
+                  width: 3,
+                },
+              },
+            },
+          },
+          {
+            name: "",
+            type: "line",
+            smooth: true,
+            data: [],
+            symbol: "circle", // 设定为实心点
+            symbolSize: 6, // 设定实心点的大小
+            itemStyle: {
+              normal: {
+                color: "#ff746c",
+                lineStyle: {
+                  color: "#ff746c",
+                  width: 3,
+                },
+              },
+            },
+          },
+          {
+            name: "",
+            type: "line",
+            smooth: true,
+            data: [],
+            symbol: "circle", // 设定为实心点
+            symbolSize: 6, // 设定实心点的大小
+            itemStyle: {
+              normal: {
+                color: "#5756d5",
+                lineStyle: {
+                  color: "#5756d5",
+                  width: 3,
+                },
+              },
+            },
+          },
+        ],
+      },
+      options1: [],
+      options2: [],
+      departments1: [],
+      departments2: [],
+      departments3: [],
+      checkedThing1: false,
+      checkedThing2: false,
+      checkedThing3: false,
+      department1: [],
+      department2: [],
+      department3: [],
+
+      selfstyle: {
+        textAlign: "right",
+        paddingRight: "10px",
+      },
+      appOptions: [],
+      adverStyleOptions: [],
+      systemPlatformOptions: [
+        { label: "Android", value: "0" },
+        { label: "iOS", value: "1" },
+      ],
+      adverStyleVal: "",
+      systemPlatform: [],
+    };
+  },
+  watch: {},
+  mounted() {
+    this.getIncome();
+    this.echartsInit();
+    this.getHomeEcharts();
+    this.getDate();
+    this.getApp();
+    this.getPlace();
+    this.getPosition();
+    this.getPlatOptionList();
+  },
+  methods: {
+    getIncome() {
+      incomeData().then((res) => {
+        if (res.code !== 200) return this.$message.error(res.msg);
+        this.income = res.data;
+      });
+    },
+    getDate() {
+      // 昨天
+      let today = toDate(Date.now() - 24 * 60 * 60 * 1000);
+      // 13天前
+      let day13Before = toDate(Date.now() - 14 * 24 * 60 * 60 * 1000);
+      this.time = [day13Before, today];
+      this.echartsParams.dateStart = this.time[0];
+      this.echartsParams.dateEnd = this.time[1];
+    },
+    // 应用
+    getApp() {
+      getAppList().then((res) => {
+        this.departments1 = res.data;
+      });
+    },
+    // 广告位
+    getPlace() {
+      getPlaceList().then((res) => {
+        this.departments2 = res.data;
+      });
+    },
+    // 广告样式
+    getPosition() {
+      getPositionList().then((res) => {
+        this.options1 = res.data;
+      });
+    },
+    // 广告平台
+    getPlatOptionList() {
+      advertPlatform().then((res) => {
+        this.departments3 = res.data;
+      });
+    },
+    getSTime() {
+      if (this.time) {
+        this.echartsParams.dateStart = this.time[0];
+        this.echartsParams.dateEnd = this.time[1];
+      } else {
+        this.echartsParams.dateStart = "";
+        this.echartsParams.dateEnd = "";
+        this.time = [];
+      }
+    },
+    //  应用单选
+    getSelectDep1(department) {
+      if (department.length === this.departments1.length) {
+        this.checkedThing1 = true;
+      } else {
+        this.checkedThing1 = false;
+      }
+      this.echartsParams.appIdList = department;
+      if (department.length === 0) {
+        // 广告位
+        this.getPlace();
+      } else {
+        appToAdvert(department).then((res) => {
+          this.departments2 = res.data;
+        });
+      }
+    },
+    // 应用全选
+    selectAllThing1() {
+      this.department1 = [];
+      if (this.checkedThing1) {
+        this.departments1.map((item) => {
+          this.department1.push(item.id);
+        });
+      } else {
+        this.department1 = [];
+      }
+      this.echartsParams.appIdList = this.department1;
+      if (this.department1.length === 0) {
+        // 广告位
+        this.getPlace();
+      } else {
+        appToAdvert(this.department1).then((res) => {
+          this.departments2 = res.data;
+        });
+      }
+    },
+
+    //  广告位单选
+    getSelectDep2(department) {
+      if (department.length === this.departments2.length) {
+        this.checkedThing2 = true;
+      } else {
+        this.checkedThing2 = false;
+      }
+      this.echartsParams.placeIdList = department;
+    },
+    //  广告位全选
+    selectAllThing2() {
+      this.department2 = [];
+      if (this.checkedThing2) {
+        this.departments2.map((item) => {
+          this.department2.push(item.id);
+        });
+      } else {
+        this.department2 = [];
+      }
+      this.echartsParams.placeIdList = this.department2;
+    },
+
+    //  广告平台单选
+    getSelectDep3(department) {
+      if (department.length === this.departments3.length) {
+        this.checkedThing3 = true;
+      } else {
+        this.checkedThing3 = false;
+      }
+      this.echartsParams.platIdList = department;
+    },
+    // 广告平台 全选
+    selectAllThing3() {
+      this.department3 = [];
+      if (this.checkedThing3) {
+        this.departments3.map((item) => {
+          this.department3.push(item.id);
+        });
+      } else {
+        this.department3 = [];
+      }
+      this.echartsParams.platIdList = this.department3;
+    },
+
+    handleSearch() {
+      this.getHomeEcharts();
+    },
+
+    echartsInit() {
+      let myEcharts = echarts.init(this.$refs.box);
+      myEcharts.setOption(this.option);
+    },
+    getHomeEcharts() {
+      this.loadingEcharts = true;
+      homeEcharts(this.echartsParams).then((res) => {
+        if (res.code !== 200) return;
+        setTimeout(() => {
+          this.loadingEcharts = false;
+        }, 400);
+        this.option.xAxis.data = res.data.lable;
+        res.data.list.forEach((e) => {
+          if (e.field === "estimatedRevenue") {
+            e.data.forEach((item, index) => {
+              e.data[index] = item.toFixed(2);
+            });
+          }
+          if (e.field === "unitRevenue") {
+            e.data.forEach((item, index) => {
+              e.data[index] = item.toFixed(2);
+            });
+          }
+        });
+        // console.log(res.data.list)
+        this.ecjartsList = res.data.list;
+        this.changeEcharts();
+      });
+    },
+    // 点击复选框
+    changeEcharts() {
+      for (let j = 0; j < this.option.series.length; j++) {
+        this.option.series[j].data = [];
+        this.option.series[j].name = "";
+      }
+      for (let i = 0; i < this.checkList.length; i++) {
+        for (let j = 0; j < this.ecjartsList.length; j++) {
+          if (this.checkList[i] === this.ecjartsList[j].field) {
+            this.option.series[j].data = this.ecjartsList[j].data;
+            this.option.series[j].name = this.ecjartsList[j].name;
+          }
+        }
+      }
+      this.echartsInit();
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+body {
+  // width: 100%;
+  overflow-x: scroll;
+}
+.tab-container {
+  padding: 10px;
+  // background-color: rgb(240, 242, 245);
+  position: relative;
+  .item {
+    margin: 0 20px 20px 0;
+  }
+  .panel-group {
+    .card-panel-col {
+      margin-bottom: 32px;
+    }
+
+    .card-panel {
+      display: flex;
+      height: 108px;
+      cursor: pointer;
+      font-size: 12px;
+      position: relative;
+      overflow: hidden;
+      color: #666;
+      background: #fff;
+      box-shadow: 4px 4px 40px rgba(0, 0, 0, 0.05);
+      border-color: rgba(0, 0, 0, 0.05);
+
+      // &:hover {
+      //   .card-panel-icon-wrapper {
+      //     color: #fff;
+      //   }
+
+      //   .icon-yesterday {
+      //     background: #40c9c6;
+      //   }
+
+      //   .icon-last-seven-day {
+      //     background: #36a3f7;
+      //   }
+
+      //   .icon-month {
+      //     background: #f4516c;
+      //   }
+
+      //   .icon-all {
+      //     background: #34bfa3;
+      //   }
+      // }
+
+      .icon-yesterday {
+        color: #40c9c6;
+      }
+
+      .icon-last-seven-day {
+        color: #36a3f7;
+      }
+
+      .icon-month {
+        color: #f4516c;
+      }
+
+      .icon-all {
+        color: #34bfa3;
+      }
+
+      .card-panel-icon-wrapper {
+        float: left;
+        margin: 14px 0 0 0px;
+        padding: 16px;
+        transition: all 0.38s ease-out;
+        border-radius: 6px;
+      }
+
+      .card-panel-icon {
+        float: left;
+        font-size: 48px;
+      }
+
+      .card-panel-description {
+        // float: left;
+        flex: 1;
+        font-weight: bold;
+        margin: 26px 0px 26px 0;
+
+        .card-panel-text {
+          line-height: 18px;
+          color: rgba(0, 0, 0, 0.45);
+          font-size: 16px;
+          margin-bottom: 12px;
+        }
+        .card-panel-num {
+          font-size: 20px;
+        }
+      }
+    }
+  }
+  .earcth {
+    display: flex;
+    width: 100%;
+    margin-top: 20px;
+    // overflow-x: scroll;
+    background-color: #fff;
+    .eartch_left {
+      width: 80%;
+      height: 380px;
+      // background-color: blue;
+    }
+    .data_right {
+      flex: 1;
+
+      h3 {
+        font-weight: 400;
+        height: 40px;
+        line-height: 40px;
+        color: #333;
+        border: 1px solid rgb(214, 208, 208);
+        border-bottom: none;
+        box-sizing: border-box;
+        color: #333;
+        font-size: 14px;
+        padding-left: 30px;
+        background-color: #f5f7fa;
+      }
+      ul {
+        height: 300px;
+        overflow-y: scroll;
+        border: 1px solid rgb(214, 208, 208);
+        li {
+          height: 40px;
+          line-height: 40px;
+          padding-left: 20px;
+          box-sizing: border-box;
+          border-bottom: 1px solid rgb(214, 208, 208);
+        }
+      }
+    }
+  }
+  .searchTiaojian {
+    width: 100%;
+    background-color: red;
+    margin-bottom: 15px;
+  }
+}
+.box {
+  font-size: 22px;
+}
+</style>

@@ -1,0 +1,22 @@
+{
+    "name": "test",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "less": "^4.1.1",
+        "post-cli": "^1.0.5",
+        "postcss": "^8.3.6",
+        "webpack": "^4.46.0",
+        "webpack-cli": "^3.3.10"
+    },
+    "scripts": {
+        "start": "postcss css/suorce.pcss -o css/out.css -w"
+    },
+    "dependencies": {
+        "jquery": "^3.4.1",
+        "wepack-cli": "^0.0.1-security"
+    }
+}

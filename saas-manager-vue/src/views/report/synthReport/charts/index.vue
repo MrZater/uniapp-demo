@@ -1,0 +1,1146 @@
+<template>
+  <div class="synth-charts-container">
+    <div class="control">
+      <el-row :gutter="0">
+        <el-col :span="4">
+          <el-select
+            v-model="indicator"
+            size="mini"
+            placeholder=""
+            @change="changeIndicator"
+          >
+            <template v-for="(item, i) in chartsData">
+              <el-option
+                v-if="item.show && getIsShow(item.id)"
+                :key="i"
+                :disabled="item.id == compareIndicator"
+                :label="item.name"
+                :value="item.id"
+              />
+            </template>
+          </el-select>
+        </el-col>
+        <el-col :span="4">
+          <el-select
+            v-model="isDimension"
+            size="mini"
+            placeholder=""
+            @change="changeIsDimension"
+          >
+            <el-option
+              :label="'指标对比'"
+              :value="false"
+            />
+            <el-option
+              :label="'维度对比'"
+              :value="true"
+            />
+          </el-select>
+        </el-col>
+        <el-col
+          v-if="isDimension"
+          :span="4"
+        >
+          <el-select
+            v-model="dimension"
+            size="mini"
+            placeholder=""
+            @change="changeDimension"
+          >
+            <template>
+              <el-option
+                v-for="(item, i) in dimensionArr"
+                :key="i"
+                :label="item.name"
+                :value="item.key"
+              />
+            </template>
+          </el-select>
+        </el-col>
+        <el-col
+          v-else
+          :span="4"
+        >
+          <el-select
+            v-model="compareIndicator"
+            size="mini"
+            placeholder=""
+            @change="changeCompareIndicator"
+          >
+            <template v-for="(item, i) in chartsData">
+              <el-option
+                v-if="item.show && getIsShow(item.id)"
+                :key="i"
+                :disabled="indicator == item.id"
+                :label="item.name"
+                :value="item.id"
+              />
+            </template>
+          </el-select>
+        </el-col>
+      </el-row>
+    </div>
+    <div
+      ref="charts"
+      v-loading="isLoading"
+      class="charts"
+    />
+  </div>
+</template>
+
+<script>
+const echarts = require('echarts')
+export default {
+  name: 'SynthCharts',
+  props: {
+    allData: Object,
+    isLoading: Boolean,
+    query: {
+      type: Object,
+      default: {}
+    }
+  },
+  data() {
+    return {
+      myEcharts: null,
+      nodataOption: {},
+      option: {
+        tooltip: {
+          trigger: 'axis',
+          formatter: (params) => {
+            let str = ''
+            params.forEach((item, index) => {
+              let temp = {}
+              if (
+                item.seriesName == '收益' ||
+                item.seriesName == 'eCPM' ||
+                item.seriesName == '预估收益' ||
+                item.seriesName == 'ARPDAU'
+              ) {
+                temp.value = '￥' + item.value
+              } else {
+                temp.value = item.value
+              }
+              str += item.marker + item.seriesName + ': ' + temp.value + '<br>'
+            })
+            return params[0].axisValue + '<br>' + str
+          }
+        },
+        legend: {
+          data: []
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '4%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'category',
+          data: [],
+          axisLabel: {
+            show: true,
+            interval: 0
+          }
+        },
+        yAxis: [
+          // 0
+          {
+            type: 'value',
+            name: '',
+            position: 'left',
+            axisLine: {
+              show: false,
+              lineStyle: {
+                color: '#666',
+                width: 0.5
+              }
+            },
+            axisTick: {
+              show: true
+            },
+            splitLine: {
+              show: true
+            },
+
+            axisLabel: {
+              show: true
+            }
+          }
+        ],
+        series: [
+          {
+            name: '',
+            type: 'line',
+            smooth: true,
+            yAxisIndex: 0,
+            data: [],
+            symbol: 'circle', // 设定为实心点
+            symbolSize: 6, // 设定实心点的大小
+            itemStyle: {
+              normal: {
+                color: '#ffab31',
+                lineStyle: {
+                  color: '#ffab31',
+                  width: 2
+                }
+              }
+            }
+          }
+        ]
+      },
+      // 指标
+      indicator: 'income',
+      // 指标名
+      indicatorName: '',
+      //   对比指标
+      compareIndicator: 'impress',
+      //   维度
+      dimension: 1,
+      // 维度名
+      dimensionName: '',
+      // 曲线名
+      legendArr: [],
+      // 日期数组
+      keyArr: [],
+      chartsData: [
+        {
+          data: [],
+          name: '日期',
+          id: 'date',
+          show: false,
+          hidden: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        },
+        {
+          data: [],
+          name: '预估收益',
+          id: 'income',
+          show: true,
+          hidden: []
+        },
+        {
+          data: [],
+          name: '展示',
+          id: 'impress',
+          show: true,
+          hidden: []
+        },
+        {
+          data: [],
+          name: 'DAU',
+          id: 'dau',
+          show: true,
+          hidden: [6, 7]
+        },
+        {
+          data: [],
+          name: 'DEU',
+          id: 'deu',
+          show: true,
+          hidden: [6, 7]
+        },
+        {
+          data: [],
+          name: '渗透率',
+          id: 'permeability',
+          show: true,
+          hidden: [6, 7]
+        },
+        {
+          data: [],
+          name: '新用户',
+          id: 'newLogin',
+          show: true,
+          hidden: [2, 3, 4, 6, 7]
+        },
+        {
+          data: [],
+          name: '新用户占比',
+          id: 'newUserRate',
+          show: true,
+          hidden: [2, 3, 4, 6, 7]
+        },
+
+        {
+          data: [],
+          name: '预估eCPM',
+          id: 'estimatedRevenueEcpm',
+          show: true,
+          hidden: []
+        },
+        {
+          data: [],
+          name: 'ARPDAU',
+          id: 'arpu',
+          show: true,
+          hidden: [4, 5, 6, 7]
+        },
+        {
+          data: [],
+          name: 'ARPDEU',
+          id: 'arpDeu',
+          show: true,
+          hidden: [4, 5, 6, 7]
+        },
+        {
+          data: [],
+          name: '流量请求',
+          id: 'request',
+          show: true,
+          hidden: [6, 7]
+        },
+        {
+          data: [],
+          name: '流量填充率',
+          id: 'requestFilledRate',
+          show: true,
+          hidden: [6, 7]
+        },
+
+        {
+          data: [],
+          name: '展示率',
+          id: 'impressRate',
+          show: true,
+          hidden: []
+        },
+        {
+          data: [],
+          name: '点击',
+          id: 'click',
+          show: true,
+          hidden: []
+        },
+        {
+          data: [],
+          name: '点击率',
+          id: 'clickRate',
+          show: true,
+          hidden: []
+        },
+        {
+          data: [],
+          name: '展示/DAU',
+          id: 'aipau',
+          show: true,
+          hidden: [6, 7]
+        },
+        {
+          data: [],
+          name: '展示/DEU',
+          id: 'aipu',
+          show: true,
+          hidden: [6, 7]
+        },
+        {
+          data: [],
+          name: '收益',
+          id: 'unitRevenue',
+          show: true,
+          hidden: [8, 9]
+        },
+        {
+          data: [],
+          name: '展示API',
+          id: 'unitImpression',
+          show: true,
+          hidden: [8, 9]
+        },
+        {
+          data: [],
+          name: '点击API',
+          id: 'unitClick',
+          show: true,
+          hidden: [8, 9]
+        },
+        {
+          data: [],
+          name: '点击率API',
+          id: 'unitCtr',
+          show: true,
+          hidden: [8, 9]
+        },
+        {
+          data: [],
+          name: 'eCPM API',
+          id: 'unitEcpm',
+          show: true,
+          hidden: [8, 9]
+        },
+        {
+          data: [],
+          name: '展示Gap',
+          id: 'impressionGap',
+          show: true,
+          hidden: [8, 9]
+        },
+        {
+          data: [],
+          name: '点击Gap',
+          id: 'clickGap',
+          show: true,
+          hidden: [8, 9]
+        },
+        // 维度数据
+        {
+          data: [],
+          name: '应用',
+          id: 'appName',
+          show: false,
+          hidden: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        },
+        {
+          data: [],
+          name: '广告样式',
+          id: 'positionName',
+          show: false,
+          hidden: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        },
+        {
+          data: [],
+          name: '广告位',
+          id: 'placeName',
+          show: false,
+          hidden: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        },
+        {
+          data: [],
+          name: '流量分组',
+          id: 'groupName',
+          show: false,
+          hidden: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        },
+        {
+          data: [],
+          name: '渠道',
+          id: 'channel',
+          show: false,
+          hidden: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        },
+        {
+          data: [],
+          name: '广告源',
+          id: 'platName',
+          show: false,
+          hidden: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        },
+        {
+          data: [],
+          name: '代码位',
+          id: 'sourceName',
+          show: false,
+          hidden: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        },
+        {
+          data: [],
+          name: 'SDK版本',
+          id: 'sdkVersion',
+          show: false,
+          hidden: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        },
+        {
+          data: [],
+          name: '应用版本',
+          id: 'appVersion',
+          show: false,
+          hidden: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        }
+      ],
+      dimensionArr: [
+        // 维度数据
+        {
+          value: '',
+          name: '应用',
+          id: 'appName',
+          key: 1
+        },
+        {
+          value: '',
+          name: '广告样式',
+          id: 'positionName',
+          key: 2
+        },
+        {
+          value: '',
+          name: '广告位',
+          id: 'placeName',
+          key: 3
+        },
+        {
+          value: '',
+          name: '流量分组',
+          id: 'groupName',
+          key: 4
+        },
+        {
+          value: '',
+          name: '渠道',
+          id: 'channel',
+          key: 5
+        },
+        {
+          value: '',
+          name: '广告源',
+          id: 'platName',
+          key: 6
+        },
+        {
+          value: '',
+          name: '代码位',
+          id: 'sourceName',
+          key: 7
+        },
+        {
+          value: '',
+          name: 'SDK版本',
+          id: 'sdkVersion',
+          key: 8
+        },
+        {
+          value: '',
+          name: '应用版本',
+          id: 'appVersion',
+          key: 9
+        }
+      ],
+      randerData: [],
+      isDimension: false,
+      dimensionData: [],
+      colorArr: [
+        '#0055ff',
+        '#ffab31',
+        '#39da61',
+        '#ff6688',
+        '#a8a8ff',
+        '#de7af9',
+        'rgb(0, 118, 143)',
+        'rgb(76, 180, 231)'
+      ],
+      iscreat: true
+    }
+  },
+  computed: {
+    opened() {
+      return this.$store.getters.opened
+    }
+  },
+  watch: {
+    query: {
+      handler(val) {},
+      deep: true
+    },
+
+    allData: {
+      handler(val) {
+        if (!val.data) {
+          this.nodataCharts()
+          this.initCharts()
+          return
+        }
+        this.indicator = 'income'
+        this.compareIndicator = 'impress'
+        if (!this.isDimension) {
+          // 指标对比数据
+          this.randerData = JSON.parse(JSON.stringify(this.chartsData))
+          val.data.forEach((item, i) => {
+            for (let key in item) {
+              this.randerData.forEach((child, c) => {
+                if (key == child.id) {
+                  child.data.push(item[key])
+                }
+              })
+            }
+          })
+          this.changeIndicator(this.indicator)
+        } else {
+          this.dimensionData = []
+          // 日期数组
+          this.keyArr = val.lable
+          this.legendArr = Object.keys(val.data)
+
+          // 根据数量添加数据
+          for (let i = 0; i < this.legendArr.length; i++) {
+            this.dimensionData.push(
+              JSON.parse(JSON.stringify(this.chartsData))
+            )
+          }
+
+          this.dimensionName = ''
+          switch (this.dimension) {
+            case 1:
+              this.dimensionName = 'appName'
+              break
+            case 2:
+              this.dimensionName = 'positionName'
+              break
+            case 3:
+              this.dimensionName = 'placeName'
+              break
+            case 4:
+              this.dimensionName = 'groupName'
+              break
+            case 5:
+              this.dimensionName = 'channel'
+              break
+            case 6:
+              this.dimensionName = 'platName'
+              break
+            case 7:
+              this.dimensionName = 'sourceName'
+              break
+            case 8:
+              this.dimensionName = 'sdkVersion'
+              break
+            case 9:
+              this.dimensionName = 'appVersion'
+              break
+            default:
+              return
+          }
+
+          for (let key in val.data) {
+            val.data[key].forEach((item, i) => {
+              let index = this.legendArr.indexOf(key)
+              if (item) {
+                for (let k in item) {
+                  this.dimensionData[index].forEach((child, c) => {
+                    if (child.id == k) {
+                      child.data.push(item[k])
+                    }
+                  })
+                }
+              } else {
+                this.dimensionData[index].forEach((child, c) => {
+                  child.data.push(0)
+                })
+              }
+            })
+          }
+          this.changeIndicator(this.indicator)
+        }
+      }
+    }
+  },
+  created() {
+    this.nodataOption = JSON.parse(JSON.stringify(this.option))
+  },
+  mounted() {
+    this.initCharts()
+    window.addEventListener('resize', this.getSize)
+    this.getSize()
+  },
+  destroyed() {
+    this.myEcharts.dispose()
+    window.removeEventListener('resize', this.getSize)
+  },
+  methods: {
+    getIsShow(prop) {
+      // if (!this.isDimension) {
+      //   return true;
+      // }
+      // 代码位
+      let hasSource =
+        !!(this.query.sourceIdList && this.query.sourceIdList.length > 0)
+      let sourceArr = [
+        'dau',
+        'deu',
+        'permeability',
+        'aipau',
+        'aipu',
+        'arpu',
+        'arpDeu',
+        'request',
+        'requestFilledRate',
+        'newLogin',
+        'newUserRate'
+      ]
+      // 广告源
+      let hasPlat =
+        !!(this.query.platIdList && this.query.platIdList.length > 0)
+      let platArr = [
+        'dau',
+        'deu',
+        'permeability',
+        'aipau',
+        'aipu',
+        'arpu',
+        'arpDeu',
+        'request',
+        'requestFilledRate',
+        'newLogin',
+        'newUserRate'
+      ]
+
+      // 广告位
+      let hasPlace =
+        !!(this.query.placeIdList && this.query.placeIdList.length > 0)
+      let placeArr = ['newLogin', 'newUserRate']
+      // 广告样式
+      let hasPosition =
+        !!(this.query.positionIdList && this.query.positionIdList.length > 0)
+      let positionArr = ['newLogin', 'newUserRate']
+      // 流量分组
+      let hasGroup =
+        !!(this.query.groupIdList && this.query.groupIdList.length > 0)
+      let groupArr = [
+        'newLogin',
+        'newUserRate',
+        'unitImpression',
+        'unitClick',
+        'unitCtr',
+        'unitEcpm',
+        'impressionGap',
+        'clickGap'
+      ]
+      // 渠道
+      let hasChannel =
+        !!(this.query.channelIdList && this.query.channelIdList.length > 0)
+      let channelArr = [
+        'unitImpression',
+        'unitClick',
+        'unitCtr',
+        'unitEcpm',
+        'impressionGap',
+        'clickGap'
+      ]
+      // SDK版本
+      let hasSdkVersion = !!this.query.sdkVersion
+      let sdkArr = [
+        'unitImpression',
+        'unitClick',
+        'unitCtr',
+        'unitEcpm',
+        'impressionGap',
+        'clickGap'
+      ]
+      // 应用版本
+      let hasAppVersion = !!this.query.appVersion
+      let appArr = [
+        'unitImpression',
+        'unitClick',
+        'unitCtr',
+        'unitEcpm',
+        'impressionGap',
+        'clickGap'
+      ]
+      if (hasSource && sourceArr.includes(prop)) {
+        // 代码位
+        return false
+      } else if (hasPlat && platArr.includes(prop)) {
+        // 广告源
+        return false
+      } else if (hasPlace && placeArr.includes(prop)) {
+        // 广告位
+        return false
+      } else if (hasPosition && positionArr.includes(prop)) {
+        // 广告样式
+        return false
+      } else if (hasGroup && groupArr.includes(prop)) {
+        // 流量分组
+        return false
+      } else if (hasChannel && channelArr.includes(prop)) {
+        // 渠道
+        return false
+      } else if (hasSdkVersion && sdkArr.includes(prop)) {
+        // SDK版本
+        return false
+      } else if (hasAppVersion && appArr.includes(prop)) {
+        // 应用版本
+        return false
+      }
+
+      return true
+    },
+    getSize() {
+      // 判断是否是created时调用
+      if (!this.iscreat) {
+        this.myEcharts.resize()
+      }
+      this.iscreat = false
+    },
+    initCharts() {
+      console.log(this.option, 123321)
+      if (this.randerData) {
+      }
+      if (this.myEcharts) {
+        this.myEcharts.dispose()
+        this.myEcharts = null
+      }
+      let myEcharts = echarts.init(this.$refs.charts)
+      myEcharts.setOption(this.option)
+      this.myEcharts = myEcharts
+    },
+    changeIndicator(val) {
+      this.option = JSON.parse(JSON.stringify(this.nodataOption))
+      this.option.tooltip.formatter = (params) => {
+        let str = ''
+        if (!this.isDimension) {
+          params.forEach((item, index) => {
+            let temp = {}
+            if (
+              item.seriesName == '收益' ||
+              item.seriesName == '预估eCPM' ||
+              item.seriesName == '预估收益' ||
+              item.seriesName == 'ARPDAU'
+            ) {
+              temp.value = '￥' + item.value
+            } else if (
+              item.seriesName == '流量填充率' ||
+              item.seriesName == '展示率' ||
+              item.seriesName == '点击率' ||
+              item.seriesName == '渗透率' ||
+              item.seriesName == '展示Gap' ||
+              item.seriesName == '点击Gap'
+            ) {
+              temp.value = item.value + '%'
+            } else {
+              temp.value = item.value
+            }
+            str += item.marker + item.seriesName + ': ' + temp.value + '<br>'
+          })
+          return params[0].axisValue + '<br>' + str
+        } else {
+          let indicator = this.indicator
+
+          params.forEach((item, index) => {
+            let temp = {}
+            if (
+              indicator == 'unitRevenue' ||
+              indicator == 'estimatedRevenueEcpm' ||
+              indicator == 'income' ||
+              indicator == 'arpu'
+            ) {
+              temp.value = '￥' + item.value
+            } else if (
+              indicator == 'requestFilledRate' ||
+              indicator == 'impressRate' ||
+              indicator == 'clickRate' ||
+              indicator == 'permeability' ||
+              indicator == 'impressionGap' ||
+              indicator == 'clickGap'
+            ) {
+              temp.value = item.value + '%'
+            } else {
+              temp.value = item.value
+            }
+            str += item.marker + item.seriesName + ': ' + temp.value + '<br>'
+          })
+          return params[0].axisValue + '<br>' + str
+        }
+      }
+
+      if (!this.isDimension) {
+        this.option.yAxis = []
+        this.option.xAxis = []
+        this.option.series = []
+        this.option.legend.data = []
+        this.randerData.forEach((item) => {
+          if (item.id == this.indicator) {
+            this.option.yAxis = [
+              {
+                type: 'value',
+                name: item.name,
+                position: 'left',
+                axisLine: {
+                  show: true,
+                  lineStyle: {
+                    color: '#666',
+                    width: 0.5
+                  }
+                },
+                axisTick: {
+                  show: true
+                },
+                splitLine: {
+                  show: true
+                },
+
+                axisLabel: {
+                  show: true
+                }
+              }
+            ]
+            this.option.series = [
+              {
+                name: item.name,
+                type: 'line',
+                smooth: true,
+                yAxisIndex: 0,
+                data: item.data,
+                symbol: 'circle', // 设定为实心点
+                symbolSize: 4, // 设定实心点的大小
+                itemStyle: {
+                  normal: {
+                    color: '#FF4905',
+                    lineStyle: {
+                      color: '#FF4905',
+                      width: 1.8
+                    }
+                  }
+                }
+              }
+            ]
+            this.option.xAxis = {
+              type: 'category',
+              data: this.randerData[0].data,
+              axisLabel: {
+                show: true
+                //   interval: 0,
+              }
+            }
+            this.option.legend = {
+              data: [item.name]
+            }
+          }
+        })
+        this.randerData.forEach((item) => {
+          if (item.id == this.compareIndicator) {
+            this.option.yAxis[1] = {
+              type: 'value',
+              name: item.name,
+              position: 'right',
+              axisLine: {
+                show: true,
+                lineStyle: {
+                  color: '#666',
+                  width: 0.5
+                }
+              },
+              axisTick: {
+                show: true
+              },
+              splitLine: {
+                show: false
+              },
+
+              axisLabel: {
+                show: true
+              }
+            }
+            this.option.series[1] = {
+              name: item.name,
+              type: 'line',
+              smooth: true,
+              yAxisIndex: 1,
+              data: item.data,
+              symbol: 'circle', // 设定为实心点
+              symbolSize: 4, // 设定实心点的大小
+              itemStyle: {
+                normal: {
+                  color: '#27AD61',
+                  lineStyle: {
+                    color: '#27AD61',
+                    width: 1.8
+                  }
+                }
+              }
+            }
+            this.option.legend.data.push(item.name)
+          }
+        })
+      } else {
+        this.option.yAxis = []
+        this.option.xAxis = []
+        this.option.series = []
+        this.option.legend.data = []
+        let count = 0
+        this.chartsData
+        this.chartsData.forEach((item) => {
+          if (item.id == this.indicator) {
+            this.indicatorName = item.name
+          }
+        })
+        this.dimensionData.forEach((item, i) => {
+          item.forEach((child, c) => {
+            if (this.indicator == child.id) {
+              count++
+              if (count === 1) {
+                this.option.yAxis.push({
+                  type: 'value',
+                  name: this.indicatorName,
+                  position: '',
+                  axisLine: {
+                    show: true,
+                    lineStyle: {
+                      color: '#999',
+                      width: 0.5
+                    }
+                  },
+                  axisTick: {
+                    show: true
+                  },
+                  splitLine: {
+                    show: true
+                  },
+
+                  axisLabel: {
+                    show: true
+                  }
+                })
+              }
+              this.option.xAxis[0] = {
+                type: 'category',
+                data: this.keyArr,
+                axisLabel: {
+                  show: true
+                }
+              }
+              this.option.legend.data = this.legendArr
+              this.option.series.push({
+                name: this.legendArr[i],
+                type: 'line',
+                smooth: true,
+                yAxisIndex: 0,
+                data: child.data,
+                symbol: 'circle', // 设定为实心点
+                symbolSize: 4, // 设定实心点的大小
+                itemStyle: {
+                  normal: {
+                    color: this.colorArr[i] ? this.colorArr[i] : '#f40',
+                    lineStyle: {
+                      color: this.colorArr[i] ? this.colorArr[i] : '#f40',
+                      width: 2
+                    }
+                  }
+                }
+              })
+            }
+          })
+        })
+      }
+      this.initCharts()
+    },
+    nodataCharts() {
+      this.option = JSON.parse(JSON.stringify(this.nodataOption))
+      this.option.series[0] = {
+        name: '',
+        type: 'line',
+        smooth: true,
+        yAxisIndex: 0,
+        data: [],
+        symbol: 'circle', // 设定为实心点
+        symbolSize: 6, // 设定实心点的大小
+        itemStyle: {
+          normal: {
+            color: '#ffab31',
+            lineStyle: {
+              color: '#ffab31',
+              width: 2
+            }
+          }
+        }
+      }
+      this.option.xAxis[0] = {
+        type: 'category',
+        data: [],
+        axisLabel: {
+          show: true,
+          interval: 0
+        }
+      }
+      this.option.yAxis[0] = {
+        type: 'value',
+        name: '',
+        // axisLabel: {
+        //   formatter: "{value}",
+        // },
+        position: 'left',
+        axisLine: {
+          show: false,
+          lineStyle: {
+            color: '#666',
+            width: 0.5
+          }
+        },
+        axisTick: {
+          show: true
+        },
+        splitLine: {
+          show: true
+        },
+
+        axisLabel: {
+          show: true
+        }
+      }
+      this.initCharts()
+      return
+    },
+    changeIsDimension(val) {
+      if (!val) {
+        let i1 = false
+        let i2 = false
+
+        this.randerData.forEach((item) => {
+          if (item.show && this.getIsShow(item.id) && !i2 && i1) {
+            this.compareIndicator = item.id
+            i2 = true
+          }
+          if (item.show && this.getIsShow(item.id) && !i1) {
+            this.indicator = item.id
+            i1 = true
+          }
+        })
+        this.chartsData.forEach((item) => {
+          if (item.hidden.length != 9) {
+            item.show = true
+          }
+        })
+      } else {
+        this.compareIndicator = ''
+        this.indicator = 'income'
+      }
+      this.$emit('changeIsDimension', {
+        dimension: this.dimension,
+        isDimension: val
+      })
+    },
+    changeDimension(val) {
+      if (val) {
+        this.chartsData.forEach((item) => {
+          item.show = true
+          if (item.hidden.includes(val)) {
+            item.show = false
+          }
+        })
+        for (let i = 0; i <= this.chartsData.length; i++) {
+          if (this.chartsData[i].show && i != 0) {
+            this.indicator = this.chartsData[i].id
+            break
+          }
+        }
+        this.$emit('changeDimension', val)
+      }
+    },
+    changeCompareIndicator(val) {
+      this.changeIndicator()
+    },
+    handleChildData(data1, data2) {
+      for (let item1 in data1) {
+        for (let item2 in data2) {
+          if (item1 == item2) {
+            data1[item1] = data2[item2]
+          }
+        }
+      }
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+.synth-charts-container {
+  width: 100%;
+  background-color: #fff;
+  margin-top: 10px;
+  .control {
+    padding-bottom: 10px;
+    padding-top: 10px;
+    padding-left: 20px;
+  }
+  .charts {
+    width: 100%;
+    height: 50vh;
+  }
+}
+</style>

@@ -1,0 +1,710 @@
+<template>
+  <div class="app-container">
+    <div class="filter-container">
+      <el-select
+        v-if="
+          $store.getters.roles[0] == 'SUPER_ADMIN' ||
+          $store.getters.roles[0] == 'MANAGEMENT' ||
+          $store.getters.roles[0] == 'TECHNOLOGY' ||
+          $store.getters.roles[0] == 'OPERATOR_DIRECTOR' ||
+          $store.getters.roles[0] == 'BUSINESS_DIRECTOR'
+        "
+        v-model="query.userId"
+        class="filter-item"
+        placeholder="请选择账户"
+        filterable
+        collapse-tags
+        clearable
+        @change="changeAdmin"
+      >
+        <el-option
+          v-for="(item, index) in adminList"
+          :key="index"
+          :label="item.company"
+          :value="item.id"
+        />
+      </el-select>
+      <el-select
+        v-model="query.plat"
+        class="filter-item"
+        placeholder="请选择广告源"
+        filterable
+        multiple
+        collapse-tags
+        clearable
+      >
+        <el-option
+          v-for="(item, index) in platOptions"
+          :key="index"
+          :label="item.name"
+          :value="item.id"
+        />
+      </el-select>
+      <el-select
+        v-model="query.openApiStatus"
+        class="filter-item"
+        placeholder="请选择报表API"
+        clearable
+      >
+        <el-option :value="0" label="未开通" />
+        <el-option :value="1" label="已开通" />
+      </el-select>
+      <el-button
+        v-waves
+        class="filter-item"
+        type="primary"
+        icon="el-icon-search"
+        @click="handleSearch"
+      >
+        查询
+      </el-button>
+    </div>
+    <div class="body-container">
+      <div class="btn-container">
+        <el-button
+          type="primary"
+          icon="el-icon-plus"
+          class="btn-item"
+          @click="handleAdd"
+        >
+          广告源
+        </el-button>
+        <el-button
+          type="warning"
+          icon="el-icon-plus"
+          @click="handleAddCustPlat"
+        >
+          自定义广告源
+        </el-button>
+        <addCustPlat
+          :form="custquery"
+          :is-add="isAddCustPlat"
+          :add-cust-plat-dialog="addCustPlatDialog"
+          @addPlatSuccess="addPlatSuccess"
+          @closeDialog="addCustPlatDialog = false"
+        />
+      </div>
+      <el-table
+        :key="tableKey"
+        v-loading="isLoading"
+        :data="list"
+        fit
+        highlight-current-row
+        :header-cell-style="{ 'background-color': '#f7f8fa', color: '#000' }"
+      >
+        <el-table-column label="账户名称" align="center" prop="name">
+          <template slot-scope="{ row }">
+            <span>{{ row.name }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="广告源" align="center" prop="platName">
+          <template slot-scope="{ row }">
+            <span>{{ row.platName }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="报表API" align="center">
+          <template slot-scope="{ row }">
+            <el-tag v-if="row.openApiStatus === 0" type="danger">
+              未开通
+            </el-tag>
+            <el-tag v-else-if="row.openApiStatus === 1" type="success">
+              已开通
+            </el-tag>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="状态" align="center">
+          <template slot-scope="{ row }">
+            <el-tag v-if="row.sts === 'A'"> 启用 </el-tag>
+            <el-tag v-else-if="row.sts === 'D'" type="info"> 暂停 </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="接入方式" align="center">
+          <template slot-scope="{ row }">
+            <el-tag v-if="row.accessType === '0'"> SDK </el-tag>
+            <el-tag v-else-if="row.accessType === '1'" type="success">
+              API
+            </el-tag>
+            <el-tag v-else-if="row.accessType === '2'" type="success">
+              自定义
+            </el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="操作" align="center">
+          <template slot-scope="{ row }">
+            <el-tooltip content="编辑" placement="top" effect="light">
+              <div class="doicon" @click="handleUpdate(row)">
+                <svg-icon class="svgicon" icon-class="edit" />
+              </div>
+            </el-tooltip>
+          </template>
+        </el-table-column>
+        <el-table-column label="昨日收益" align="center">
+          <template slot-scope="{ row }">
+            {{ row.unitRevenue ? "￥" + row.unitRevenue : "-" }}
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <el-pagination
+        style="margin-top: 20px"
+        :current-page="query.page"
+        :page-sizes="[10, 20, 30, 40]"
+        :page-size="query.limit"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div>
+    <el-dialog
+      v-if="dialogVisible"
+      ref="dialog"
+      :title="dialogType === 0 ? '新增广告源' : '编辑广告源'"
+      :visible.sync="dialogVisible"
+    >
+      <el-form
+        ref="form"
+        :model="temp"
+        :rules="rules"
+        label-width="130px"
+        label-position="left"
+      >
+        <el-form-item label="广告源" prop="platId" :required="dialogType === 0">
+          <el-select
+            v-if="dialogType === 0"
+            v-model="temp.platId"
+            placeholder="请选择广告源"
+            @change="selectEditPlat"
+          >
+            <el-option
+              v-for="(item, index) in platOptions"
+              :key="index"
+              :value="item.id"
+              :label="item.name"
+            />
+          </el-select>
+          <span v-else>{{ temp.platName }}</span>
+        </el-form-item>
+        <el-form-item label="账户名称" prop="name">
+          <el-input
+            v-model="temp.name"
+            placeholder="请输入名称以区分不同账号"
+            maxlength="30"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item
+          v-if="
+            temp.platId == '993' ||
+            temp.platId == '992' ||
+            temp.platId == '991' ||
+            temp.platId == '998' ||
+            temp.platId == '996' ||
+            temp.platId == '1000' ||
+            temp.platId == '1008'
+          "
+          :label="
+            temp.platId == '993'
+              ? 'MID'
+              : temp.platId == '992'
+              ? 'ChannleId'
+              : temp.platId == '991'
+              ? '发布商ID'
+              : temp.platId == '998'
+              ? 'token'
+              : temp.platId == '996'
+              ? '渠道ID'
+              : temp.platId == '1000'
+              ? 'MID'
+              : temp.platId == '1008'
+              ? 'MID'
+              : ''
+          "
+          prop="mid"
+        >
+          <el-input
+            v-model="temp.mid"
+            :placeholder="
+              temp.platId == '993'
+                ? '请输入MID'
+                : temp.platId == '992'
+                ? '请输入ChannleId'
+                : temp.platId == '991'
+                ? '请输入发布商ID'
+                : temp.platId == '998'
+                ? '请输入token'
+                : temp.platId == '996'
+                ? '请输入渠道ID'
+                : temp.platId == '1000'
+                ? '请输入MID'
+                : temp.platId == '1008'
+                ? '请输入MID'
+                : ''
+            "
+            prop="mid"
+          />
+        </el-form-item>
+        <!-- <el-form-item
+          v-if="temp.platId == '1008'"
+          label="signKey"
+          prop="signkey"
+        >
+          <el-input v-model="temp.signkey" placeholder="请输入signKey" />
+        </el-form-item> -->
+
+        <el-form-item v-if="temp.platId == '991'" label="密钥ID  " prop="keyId">
+          <el-input
+            v-model="temp.keyId"
+            placeholder="请输入密钥ID "
+            prop="keyId"
+          />
+        </el-form-item>
+        <el-form-item
+          v-if="temp.platId == '991' || temp.platId == '1008'"
+          :label="
+            temp.platId == '991'
+              ? '密钥'
+              : temp.platId == '1008'
+              ? 'signKey'
+              : ''
+          "
+          prop="signKey"
+        >
+          <el-input
+            v-model="temp.signKey"
+            :placeholder="
+              temp.platId == '991'
+                ? '请输入密钥'
+                : temp.platId == '1008'
+                ? '请输入signKey'
+                : ''
+            "
+          />
+        </el-form-item>
+        <el-form-item
+          v-if="
+            accessType != 2 &&
+            (temp.platId == 5 || (temp.platId >= 900 && temp.platId != 989))
+          "
+          label="请求环境"
+        >
+          <el-radio-group v-model="temp.isDebug">
+            <el-radio :label="'1'" border> 测试 </el-radio>
+            <el-radio :label="'0'" border> 正式 </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item v-if="temp.platId == 989" label="请求地址">
+          <el-input v-model="temp.requestUrl" placeholder="请输入请求地址" />
+        </el-form-item>
+        <el-form-item
+          v-if="accessType && accessType != '1' && accessType != '2'"
+          label="报表API"
+        >
+          <el-radio-group
+            v-model="temp.openApiStatus"
+            :value="temp.openApiStatus ? temp.openApiStatus : 0"
+          >
+            <el-radio :label="1" border> 已开通 </el-radio>
+            <el-radio :label="0" border> 未开通 </el-radio>
+          </el-radio-group>
+        </el-form-item>
+
+        <el-form-item
+          v-if="temp.openApiStatus === 1 && showUserId"
+          :label="'账户' + userIdKey"
+          prop="accountId"
+        >
+          <el-input
+            v-model="temp.accountId"
+            :placeholder="'请输入账户' + userIdKey"
+            maxlength="30"
+            show-word-limit
+          />
+        </el-form-item>
+        <!-- 穿山甲 -->
+        <el-form-item
+          v-if="temp.openApiStatus === 1 && showAccessKey"
+          :label="accessKeyWord"
+          prop="accessKey"
+        >
+          <el-input
+            v-model="temp.accessKey"
+            :placeholder="'请输入' + accessKeyWord"
+          />
+        </el-form-item>
+        <el-form-item
+          v-if="
+            temp.openApiStatus === 1 &&
+            accessType &&
+            accessType != '1' &&
+            accessType != '2' &&
+            temp.platId != 17
+          "
+          :label="secretWord"
+          prop="secretKey"
+        >
+          <el-input
+            v-model="temp.secretKey"
+            :placeholder="'请输入' + secretWord"
+          />
+        </el-form-item>
+        <el-form-item v-if="dialogType === 1" label="状态" prop="sts">
+          <el-select v-model="temp.sts">
+            <el-option value="A" label="启动" />
+            <el-option value="D" label="暂停" />
+          </el-select>
+          <div v-if="temp.sts == 'D'" style="color: red; line-height: 1.5em">
+            暂停后，该广告源下所有代码位状态都关闭，再次启用时需要开发者把对应的代码位状态手动打开。因此请谨慎操作！
+          </div>
+        </el-form-item>
+      </el-form>
+      <span v-if="allowOperate" slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handlePlatForm">确定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import waves from "@/directive/waves";
+import { Message } from "element-ui";
+import addCustPlat from "./addCustPlat";
+import {
+  addPlatform,
+  getPlatOptions,
+  getPlatPager,
+  updatePlatform,
+} from "@/api/plat";
+import { platListByUser } from "@/api/synthReport";
+import { getadminList } from "@/api/app";
+import {
+  getAccessKeyLabel,
+  getSecretLabel,
+  getUserIdLabel,
+  getshowUserId,
+  getShowAccessKey,
+} from "@/utils/autoPlatLabel";
+
+export default {
+  name: "Platform",
+  components: { addCustPlat },
+  directives: { waves },
+  data() {
+    // const checkSts = (rule, value, callback) => {
+    //   if (value && value === "D") {
+    //     return callback(
+    //       new Error(
+    //         "暂停后，该广告源下所有代码位状态都关闭，再次启用时需要开发者把对应的代码位状态手动打开。因此请谨慎操作！"
+    //       )
+    //     );
+    //   } else {
+    //     callback();
+    //   }
+    // };
+    const secretKeyValidator = (rule, value, callback) => {
+      if (!value || value === "") {
+        return callback(new Error("请输入" + this.secretWord));
+      } else {
+        callback();
+      }
+    };
+    const signKeyValidator = (rule, value, callback) => {
+      if (!value || value === "") {
+        return callback(new Error("请输入signKey"));
+      }
+    };
+    const midValidator = (rule, value, callback) => {
+      if (!value || value === "") {
+        return callback(
+          new Error(
+            "请输入" +
+              (this.temp.platId == "993"
+                ? "MID"
+                : this.temp.platId == "992"
+                ? "ChannleId"
+                : this.temp.platId == "991"
+                ? "发布商ID"
+                : this.temp.platId == "998"
+                ? "token"
+                : this.temp.platId == "996"
+                ? "渠道ID"
+                : "")
+          )
+        );
+      } else {
+        callback();
+      }
+    };
+    const accessKeyValidator = (rule, value, callback) => {
+      if (!value || value === "") {
+        return callback(new Error("请输入" + this.accessKeyWord));
+      } else {
+        callback();
+      }
+    };
+    const accountIdValidator = (rule, value, callback) => {
+      if (!value || value === "") {
+        return callback(new Error("请输入" + this.userIdKey));
+      } else {
+        callback();
+      }
+    };
+    return {
+      isAddCustPlat: false,
+      addCustPlatDialog: false,
+      custquery: {
+        platName: "", // 广告源名称
+        plactAccountName: "", // 广告源账号名称
+        name: "",
+        androidKp: "", // 安卓开屏
+        androidCp: "", // 安卓插屏
+        androidJlsp: "", // 安卓激励视频
+        androidYsmb: "", // 安卓原生模板
+        androidYszxr: "", // 安卓原生自渲染
+        androidHf: "", // 安卓横幅
+        androidQpsp: "", // 安卓全屏视频
+        iosKp: "", // iOS开屏
+        iosCp: "", // iOS插屏
+        iosJlsp: "", // iOS激励视频
+        iosYsmb: "", // iOS原生模板
+        iosYszxr: "", // iOS原生自渲染
+        iosHf: "", // iOS横幅
+        iosQpsp: "", // iOS全屏视频
+      },
+      query: {
+        plat: null,
+        openApiStatus: null,
+        page: 0,
+        limit: 20,
+      },
+      adminList: [],
+      platOptions: [],
+      tableKey: 0,
+      isLoading: false,
+      list: [],
+      total: 0,
+      temp: { openApiStatus: 1 },
+      dialogType: 0,
+      dialogVisible: false,
+      rules: {
+        platId: [
+          { required: true, message: "请选择广告源", trigger: "change" },
+        ],
+        mid: [{ required: true, validator: midValidator, trigger: "blur" }],
+        keyId: [{ required: true, message: "请输入密钥ID", trigger: "blur" }],
+        signKey: [{ required: true, message: "请输入密钥", trigger: "blur" }],
+        name: [{ required: true, message: "请输入账户名称", trigger: "blur" }],
+        sts: [{ required: true, message: "请选择状态", trigger: "change" }],
+        secretKey: [
+          { required: true, validator: secretKeyValidator, trigger: "blur" },
+        ],
+        accessKey: [
+          { required: true, validator: accessKeyValidator, trigger: "blur" },
+        ],
+        accountId: [
+          {
+            required: true,
+            validator: accountIdValidator,
+            trigger: "blur",
+          },
+        ],
+        // m_id: [{ required: true, message: "请输入渠道ID", trigger: "blur" }],
+      },
+      accessType: "",
+    };
+  },
+  computed: {
+    allowOperate() {
+      return this.$store.getters.allowOperate;
+    },
+
+    // secretKey适应label
+    secretWord() {
+      let label = getSecretLabel(this.temp.platId);
+      return label;
+    },
+    // 是否显示accessKey输入框
+    showAccessKey() {
+      let isShow = getShowAccessKey(this.temp.platId);
+      return isShow;
+    },
+    // 是否显示账户id输入框
+    showUserId() {
+      let isShow = getshowUserId(this.temp.platId);
+      return isShow;
+    },
+    // accessKey适应label
+    accessKeyWord() {
+      let label = getAccessKeyLabel(this.temp.platId);
+      return label;
+    },
+    // 账户id适应label
+    userIdKey() {
+      let label = getUserIdLabel(this.temp.platId);
+      return label;
+    },
+  },
+  created() {
+    this.getadminList();
+    this.initPlatOptions();
+    this.handleGetPager();
+  },
+  methods: {
+    handleAddCustPlat() {
+      this.custquery = {
+        platName: "", // 广告源名称
+        plactAccountName: "", // 广告源账号名称
+        name: "",
+        androidKp: "", // 安卓开屏
+        androidCp: "", // 安卓插屏
+        androidJlsp: "", // 安卓激励视频
+        androidYsmb: "", // 安卓原生模板
+        androidYszxr: "", // 安卓原生自渲染
+        androidHf: "", // 安卓横幅
+        androidQpsp: "", // 安卓全屏视频
+        iosKp: "", // iOS开屏
+        iosCp: "", // iOS插屏
+        iosJlsp: "", // iOS激励视频
+        iosYsmb: "", // iOS原生模板
+        iosYszxr: "", // iOS原生自渲染
+        iosHf: "", // iOS横幅
+        iosQpsp: "", // iOS全屏视频
+      };
+      this.addCustPlatDialog = true;
+      this.isAddCustPlat = true;
+    },
+    addPlatSuccess() {
+      this.handleGetPager();
+      this.addCustPlatDialog = false;
+    },
+    selectEditPlat(val) {
+      this.platOptions.forEach((item) => {
+        if (val == item.id) {
+          this.accessType = item.accessType;
+        }
+      });
+    },
+    async changeAdmin(val) {
+      this.query.plat = [];
+      if (val) {
+        let resp = await platListByUser({
+          id: this.query.userId,
+          businessId: "",
+        });
+        let arr = [];
+        resp.data.forEach((item) => {
+          if (!arr.includes(item.id)) {
+            arr.push(item.id);
+          }
+          item.name = item.platName;
+        });
+        let applist = resp.data.filter((item) => {
+          return arr.includes(item.id);
+        });
+        applist.forEach((item) => {
+          item.id = item.platId;
+        });
+        this.platOptions = applist;
+      } else {
+        this.initPlatOptions();
+      }
+    },
+    async getadminList() {
+      let resp = await getadminList();
+      this.adminList = resp.data;
+    },
+    initPlatOptions() {
+      getPlatOptions().then((res) => {
+        this.platOptions = res.data;
+      });
+    },
+    handleSearch() {
+      this.query.page = 1;
+      this.handleGetPager();
+    },
+    handleGetPager() {
+      this.isLoading = true;
+      getPlatPager(this.query).then((res) => {
+        this.total = res.data.total;
+        this.list = res.data.items;
+        this.isLoading = false;
+        this.$bus.$emit("totop");
+      });
+    },
+    handleSizeChange(val) {
+      this.query.limit = val;
+      this.handleGetPager();
+    },
+    handleCurrentChange(val) {
+      this.query.page = val;
+      this.handleGetPager();
+    },
+    handleAdd() {
+      this.accessType = "";
+      this.dialogType = 0;
+      this.temp = { openApiStatus: 1, isDebug: "0" };
+      this.dialogVisible = true;
+    },
+    handleUpdate(row) {
+      if (row.accessType == 2) {
+        this.custquery = row;
+        this.addCustPlatDialog = true;
+        this.isAddCustPlat = false;
+      } else {
+        this.accessType = row.accessType;
+        this.dialogType = 1;
+        this.temp = JSON.parse(JSON.stringify(row));
+        this.dialogVisible = true;
+      }
+    },
+    handlePlatForm() {
+      let _this = this;
+      console.log(this.temp);
+      console.log(this.$refs.form);
+      this.$refs.form.validate(async (valid) => {
+        if (valid) {
+          if (_this.dialogType === 0) {
+            await addPlatform(_this.temp).then((res) => {
+              Message({
+                message: "操作成功！",
+                type: "success",
+                duration: 5 * 1000,
+              });
+            });
+          } else if (_this.dialogType === 1) {
+            await updatePlatform(_this.temp).then((res) => {
+              Message({
+                message: "操作成功！",
+                type: "success",
+                duration: 5 * 1000,
+              });
+            });
+          }
+          _this.dialogVisible = false;
+          _this.handleGetPager();
+        }
+      });
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.doicon {
+  font-size: 16px;
+  cursor: pointer;
+}
+.svgicon {
+  color: #3685df;
+  &:hover {
+    color: #034ca0;
+  }
+}
+.btn-container {
+  margin-bottom: 15px;
+  display: flex;
+}
+</style>

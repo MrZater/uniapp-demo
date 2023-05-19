@@ -1,0 +1,24 @@
+export default function (refValue) {
+    return {
+        mounted() {
+            // 监听主区域的滚轮滚动事件
+            this.$refs[refValue].addEventListener("scroll", this.handleMainScroll);
+            this.$bus.$on('totop', this.scrollTotop)
+        },
+        beforeDestroy() {
+            // 组件销毁时，移除滚动条滚动事件
+            this.$bus.$emit('mainScroll');
+            this.$refs[refValue].removeEventListener("scroll", this.handleMainScroll);
+            this.$bus.$on('totop')
+
+        },
+        methods: {
+            handleMainScroll() {
+                this.$bus.$emit("mainScroll", this.$refs[refValue]);
+            },
+            scrollTotop(ref = this.$refs[refValue]) {
+                ref.scrollTo(0, 0)
+            }
+        }
+    }
+}

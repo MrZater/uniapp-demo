@@ -1,0 +1,328 @@
+<template>
+  <div>
+    <el-card>
+      <el-row :gutter="20">
+        <el-col :span="6">
+          <el-input
+            clearable
+            placeholder="输入素材包名称"
+            v-model="packages.name"
+          >
+            <el-button
+              @click="searchBtn"
+              slot="append"
+              icon="el-icon-search"
+            ></el-button>
+          </el-input>
+        </el-col>
+        <el-col :span="4">
+          <el-button type="primary" class="el-icon-plus" @click="customPackage"
+            >自定义素材包</el-button
+          >
+        </el-col>
+      </el-row>
+
+      <div class="tablebox" v-loading="tableLoading">
+        <el-table
+          v-if="materialTable.length > 0"
+          :data="materialTable"
+          stripe
+          style="width: 100%"
+        >
+          <el-table-column prop="name" label="素材包名称" align="center">
+          </el-table-column>
+          <el-table-column prop="creativeNum" label="素材数量" align="center">
+          </el-table-column>
+          <el-table-column
+            prop="auditUserNum"
+            label="已分配人数"
+            align="center"
+          >
+            <template slot-scope="{ row }">
+              <div>
+                {{ row.id == 0 ? "已绑定所有审核人员" : row.auditUserNum }}
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="address" label="操作" align="center">
+            <template slot-scope="{ row }" v-if="row.id != 0">
+              <div>
+                <el-button size="mini" type="success" @click="editPackage(row)"
+                  >编辑</el-button
+                >
+                <el-button size="mini" type="danger" @click="delPackage(row)"
+                  >删除</el-button
+                >
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+        <Empty v-else></Empty>
+      </div>
+      <el-pagination
+        :current-page="Packages.page"
+        :page-sizes="[10, 20, 30, 40]"
+        :page-size="Packages.limit"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </el-card>
+    <!-- 自定义素材包 -->
+    <el-dialog
+      @close="closeDialog"
+      :title="isAdd ? '自定义素材包' : '编辑素材包'"
+      :visible.sync="customPackageDialog"
+      width="50%"
+    >
+      <el-form
+        :model="customPackageForm"
+        :rules="customPackageRules"
+        ref="ruleForm"
+        label-width="120px"
+      >
+        <el-form-item label="广告源" prop="platId">
+          <el-select
+            :disabled="disabled"
+            v-model="customPackageForm.platId"
+            placeholder="请选择广告源"
+          >
+            <el-option
+              v-for="item in advertOptions"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="广告类型" prop="name">
+          <el-select
+            :disabled="disabled"
+            v-model="customPackageForm.position"
+            placeholder="请选择广告类型"
+          >
+            <el-option
+              v-for="item in advertTypesOptions"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="素材类型" prop="type">
+          <el-select
+            :disabled="disabled"
+            v-model="customPackageForm.type"
+            placeholder="请选择素材类型"
+          >
+            <el-option
+              v-for="item in materialTypesOptions"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="素材包名称" prop="name">
+          <el-input
+            placeholder="请输入素材包名称"
+            v-model="customPackageForm.name"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="选择审核人员" prop="auditUserIds">
+          <el-select
+            multiple
+            v-model="customPackageForm.auditUserIds"
+            placeholder="请选择审核人员"
+          >
+            <el-option
+              v-for="item in auditPeopleOptions"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="customPackageDialog = false">取 消</el-button>
+        <el-button type="primary" @click="handleAddCreative">确 定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+<script>
+// import { creativePackage, editCreative, deletePackage, auditPeople, addCreative, flowSelect, platform } from '@/libs/api'
+import Empty from "@/components/empty";
+export default {
+  components: {
+    Empty,
+  },
+  data() {
+    return {
+      input: "",
+      materialTable: [],
+      packages: {
+        page: 1,
+        limit: 5,
+        name: "",
+      },
+      Packages: {
+        page: 1,
+        limit: 5,
+        name: "",
+      },
+      disabled: true,
+      tableLoading: false,
+      total: 0,
+      isAdd: true,
+      customPackageDialog: false,
+      // 新增
+      customPackageForm: {
+        name: "",
+        platId: "",
+        position: "",
+        type: "",
+        auditUserIds: [],
+      },
+      editParams: {
+        id: "",
+        name: "",
+        auditUserIds: [],
+      },
+      advertOptions: [],
+      materialTypesOptions: [
+        { id: 1, name: "图片" },
+        { id: 2, name: "视频" },
+      ],
+      advertTypesOptions: [],
+      auditPeopleOptions: [],
+      customPackageRules: {
+        platId: [{ required: true, message: "请选择广告源", trigger: "blur" }],
+        position: [
+          { required: true, message: "请选择广告类型", trigger: "blur" },
+        ],
+        type: [{ required: true, message: "请选择素材类型", trigger: "blur" }],
+        name: [
+          { required: true, message: "请输入素材包名称", trigger: "blur" },
+        ],
+        // auditUserIds: [{ required: true, message: '请选择审核人员', trigger: 'blur' }],
+      },
+    };
+  },
+  mounted() {
+    // this.getCreativePackage();
+    // this.getAuditPeople();
+    // this.getAdvertSelect();
+    // this.getPlatform();
+  },
+  methods: {
+    // 列表
+    async getCreativePackage() {
+      this.tableLoading = true;
+      const res = await creativePackage(this.packages);
+      if (res.code != 200) return this.$message.error(res.msg);
+      setTimeout(() => {
+        this.tableLoading = false;
+      }, 500);
+      this.materialTable = res.data.items;
+      this.total = res.data.total;
+    },
+    // 审核人员下拉
+    async getAuditPeople() {
+      const res = await auditPeople();
+      if (res.code != 200) return;
+      this.auditPeopleOptions = res.data;
+    },
+    // 广告类型 / 广告位置
+    async getAdvertSelect() {
+      const res = await flowSelect();
+      if (res.code != 200) return;
+      this.advertTypesOptions = res.data;
+    },
+    // 广告源
+    async getPlatform() {
+      const res = await platform();
+      if (res.code != 200) return;
+      this.advertOptions = res.data;
+    },
+    customPackage() {
+      this.disabled = false;
+      this.isAdd = true;
+      this.customPackageDialog = true;
+    },
+    // 编辑
+    editPackage(row) {
+      this.disabled = true;
+      row = JSON.parse(JSON.stringify(row));
+      this.customPackageForm = row;
+      this.customPackageForm.id = row.id;
+      this.isAdd = false;
+      this.customPackageDialog = true;
+    },
+    // 确定 添加或编辑
+    handleAddCreative() {
+      this.$refs["ruleForm"].validate(async (val) => {
+        if (!val) return;
+        if (this.isAdd) {
+          const res = await addCreative(this.customPackageForm);
+          if (res.code != 200) return this.$message.error(res.msg);
+          this.getCreativePackage();
+          this.$message.success("操作成功！");
+          this.customPackageDialog = false;
+        } else {
+          const res = await editCreative(this.customPackageForm);
+          if (res.code != 200) return this.$message.error(res.msg);
+          this.getCreativePackage();
+          this.$message.success("操作成功！");
+          this.customPackageDialog = false;
+        }
+      });
+    },
+    closeDialog() {
+      this.$refs["ruleForm"].resetFields();
+      this.customPackageForm = {
+        name: "",
+        platId: "",
+        position: "",
+        type: "",
+        auditUserIds: [],
+      };
+    },
+    searchBtn() {
+      this.Packages = Object.assign({}, this.packages);
+      this.getCreativePackage();
+    },
+    handleSizeChange(val) {
+      this.Packages.limit = val;
+      this.getCreativePackage();
+    },
+    handleCurrentChange(val) {
+      this.Packages.page = val;
+      this.getCreativePackage();
+    },
+
+    // 删除
+    delPackage(row) {
+      let id = row.id;
+      this.$confirm("此操作将永久删除该文件, 是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+      })
+        .then(async () => {
+          const res = await deletePackage(id);
+          if (res.data.code != 200) return this.$message.error(res.data.msg);
+          this.getCreativePackage();
+          this.$message.success('操作成功！');
+        })
+        .catch(() => {});
+    },
+  },
+};
+</script>

@@ -1,0 +1,73 @@
+<template>
+  <div>
+    <el-card>
+      <el-table class="tableBox" :data="gradeTable" stripe style="width: 100%">
+        <el-table-column prop="date" label="素材等级" align="center"> </el-table-column>
+        <el-table-column prop="name" label="描述" align="center"> </el-table-column>
+        <el-table-column prop="address" label="" align="center"> </el-table-column>
+      </el-table>
+      <el-table :data="gradeTable1" stripe style="width: 100%">
+        <el-table-column prop="date" label="投放等级" align="center"> </el-table-column>
+        <el-table-column prop="name" label="描述" align="center"> </el-table-column>
+        <el-table-column prop="address" label="展示的素材" align="center"> </el-table-column>
+      </el-table>
+    </el-card>
+  </div>
+</template>
+<script>
+export default {
+  data() {
+    return {
+      gradeTable: [
+        {
+          date: ' A',
+          name: '适合成年人及以上观看的内容',
+          address: '成年人可看',
+        },
+        {
+          date: 'B',
+          name: '适合青少年观看的内容',
+          address: '青年人，成年人可看',
+        },
+        {
+          date: 'C',
+          name: '适合家长陪同下观看的内容',
+          address: '青少年，青年人，儿童可看',
+        },
+        {
+          date: 'D',
+          name: '适合广泛受众观看的内容',
+          address: '所有人可看',
+        },
+      ],
+      gradeTable1: [
+        {
+          date: '一级',
+          name: '展示所有广告内容',
+          address: 'A+B+C+D',
+        },
+        {
+          date: '二级',
+          name: '展示适合青少年及成年人观看得内容',
+          address: 'B+C+D',
+        },
+        {
+          date: '三级',
+          name: '展示适合大多数人但未成年人要在家长陪同下观看得广告',
+          address: 'C+D',
+        },
+        {
+          date: '四级',
+          name: '适合广泛受众的内容',
+          address: 'D',
+        },
+      ],
+    }
+  },
+}
+</script>
+<style scoped>
+.tableBox {
+  margin-bottom: 30px;
+}
+</style>

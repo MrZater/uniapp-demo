@@ -1,0 +1,56 @@
+<template>
+  <div class="box">
+    <div class="header">
+      数据维度
+      <el-select v-model="value" placeholder="请选择">
+        <el-option
+          v-for="item in options"
+          :key="item.value"
+          :label="item.label"
+          :value="item.value"
+        />
+      </el-select>
+    </div>
+  </div>
+</template>
+<script>
+export default {
+  data() {
+    return {
+      value: '',
+      options: [
+        {
+          value: '选项1',
+          label: '广告位'
+        },
+        {
+          value: '选项2',
+          label: '渠道'
+        }
+      ]
+    }
+  }
+}
+</script>
+<style lang="scss" scoped>
+.box {
+  width: 235px;
+  height: 350px;
+  border: 1px solid #ebecf0;
+  margin: 20px auto;
+  .header {
+    display: flex;
+    align-items: center;
+    height: 50px;
+    background-color: #f5f7fa;
+    padding-left: 20px;
+    font-size: 14px;
+    color: #333;
+
+    ::v-deep .el-select {
+      width: 95px;
+      margin-left: 10px;
+    }
+  }
+}
+</style>

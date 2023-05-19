@@ -1,0 +1,398 @@
+@import "~@/styles/variables.scss";
+@import "~@/styles/var.scss";
+@import "~@/styles/mixin.scss";
+// ::v-deep .aggregate-container .el-table th.is-leaf {
+//   border-bottom: 1.5px solid #dfe6ec;
+// }
+// 汇总行选择项隐藏
+::v-deep.aggregate-container label.el-checkbox.is-disabled {
+  display: none;
+}
+
+// 瀑布流的列表背景色
+::v-deep.el-table .group1-row {
+  &.hover-row > td {
+    background: #fff !important;
+  }
+}
+::v-deep.el-table .group2-row {
+  background-color: rgb(245, 252, 252);
+  &.hover-row > td {
+    background-color: rgb(245, 252, 252) !important;
+  }
+}
+.el-row {
+  margin-top: 5px;
+  height: 25px;
+  font-size: 20px;
+}
+.testgroups {
+  margin-bottom: 5px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.text {
+  font-size: 14px;
+}
+.item {
+  margin-bottom: 10px;
+}
+.container {
+  display: flex;
+  width: 100%;
+  .left {
+    flex: 2;
+    h3 {
+      font-weight: 400;
+      height: 40px;
+      line-height: 40px;
+      border: 1px solid #dddfe6;
+      padding-left: 30px;
+    }
+    ul {
+      max-height: 290px;
+      overflow-y: scroll;
+      box-sizing: border-box;
+      li {
+        height: 40px;
+        padding-left: 30px;
+        line-height: 40px;
+        border-bottom: 1px solid #dddfe6;
+        color: #999;
+        font-size: 12px;
+        cursor: pointer;
+        padding-left: 34px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+        border-left: 2px solid #ffffff;
+      }
+    }
+  }
+  .right {
+    flex: 5;
+    min-height: 290px;
+    padding: 50px 50px 50px 20px;
+  }
+}
+.addactive {
+  border-left: 2px solid #2265ff !important;
+  background-color: #e8efff;
+}
+.box1 {
+  position: relative;
+  .closeIcon {
+    position: absolute;
+    right: -27px;
+    top: 8px;
+    font-size: 20px;
+    cursor: pointer;
+    &:hover {
+      color: red;
+    }
+  }
+}
+// 编辑弹框样式
+// 流量分组名称
+.name {
+  width: 92%;
+}
+::v-deep .name .el-input--mini .el-input__inner {
+  width: 100%;
+}
+// SDK版本
+.sdkbox {
+  @include rel100;
+}
+.sdkbox .el-select.select {
+  width: $selectWidth;
+  margin-right: 5px;
+  height: $selectHeight;
+}
+.sdkbox .el-input.sdk {
+  width: 70%;
+  height: $selectHeight;
+}
+// 设备ID
+.equipmentbox {
+  @include rel100;
+}
+.equipmentbox .el-select.select {
+  width: $selectWidth;
+  margin-right: 5px;
+  height: $selectHeight;
+}
+.equipmentbox .el-input.equipment {
+  width: 70%;
+  height: $selectHeight;
+}
+// 渠道
+.channelbox {
+  @include rel100;
+}
+.channelbox .el-select.select {
+  width: $selectWidth;
+  margin-right: 5px;
+  height: $selectHeight;
+}
+.channelbox .el-input.channel {
+  width: 70%;
+  height: $selectHeight;
+}
+// 地区
+.areabox {
+  @include rel100;
+}
+.areabox .el-select.select {
+  width: $selectWidth;
+  margin-right: 5px;
+  height: $selectHeight;
+}
+.areabox .el-cascader.area {
+  width: 70%;
+  height: $selectHeight;
+}
+// 日期
+.datepickers {
+  @include rel100;
+}
+::v-deep .datepickers .el-date-editor--daterange.el-input__inner {
+  width: 70%;
+  height: $selectHeight;
+}
+
+::v-deep .datepickers .el-input__inner {
+  width: $selectWidth;
+  height: $selectHeight;
+}
+// 时间
+.timepickers {
+  @include rel100;
+}
+::v-deep .timepickers .el-select .el-input__inner {
+  width: $selectWidth;
+  height: $selectHeight;
+}
+::v-deep .timepickers .el-range-editor--medium.el-input__inner {
+  width: 70%;
+  height: $selectHeight;
+}
+.closeItem:hover {
+  color: red;
+}
+// 设备品牌
+.brandbox {
+  @include rel100;
+}
+.brandbox .el-select.select {
+  width: $selectWidth;
+  height: $selectHeight;
+}
+.brandbox .el-select.brand {
+  width: 72%;
+  height: $selectHeight;
+}
+// 网络类型
+.nettypebox {
+  @include rel100;
+}
+.nettypebox .el-select.select {
+  width: $selectWidth;
+  height: $selectHeight;
+}
+.nettypebox .el-select.nettype,
+.el-input.nettype {
+  width: 72%;
+  height: $selectHeight;
+}
+.tabsStyle {
+  // border: 1px solid;
+  font-size: 14px;
+  height: 30px;
+  line-height: 30px;
+  padding-left: 40px;
+}
+
+.el-page-header {
+  height: 40px;
+  line-height: 40px;
+}
+.adverting {
+  width: 500px;
+  box-sizing: border-box;
+  padding: 10px;
+  padding-left: 0;
+  .item {
+    display: flex;
+    width: 100%;
+    height: 50px;
+    font-size: 14px;
+    .left {
+      display: flex;
+      align-items: center;
+      color: #606266;
+      width: 50%;
+      height: 50px;
+      font-weight: 700;
+      .icon-wenhao {
+        color: #ddd9d9;
+        cursor: pointer;
+        margin-left: 5px;
+      }
+    }
+    .right {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      height: 50px;
+    }
+  }
+}
+.dragBox {
+  width: 80px;
+  ::v-deep .el-input__inner {
+    text-align: center;
+  }
+}
+.empty {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 300px;
+  background-color: #fff;
+  color: #999;
+  img {
+    width: 100px;
+    height: 100px;
+  }
+}
+.tabs {
+  ::v-deep .el-tabs__header {
+    background-color: #f3f5f7;
+  }
+  ::v-deep .el-tabs__content {
+    padding: 0px;
+  }
+}
+::v-deep .el-tabs--border-card {
+  box-shadow: 0px 0px 0px 0px;
+  border: none;
+}
+.tabsbox {
+  border: 1px solid #d7dadd;
+}
+.app-container {
+  width: 100%;
+  background-color: #fff;
+  .filter-container-operate {
+    margin-bottom: 15px;
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    .left,
+    .right {
+      .item {
+        margin-right: 10px;
+      }
+    }
+  }
+}
+.additem {
+  color: rgb(42, 129, 201);
+  cursor: pointer;
+}
+.app,
+.ad {
+  font-size: 14px;
+}
+.editmoney .editIcon {
+  transition: all 0.5s;
+  font-size: 20px;
+  display: none;
+  opacity: 0;
+}
+.editmoney:hover .editIcon {
+  font-size: 20px;
+  display: inline-block;
+  opacity: 1;
+  color: rgb(52, 166, 219);
+}
+.ruletextbtn {
+  margin-left: 10px;
+  cursor: pointer;
+  color: #1890ff;
+  font-size: 12px;
+}
+.ruletext {
+  width: 100%;
+  margin-top: 30px;
+  background-color: rgb(250, 250, 250);
+  .ruleSpan {
+    display: inline-block;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    width: 90%;
+  }
+}
+.el-icon-setting.setting {
+  margin-left: 10px;
+  line-height: 35px;
+  font-size: 20px;
+  cursor: pointer;
+  color: #1890ff;
+}
+.el-icon-setting.setting:hover {
+  color: #2265ff;
+}
+
+.doicon {
+  display: inline-block;
+  cursor: pointer;
+  font-size: 14px;
+  .svgicon {
+    font-size: 18px;
+  }
+}
+::v-deep.aggregate-container .el-table__fixed {
+  box-shadow: 0 0 10px rgb(0 0 0 / 12%);
+}
+.expand.el-button,
+.pinterest.el-button {
+  color: #1890ff;
+  border-color: #badeff;
+  background-color: #e8f4ff;
+}
+// 添加/编辑代码位折叠样式
+.control {
+  display: flex;
+  flex-direction: row-reverse;
+  margin-bottom: 20px;
+  .fold {
+    cursor: pointer;
+    &:hover {
+      color: #2265ff;
+    }
+  }
+}
+.dropdown_item {
+  display: inline-block;
+  width: 90px;
+  height: 35px;
+  line-height: 35px;
+}
+.expandbox {
+  display: flex;
+  width: 100%;
+  font-size: 12px;
+  line-height: 30px;
+}
+.chooseBox {
+  margin: 15px;
+  .chooseItem {
+    font-size: 13px;
+  }
+}

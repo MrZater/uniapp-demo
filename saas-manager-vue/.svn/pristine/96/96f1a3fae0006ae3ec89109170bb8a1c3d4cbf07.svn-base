@@ -1,0 +1,672 @@
+<template>
+  <div>
+    <el-card>
+      <el-row :gutter="20">
+        <el-col :span="7">
+          <span class="item">操作系统</span>
+          <el-select
+            clearable
+            v-model="medproVparams.os"
+            placeholder="请选择操作系统"
+          >
+            <el-option
+              v-for="item in versionOption"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            >
+            </el-option>
+          </el-select>
+        </el-col>
+        <el-col :span="8">
+          <span class="item">{{ title }} SDK版本</span>
+          <el-input
+            class="sdkV"
+            v-model="medproVparams.version"
+            placeholder="请输入SDK版本"
+            clearable
+          ></el-input>
+        </el-col>
+        <el-col :span="2">
+          <el-button type="primary" @click="searchBtn">查询</el-button>
+        </el-col>
+        <el-col :span="4">
+          <el-button type="success" @click="addMedproV"
+            >新增{{ title }}版本</el-button
+          >
+        </el-col>
+      </el-row>
+    </el-card>
+    <el-card>
+      <!-- 表格 -->
+      <el-table :data="asktableData" stripe style="width: 100%">
+        <el-table-column label="系统类型" align="center" width="180">
+          <template slot-scope="{ row }">
+            <div>
+              <span v-if="row.os == 1">安卓</span>
+              <span v-if="row.os == 0">iOS</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column
+          prop="version"
+          :label="title + ' SDK版本'"
+          align="center"
+          width="180"
+        >
+        </el-table-column>
+        <el-table-column prop="uploadTime" align="center" label="创建时间">
+        </el-table-column>
+        <el-table-column prop="modifyTime" align="center" label="更新时间">
+        </el-table-column>
+        <el-table-column
+          prop="bingdingSourceIds"
+          align="center"
+          label="已绑定广告源"
+        >
+          <template
+            slot-scope="{ row }"
+            v-if="row.bingdingSourceIds && row.bingdingSourceIds.length > 0"
+          >
+            <div>
+              <span
+                v-for="(item, index) in row.bingdingSourceIds"
+                :key="index"
+                >{{
+                  item == 1
+                    ? " 穿山甲 "
+                    : item == 2
+                    ? " 优量汇 "
+                    : item == 3
+                    ? " 快手 "
+                    : item == 4
+                    ? " 精准通 "
+                    : item == 6
+                    ? " 百度联盟 "
+                    : item == 7
+                    ? " Sigmob "
+                    : ""
+                }}</span
+              >
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column align="center" label="状态">
+          <template slot-scope="{ row }">
+            <div>
+              <span v-if="row.publishSts == 0">未发布</span>
+              <span v-if="row.publishSts == 1">发布</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column align="center" label="操作">
+          <template slot-scope="{ row }">
+            <el-link type="primary" @click="editMedproV(row)">编辑</el-link>
+            <el-link type="primary" @click="bindAdvert(row)"
+              >绑定广告源</el-link
+            >
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="MedproVparams.page"
+        :page-sizes="[10, 20, 30, 40]"
+        :page-size="MedproVparams.limit"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+      >
+      </el-pagination>
+    </el-card>
+    <!-- 添加 / 编辑-->
+    <el-dialog
+      :title="isAdd ? `新增${title} SDK版本` : `编辑${title} SDK版本`"
+      :visible.sync="sdkVDialog"
+      width="50%"
+      @close="closeSdkVDialog"
+    >
+      <el-form
+        :model="sdkVForm"
+        :rules="sdkVRules"
+        ref="ruleForm"
+        label-width="120px"
+      >
+        <el-form-item label="操作系统" prop="os">
+          <el-select
+            :disabled="disabled"
+            @change="systemChange"
+            v-model="sdkVForm.os"
+            placeholder="请选择操作系统"
+          >
+            <el-option
+              v-for="item in versionOption"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="SDK版本号" prop="version">
+          <el-input
+            :disabled="disabled"
+            class="sdkV"
+            v-model="sdkVForm.version"
+            placeholder="请输入SDK版本"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="更新日志" prop="modifyLog">
+          <el-input
+            type="textarea"
+            :rows="5"
+            placeholder="请输入更新日志"
+            v-model="sdkVForm.modifyLog"
+          >
+          </el-input>
+        </el-form-item>
+        <el-form-item :label="title + ' SDK包'">
+          <el-upload
+            :action="url + 'accessCenter/upload'"
+            :file-list="fileListSDK"
+            :on-success="sdkPackageSuccess"
+            :headers="headers"
+            :on-remove="removeSdkPackage"
+          >
+            <el-button size="small" type="primary">点击上传</el-button>
+            <span class="uploadsuccess">{{
+              sdkPercentage == 0
+                ? ""
+                : 100 > sdkPercentage
+                ? "上传中请不要关闭浏览器"
+                : sdkPercentage >= 100
+                ? "上传成功"
+                : ""
+            }}</span>
+          </el-upload>
+          <el-progress
+            v-if="sdkProgressShow"
+            :percentage="sdkPercentage"
+          ></el-progress>
+        </el-form-item>
+        <el-form-item v-if="oaidShow" label="移动联盟 oaid包">
+          <el-upload
+            :action="url + 'accessCenter/upload'"
+            :file-list="fileListOaid"
+            :on-success="OaidPackageSuccess"
+            :headers="headers"
+            :on-remove="removeOaidPackage"
+          >
+            <el-button size="small" type="primary">点击上传</el-button>
+            <span class="uploadsuccess">{{
+              oaidPercentage == 0
+                ? ""
+                : 100 > oaidPercentage
+                ? "上传中请不要关闭浏览器"
+                : oaidPercentage >= 100
+                ? "上传成功"
+                : ""
+            }}</span>
+          </el-upload>
+          <el-progress
+            v-if="oaidProgressShow"
+            :percentage="oaidPercentage"
+          ></el-progress>
+        </el-form-item>
+        <el-form-item label="发布状态" prop="publishSts">
+          <el-radio-group v-model="sdkVForm.publishSts">
+            <el-radio label="1">发布</el-radio>
+            <el-radio label="0">未发布</el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="sdkVDialog = false">取 消</el-button>
+        <el-button type="primary" @click="handleSdkVDialog">确 定</el-button>
+      </span>
+    </el-dialog>
+    <!-- 绑定广告源 -->
+    <el-dialog
+      @close="closeAdvertDialog"
+      title="绑定广告源SDK"
+      :visible.sync="advertSdkDialog"
+      width="50%"
+    >
+      <div
+        class="advertItem"
+        v-for="(value, key, index) in advertListDialog"
+        :key="index"
+      >
+        <div class="advert_top">
+          <span class="advert_name">{{
+            key == 1
+              ? "穿山甲"
+              : key == 2
+              ? "优量汇"
+              : key == 3
+              ? "快手"
+              : key == 4
+              ? "京准通"
+              : key == 6
+              ? "百度联盟"
+              : key == 7
+              ? "Sigmob"
+              : ""
+          }}</span>
+          <el-button type="success" size="mini" @click="resetRadio(value)"
+            >重置</el-button
+          >
+        </div>
+        <div class="advert_bottom">
+          <!-- <el-radio-group v-model="advertListDialog[key][index].radio" @change="aaaa"> -->
+          <el-radio
+            @change="changeRadio(key, e.id, i)"
+            v-model="e.radio"
+            v-for="(e, i) in value"
+            :key="e.id"
+            :label="e.id"
+            >{{ e.version }}</el-radio
+          >
+          <!-- </el-radio-group> -->
+        </div>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="advertSdkDialog = false">取 消</el-button>
+        <el-button type="primary" @click="handleadvertDialog">确 定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+<script>
+import {
+  addMedproSDK,
+  medproSdkList,
+  editMedproSDK,
+  bindAdvertSource,
+  bindAdvertList,
+  editAdvertList,
+  progessLine,
+} from "@/api/MedproVersion";
+import { getPlatOptions } from "@/api/plat";
+
+export default {
+  data() {
+    return {
+      medproVparams: {
+        page: 1,
+        limit: 10,
+        os: "",
+        version: "",
+      },
+      MedproVparams: {
+        page: 1,
+        limit: 10,
+        os: "",
+        version: "",
+      },
+      advertListDialog: {},
+      total: 0,
+      versionOption: [
+        { id: 0, name: "iOS" },
+        { id: 1, name: "安卓" },
+      ],
+      headers: {
+        Authorization: "",
+      },
+      advertRadio: "",
+      sdkVoption: [],
+      sdkVDialog: false, //添加  编辑 弹框
+      advertSdkDialog: false, //sdk广告源 弹框
+      sdkVForm: {
+        os: "",
+        version: "",
+        modifyLog: "",
+        sdkDownloadUrl: "",
+        oaidDownloadUrl: "",
+        publishSts: "0",
+      },
+      advertListparams: {
+        medproSdkId: "",
+        sourceSdkPackageIds: [],
+      },
+      advertSources: [],
+      url: "",
+      isAdd: true,
+      disabled: false,
+      oaidShow: true,
+      fileListSDK: [],
+      fileListOaid: [],
+      asktableData: [],
+      sdkVRules: {
+        os: [{ required: true, message: "请选择操作系统", trigger: "blur" }],
+        version: [
+          { required: true, message: "请输入SDK版本", trigger: "blur" },
+        ],
+        modifyLog: [
+          { required: true, message: "请输入更新日志", trigger: "blur" },
+        ],
+        publishSts: [
+          { required: true, message: "请选择发布状态", trigger: "blur" },
+        ],
+      },
+      sdkPercentage: 0,
+      sdkProgressShow: false,
+      sdkTimer: null,
+      oaidPercentage: 0,
+      oaidProgressShow: false,
+      oaidTimer: null,
+    };
+  },
+  computed: {
+    title() {
+      return this.$store.getters.title;
+    },
+  },
+  mounted() {
+    this.headers.Authorization = this.$store.getters.token;
+    this.url = process.env.VUE_APP_BASE_API;
+    this.getSdkList();
+    this.getPlat();
+  },
+  methods: {
+    // 关闭单选框弹框时  讲所有数组中radio(版本id)清空  讲请求参数也清空
+    closeAdvertDialog() {
+      for (let k in this.advertListDialog) {
+        this.advertListDialog[k].forEach((e) => {
+          e.radio = "";
+        });
+      }
+      this.advertListparams = {
+        medproSdkId: "",
+        sourceSdkPackageIds: [],
+      };
+    },
+    // 重置 单选框    拿到当前的版本数组value
+    resetRadio(value) {
+      value.forEach((e) => {
+        this.advertListparams.sourceSdkPackageIds.forEach((item, index) => {
+          if (e.radio == item) {
+            this.advertListparams.sourceSdkPackageIds.splice(index, 1);
+          }
+        });
+      });
+      value.forEach((e) => {
+        e.radio = "";
+      });
+    },
+    changeRadio(key, id, i) {
+      this.advertListDialog[key].forEach((e) => {
+        e.radio = "";
+      });
+
+      this.advertListDialog[key][i].radio = id;
+      let arr = [];
+      for (let k in this.advertListDialog) {
+        this.advertListDialog[k].forEach((e) => {
+          if (e.radio !== "") {
+            arr.push(e.radio);
+          }
+        });
+      }
+      this.advertListparams.sourceSdkPackageIds = arr;
+    },
+
+    async handleadvertDialog() {
+      if (this.advertListparams.sourceSdkPackageIds.length == 0)
+        return this.$message.warning("请选择广告源SDK");
+      let resultAtr = this.advertListparams.sourceSdkPackageIds.join(",");
+      this.advertListparams.sourceSdkPackageIds = resultAtr;
+      let file = new FormData();
+      file.append("medproSdkId", this.advertListparams.medproSdkId);
+      file.append("sourceSdkPackageIds", resultAtr);
+      const res = await bindAdvertSource(file);
+
+      if (res.code != 200) return this.$message.error(res.msg);
+      this.getSdkList();
+      this.$message.success(res.msg);
+      this.advertSdkDialog = false;
+    },
+    async getPlat() {
+      const res = await getPlatOptions();
+      let idsArr = [];
+      if (res.code == 200) {
+        res.data.forEach((e) => {
+          idsArr.push(e.id);
+        });
+        this.advertSources = idsArr;
+      }
+    },
+    async getSdkList() {
+      const res = await medproSdkList(this.MedproVparams);
+      if (res.code != 200) return this.$message.error(res.msg);
+      // if (res.data.items.length > 0) {
+      //   res.data.items.forEach((e) => {
+      //     for (let k in e) {
+      //       if (e[k] && e[k].length > 0) {
+      //         e[k].forEach((item) => {
+      //         });
+      //       }
+      //     }
+      //   });
+      // }
+      this.asktableData = res.data.items;
+      this.total = res.data.total;
+    },
+    //   新增 版本
+    addMedproV() {
+      this.isAdd = true;
+      this.disabled = false;
+      this.sdkVDialog = true;
+    },
+    removeSdkPackage() {
+      clearInterval(this.sdkTimer);
+      this.sdkTimer = null;
+      this.sdkPercentage = 0;
+      this.sdkProgressShow = false;
+      this.sdkVForm.sdkDownloadUrl = "";
+      this.fileListSDK = [];
+    },
+    removeOaidPackage() {
+      clearInterval(this.oaidTimer);
+      this.oaidTimer = null;
+      this.oaidPercentage = 0;
+      this.oaidProgressShow = false;
+      this.sdkVForm.oaidDownloadUrl = "";
+      this.fileListOaid = [];
+    },
+    handleSdkVDialog() {
+      this.$refs["ruleForm"].validate(async (val) => {
+        if (!val) return;
+        if (this.sdkVForm.os == 0) {
+          // ios
+          if (this.fileListSDK.length == 0)
+            return this.$message.warning("上传文件为必填项！");
+        } else if (this.sdkVForm.os == 1) {
+          if (this.fileListSDK.length == 0 || this.fileListOaid.length == 0)
+            return this.$message.warning("上传文件为必填项！");
+        }
+        if (this.isAdd) {
+          const res = await addMedproSDK(this.sdkVForm);
+          if (res.code != 200) return this.$message.error(res.msg);
+          this.getSdkList();
+          this.$message.success(res.msg);
+          this.sdkVDialog = false;
+        } else {
+          let obj = {
+            id: this.sdkVForm.id,
+            modifyLog: this.sdkVForm.modifyLog,
+            sdkDownloadUrl: this.sdkVForm.sdkDownloadUrl,
+            oaidDownloadUrl: this.sdkVForm.oaidDownloadUrl,
+            publishSts: this.sdkVForm.publishSts,
+          };
+          const res = await editMedproSDK(obj);
+          if (res.code != 200) return this.$message.error(res.msg);
+          this.getSdkList();
+          this.$message.success(res.msg);
+          this.sdkVDialog = false;
+        }
+      });
+    },
+    sdkPackageSuccess(response) {
+      this.sdkProgressShow = true;
+      if (response.code == 200) {
+        this.sdkVForm.sdkDownloadUrl = response.data;
+        this.fileListSDK = [{ url: this.url + response.data }];
+        this.sdkfileName = response.data;
+        this.sdkTimer = setInterval(async () => {
+          const res = await progessLine(this.sdkfileName);
+          if (res.code == 200 && res.data === null) {
+            this.sdkPercentage = 1;
+          } else {
+            this.sdkPercentage = res.data;
+            if (res.data >= 100) {
+              this.sdkPercentage = 100;
+              clearInterval(this.sdkTimer);
+              this.sdkTimer = null;
+            }
+          }
+        }, 1000);
+      }
+    },
+    OaidPackageSuccess(response) {
+      this.oaidProgressShow = true;
+      if (response.code == 200) {
+        this.sdkVForm.oaidDownloadUrl = response.data;
+        this.fileListOaid = [{ url: this.url + response.data }];
+        this.oaidfileName = response.data;
+        this.oaidTimer = setInterval(async () => {
+          const res = await progessLine(this.oaidfileName);
+          if (res.code == 200 && res.data === null) {
+            this.oaidPercentage = 1;
+          } else {
+            this.oaidPercentage = res.data;
+            if (res.data >= 100) {
+              this.oaidPercentage = 100;
+              clearInterval(this.oaidTimer);
+              this.oaidTimer = null;
+            }
+          }
+        }, 1000);
+      }
+    },
+    closeSdkVDialog() {
+      this.sdkPercentage = 0;
+      this.sdkProgressShow = false;
+      this.oaidPercentage = 0;
+      this.oaidProgressShow = false;
+      this.$refs["ruleForm"].resetFields();
+      this.fileListSDK = [];
+      this.fileListOaid = [];
+      //   显示oaid包上传
+      this.oaidShow = true;
+      this.sdkVForm = {
+        os: "",
+        version: "",
+        modifyLog: "",
+        sdkDownloadUrl: "",
+        oaidDownloadUrl: "",
+        publishSts: "0",
+      };
+    },
+    searchBtn() {
+      this.MedproVparams = Object.assign({}, this.medproVparams);
+      this.getSdkList();
+    },
+    systemChange() {
+      if (this.sdkVForm.os == 0) {
+        this.oaidShow = false;
+      } else {
+        this.oaidShow = true;
+      }
+    },
+    editMedproV(row) {
+      row = JSON.parse(JSON.stringify(row));
+      if (row.os == 0) {
+        this.oaidShow = false;
+      } else {
+        this.oaidShow = true;
+      }
+      this.sdkVForm.sdkDownloadUrl = row.sdkDownloadUrl;
+      this.sdkVForm.oaidDownloadUrl = row.oaidDownloadUrl;
+      this.fileListSDK = [{ url: this.url + row.sdkDownloadUrl }];
+      this.fileListOaid = [{ url: this.url + row.oaidDownloadUrl }];
+      this.sdkVForm = row;
+      this.isAdd = false;
+      this.disabled = true;
+      this.sdkVDialog = true;
+    },
+    // 绑定广告源按钮
+    async bindAdvert(row) {
+      const resp = await bindAdvertList(row.os);
+      if (resp.code == 200) {
+        for (let k in resp.data) {
+          resp.data[k].forEach((e) => {
+            e.radio = "";
+          });
+        }
+        this.advertListDialog = resp.data;
+      }
+      let file = new FormData();
+      file.append("id", row.id);
+      const res = await editAdvertList(file);
+      if (res.code == 200) {
+        this.advertListparams.sourceSdkPackageIds = res.data;
+        for (let k in this.advertListDialog) {
+          this.advertListDialog[k].forEach((e) => {
+            res.data.forEach((item) => {
+              if (e.id == item) {
+                e.radio = item;
+              }
+            });
+          });
+        }
+      }
+
+      this.advertListparams.medproSdkId = row.id;
+      this.advertSdkDialog = true;
+    },
+    handleSizeChange(val) {
+      this.MedproVparams.limit = val;
+      this.getSdkList();
+    },
+    handleCurrentChange(val) {
+      this.MedproVparams.page = val;
+      this.getSdkList();
+    },
+  },
+};
+</script>
+<style lang="scss" scoped>
+.sdkV {
+  width: 250px;
+}
+.item {
+  color: #1f1f1f;
+  font-size: 14px;
+}
+.advertItem {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 90px;
+  padding-left: 30px;
+  //   background-color: crimson;
+}
+
+.advert_top,
+.advert_bottom {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+.advert_name {
+  // margin-right: 50px;
+  font-size: 16px;
+  width: 100px;
+}
+.uploadsuccess {
+  margin-left: 20px;
+  color: #67c23a;
+}
+</style>

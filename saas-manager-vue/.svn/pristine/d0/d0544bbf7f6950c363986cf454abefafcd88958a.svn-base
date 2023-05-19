@@ -1,0 +1,25 @@
+import {
+    readerFile
+} from "./2";
+import {
+    Notification
+} from "element-ui";
+
+export default async function excel(res, name = '未命名.xls') {
+    const transformData = await readerFile(res);
+    try {
+        const obj = JSON.parse(transformData);
+        const message = obj.rspMsg || obj.msg;
+        Notification.warning({
+            title: "提示",
+            message: message + ""
+        });
+    } catch (e) {
+        const blobUrl = window.URL.createObjectURL(res);
+        const a = document.createElement("a");
+        a.download = name;
+        a.href = blobUrl;
+        a.click();
+        URL.revokeObjectURL(blobUrl);
+    }
+}

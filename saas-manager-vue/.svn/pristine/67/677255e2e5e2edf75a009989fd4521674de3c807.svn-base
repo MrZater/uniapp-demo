@@ -1,0 +1,1064 @@
+<template>
+  <div class="app-container">
+    <div class="filter-container">
+      <el-date-picker
+        v-model="date"
+        class="filter-item item"
+        type="daterange"
+        value-format="yyyy-MM-dd"
+        align="right"
+        unlink-panels
+        :clearable="false"
+        range-separator="至"
+        start-placeholder="开始日期"
+        end-placeholder="结束日期"
+        :picker-options="pickerOptions"
+        @change="getSTime"
+      />
+
+      <CustSelectApp
+        style="width: 10rem"
+        class="filter-item"
+        :width="500"
+        :word="'应用'"
+        :all-data="appOptions"
+        :search-by-id="true"
+        @selectListhandle="selectListhandleApp"
+      />
+      <CustSelectApp
+        style="width: 10rem"
+        class="filter-item"
+        :width="500"
+        :word="'广告位'"
+        :all-data="placeOptions"
+        :search-by-id="true"
+        @selectListhandle="selectListhandlePlace"
+      />
+
+      <el-select
+        v-model="query.position"
+        style="width: 10rem"
+        placeholder="请选择广告样式"
+        class="filter-item"
+        clearable
+      >
+        <el-option
+          v-for="item in positionOptions"
+          :key="item.id"
+          :label="item.name"
+          :value="item.id"
+        />
+      </el-select>
+      <el-select
+        v-model="query.os"
+        style="width: 10rem"
+        placeholder="请选择操作系统"
+        class="filter-item"
+        clearable
+        @clear="query.os = null"
+      >
+        <!-- <el-option label="全部" value="" /> -->
+        <el-option label="Android" :value="1" />
+        <el-option label="IOS" :value="0" />
+      </el-select>
+      <el-button
+        v-waves
+        class="filter-item"
+        type="primary"
+        icon="el-icon-search"
+        @click="searchBtn"
+      >
+        查询
+      </el-button>
+    </div>
+
+    <div class="body-container">
+      <div class="filter-container">
+        <el-button
+          v-waves
+          type="primary"
+          size="mini"
+          icon="el-icon-plus"
+          class="filter-item"
+          @click="handleAdd"
+        >
+          广告位
+        </el-button>
+        <CustTag
+          class="custtag"
+          :far-target-arr="targetArr"
+          :storage-name="storageName"
+          :box-height="550"
+          @handelConfirmDialog="handelConfirmDialog"
+        />
+      </div>
+      <el-table
+        :key="tableKey"
+        v-loading="listLoading"
+        :header-cell-style="{ 'background-color': '#f7f8fa', color: '#000' }"
+        :data="list"
+        fit
+        highlight-current-row
+        @sort-change="sortChange"
+      >
+        <el-table-column label="广告位名称/ID" fixed align="center" min-width="220">
+          <template slot-scope="{ row }">
+            <div class="app-info-container">
+              <div class="app-name">
+                <span>{{ row.name }}</span>
+              </div>
+              <div class="app-id">
+                <span>ID:{{ row.id }}</span>
+                <el-tooltip content="复制ID" placement="right" effect="light">
+                  <i
+                    style="cursor: pointer; margin-left: 2px"
+                    class="el-icon-copy-document"
+                    @click="copyId(row.id)"
+                  />
+                </el-tooltip>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="所属应用/ID" fixed align="center" min-width="270">
+          <template slot-scope="{ row }">
+            <div class="app-td-container">
+              <div class="app-icon">
+                <el-image
+                  fit="contain"
+                  style="width: 40px; height: 40px; border-radius: 10px"
+                  :src="
+                    row.iconUrl
+                      ? getCreativeUrl(row.iconUrl)
+                      : '/images/app-none.png'
+                  "
+                />
+              </div>
+              <div class="app-info-container">
+                <div class="app-name">
+                  <svg-icon :icon-class="row.os === 1 ? 'android' : 'ios'" />
+                  <span>{{ row.appName }}</span>
+                </div>
+                <div class="app-id">
+                  <span>ID:{{ row.appId }}</span>
+                  <el-tooltip content="复制ID" placement="right" effect="light">
+                    <i
+                      style="cursor: pointer; margin-left: 2px"
+                      class="el-icon-copy-document"
+                      @click="copyId(row.appId)"
+                    />
+                  </el-tooltip>
+                </div>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="广告样式" fixed align="center" min-width="100">
+          <template slot-scope="{ row }">
+            <span>{{ getPositionNameById(row.position) }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" fixed align="center" width="120">
+          <template slot-scope="{ row }">
+            <el-tooltip
+              v-if="$store.getters.aggregate == 1"
+              content="聚合管理"
+              placement="top"
+              effect="light"
+            >
+              <div class="doicon">
+                <router-link
+                  :to="{
+                    path: '/traffic/aggregate',
+                    query: { appId: row.appId, placeId: row.id },
+                  }"
+                >
+                  <svg-icon
+                    class="svgicon"
+                    style="color: #3685df"
+                    icon-class="aggregatebtn"
+                  />
+                </router-link>
+              </div>
+            </el-tooltip>
+            <el-tooltip content="编辑" placement="top" effect="light">
+              <div
+                class="doicon"
+                style="
+                  padding-left: 10px;
+                  magin-right: 20px;
+                  display: inline-block;
+                "
+                @click="handleUpdate(row)"
+              >
+                <svg-icon
+                  class="svgicon"
+                  style="color: #3685df; font-size: 18px"
+                  icon-class="edit"
+                />
+              </div>
+            </el-tooltip>
+          </template>
+        </el-table-column>
+
+        <template v-for="(item, i) in sureArr">
+          <el-table-column
+            :key="i"
+            :render-header="renderHeader"
+            :prop="item.prop"
+            :label="item.label"
+            :align="item.align"
+            :width="item.width"
+            :sortable="'custom'"
+          >
+            <template slot-scope="{ row }">
+              <div v-if="item.prop == 'permeability'">
+                {{ row[item.prop] + "%" }}
+              </div>
+              <div v-else-if="item.prop == 'requestFilledRate'">
+                {{ row[item.prop] + "%" }}
+              </div>
+              <div v-else-if="item.prop == 'impressRate'">
+                {{ row[item.prop] + "%" }}
+              </div>
+              <div v-else-if="item.prop == 'advRequestFilledRate'">
+                {{ row[item.prop] + "%" }}
+              </div>
+              <div v-else-if="item.prop == 'clickRate'">
+                {{ row[item.prop] + "%" }}
+              </div>
+              <div v-else-if="item.prop == 'unitCtr'">
+                {{ row[item.prop] + "%" }}
+              </div>
+              <div v-else-if="item.type == 'GAP'">
+                {{ row[item.prop] + "%" }}
+              </div>
+
+              <div v-else>
+                {{ row[item.prop] }}
+              </div>
+            </template>
+          </el-table-column>
+        </template>
+      </el-table>
+
+      <el-pagination
+        :current-page="query.page"
+        :page-sizes="[5, 10, 20, 50, 100]"
+        :page-size="query.limit"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div>
+    <el-dialog
+      v-if="dialogVisible"
+      ref="dialog"
+      :title="dialogType === 0 ? '新增广告位' : '编辑广告位'"
+      :visible.sync="dialogVisible"
+    >
+      <el-form
+        ref="form"
+        :model="temp"
+        :rules="rules"
+        label-width="150px"
+        label-position="right"
+      >
+        <el-form-item label="应用" prop="appId">
+          <el-select
+            v-model="temp.appId"
+            placeholder="请选择应用"
+            :disabled="dialogType === 1"
+            filterable
+            @change="changeEditApp"
+          >
+            <svg-icon
+              slot="prefix"
+              :icon-class="temp.os == 1 ? 'android' : temp.os == 0 ? 'ios' : ''"
+            />
+            <el-option
+              v-for="item in appOptionsAll"
+              :key="item.id"
+              :value="item.id"
+              :label="item.name"
+            >
+              <svg-icon :icon-class="item.os === 1 ? 'android' : 'ios'" />
+              <span>{{ item.name }}</span>
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="广告位名称" prop="name">
+          <el-input
+            v-model="temp.name"
+            maxlength="30"
+            show-word-limit
+            placeholder="请输入广告位名称"
+          />
+        </el-form-item>
+        <el-form-item label="广告样式" prop="position">
+          <el-select
+            v-model="temp.position"
+            clearable
+            filterable
+            @change="changePosition"
+          >
+            <el-option
+              v-for="item in positionOptions"
+              :key="item.id"
+              :value="item.id"
+              :label="item.name"
+            />
+          </el-select>
+        </el-form-item>
+        <!-- <el-form-item
+          label="关闭按钮控制"
+          prop="closeButtonType"
+          v-if="$store.getters.roles[0] == 'SUPER_ADMIN'&&temp.position==3"
+        >
+          <el-radio v-model="temp.closeButtonType" :label="'A'"
+            >一直显示</el-radio
+          >
+          <el-radio v-model="temp.closeButtonType" :label="'B'"
+            >n秒后显示</el-radio
+          >
+        </el-form-item>
+        <el-form-item
+          v-if="temp.closeButtonType == 'B'"
+          label="显示时间"
+          prop="countDown"
+        >
+          <el-input-number
+            :min="0"
+            :max="10"
+            v-model="temp.countDown"
+            :step="1"
+            controls-position="right"
+          />
+          <span style="marginLeft:5px">s后</span>
+        </el-form-item>
+        <el-form-item v-if="temp.position==3" label="关闭按钮大小" prop="buttonSize">
+          <el-input-number
+            :min="0"
+            :max="100"
+            v-model="temp.buttonSize"
+            :step="1"
+            controls-position="right"
+          />
+        </el-form-item> -->
+        <el-form-item
+          v-if="temp.position == 5"
+          label="服务端激励回调"
+          prop="serverVerify"
+        >
+          <el-switch
+            v-model="temp.serverVerify"
+            :active-value="1"
+            :inactive-value="0"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+            @change="changeVerify"
+          />
+        </el-form-item>
+        <el-form-item
+          v-if="temp.serverVerify == 1 && temp.position == 5"
+          label="激励名称"
+          prop="rewardName"
+        >
+          <el-input v-model="temp.rewardName" placeholder="请输入激励名称" />
+        </el-form-item>
+        <el-form-item
+          v-if="temp.serverVerify == 1 && temp.position == 5"
+          label="激励数量"
+          prop="rewardCount"
+        >
+          <el-input
+            v-model.number="temp.rewardCount"
+            placeholder="请输入激励数量"
+          />
+        </el-form-item>
+        <el-form-item
+          v-if="temp.serverVerify == 1 && temp.position == 5"
+          label="回调URL"
+          prop="callbackUrl"
+        >
+          <el-input v-model="temp.callbackUrl" placeholder="请输入回调URL" />
+        </el-form-item>
+        <el-form-item
+          v-if="temp.serverVerify == 1 && temp.position == 5"
+          label="安全密钥"
+          prop="secKey"
+          style=""
+        >
+          <el-input
+            v-model="temp.secKey"
+            style="width: 60%"
+            placeholder="请输入安全密钥"
+            disabled
+          />
+        </el-form-item>
+        <el-form-item
+          v-if="temp.position === 1 && $store.getters.skip === 1"
+          label="跳过"
+        >
+          <el-radio-group v-model="temp.skip">
+            <el-radio label="A"> 开启 </el-radio>
+            <el-radio label="S"> 关闭 </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item v-if="dialogType === 1" label="广告位状态">
+          <el-radio-group v-model="temp.sts">
+            <el-radio label="A"> 启用 </el-radio>
+            <el-radio label="S"> 停止 </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item v-if="isShowCreativeTemplate != -1" label="素材模板">
+          <!-- <el-input v-model="temp.templateIds" /> -->
+          <el-select
+            v-model="temp.templateIds"
+            multiple
+            placeholder="请选择素材模板"
+          >
+            <el-option
+              v-for="item in materialTempList"
+              :key="item.id"
+              :value="item.id"
+              :label="item.sizeName"
+            />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item v-if="$store.getters.creative === 1" label="审核状态">
+          <el-switch
+            v-model="temp.auditSts"
+            active-value="A"
+            inactive-value="S"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+          />
+        </el-form-item>
+        <el-form-item v-if="$store.getters.creative === 1" label="投放等级">
+          <el-select v-model="temp.level" placeholder="请选择">
+            <el-option
+              v-for="item in levelOptions"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item
+          v-if="
+            $store.getters.roles[0] == 'SUPER_ADMIN' ||
+            ($store.getters.roles[0] == 'ADMIN' &&
+              $store.state.user.mediaAccess == 1)
+          "
+          label="分成比例"
+        >
+          <el-input
+            v-model="temp.divideIntoProportions"
+            placeholder="请输入分成比例（0-100）"
+          />
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="temp.remark" />
+        </el-form-item>
+      </el-form>
+      <span v-if="allowOperate" slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSubmitForm">确定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import waves from "@/directive/waves";
+// import Pagination from '@/components/Pagination'
+import { Message } from "element-ui";
+import { getAppList, getApplistByUserIdAndOs } from "@/api/app";
+// import { editAudit } from "@/api/synthReport";
+import { materialTemp } from "@/api/MedproVersion";
+import {
+  addAdplace,
+  getPlaceList,
+  getPlacePager,
+  updateAdplace,
+} from "@/api/place";
+import { appToAdvert } from "@/api/synthReport";
+import { getPositionList } from "@/api/common";
+import { copy } from "@/utils/string";
+import { getPlatOptions } from "@/api/plat";
+import CustSelectApp from "@/components/CustSelectApp";
+import CustSelectOne from "@/components/CustSelectOne";
+
+import { placeDataArr } from "@/utils/targetArr";
+import CustTag from "@/components/CustTag";
+import { adminDateOption } from "@/utils/options";
+import tips from "@/components/tips/HelpHint/HelpHint.vue";
+import { clearStorage } from "@/utils/clearStorage";
+
+import md5 from "js-md5";
+
+export default {
+  name: "Adplace",
+  directives: { waves },
+  components: {
+    CustTag,
+    CustSelectApp,
+    tips,
+    CustSelectOne,
+  },
+  data() {
+    const countValidator = (rule, value, callback) => {
+      if (typeof value !== "number") {
+        return callback(new Error("请输入数字"));
+      } else if (value < 0) {
+        return callback(new Error("请输入大于0的数字"));
+      } else if (value % 1 > 0) {
+        return callback(new Error("请输入整数"));
+      } else {
+        return callback();
+      }
+    };
+    return {
+      // 自定义指标
+
+      targetArr: placeDataArr,
+      sureArr: [],
+
+      query: {
+        os: null,
+        appIds: [],
+        adplaceIds: [],
+        position: "",
+        page: 1,
+        limit: 10,
+        beginDate: "",
+        endDate: "",
+        sortBy: "",
+        sortOrder: "",
+      },
+      Query: {
+        os: "",
+        appIds: [],
+        adplaceIds: [],
+        position: "",
+        page: 1,
+        limit: 10,
+      },
+      appOptions: [],
+      appOptionsAll: [],
+      placeOptions: [],
+      placeOptionsAll: [],
+      positionOptions: [],
+      platOptions: [],
+      tableKey: 0,
+      listLoading: false,
+      isShowCreativeTemplate: -1,
+      list: [],
+      total: 0,
+      temp: {
+        auditSts: "",
+        level: "",
+        skip: "S",
+        divideIntoProportions: 100,
+      },
+      materialTempList: [],
+      dialogType: 0,
+      dialogVisible: false,
+      levelOptions: [
+        { id: 1, name: "一级" },
+        { id: 2, name: "二级" },
+        { id: 3, name: "三级" },
+        { id: 4, name: "四级" },
+      ],
+      rules: {
+        appId: [{ required: true, message: "请选择APP", trigger: "change" }],
+        name: [{ required: true, message: "请输入名称", trigger: "blur" }],
+        position: [
+          { required: true, message: "请选择位置", trigger: "change" },
+        ],
+        rewardName: [
+          { required: true, message: "请输入激励名称", trigger: "blur" },
+        ],
+        rewardCount: [
+          { required: true, message: "请输入激励数量", trigger: "blur" },
+          { required: true, validator: countValidator, trigger: "blur" },
+        ],
+        callbackUrl: [
+          { required: true, message: "请输入回调URL", trigger: "blur" },
+        ],
+      },
+      date: [],
+      pickerOptions: adminDateOption || [],
+      storageName: "adplaceData_0629_1", // 自定义指标本地缓存key
+    };
+  },
+  computed: {
+    title() {
+      return this.$store.getters.title;
+    },
+    allowOperate() {
+      return this.$store.getters.allowOperate;
+    },
+  },
+  watch: {
+    "query.os": {
+      async handler(val) {
+        let resp = await getApplistByUserIdAndOs({ adminUser: "", os: val });
+        if (resp.code !== 200) return;
+        if (!resp.data) {
+          resp.data = [];
+        }
+        this.appOptions = resp.data;
+        let arr = this.appOptions.map((item) => {
+          return item.id;
+        });
+        let res = await appToAdvert(arr);
+        if (res.code !== 200) return;
+        this.placeOptions = res.data;
+      },
+    },
+  },
+  created() {
+    clearStorage("adplaceData", this.storageName);
+    this.initpickerDate();
+    this.initAppOptions();
+    this.initPlaceOptions();
+    this.initPositionOptions();
+    this.getMaterialTemp();
+    this.initPlatOptions();
+    let appId = this.$route.query.appId;
+    if (appId && appId.trim().length > 0) {
+      this.Query.appIds.push(appId);
+      this.query.appIds.push(appId);
+    }
+
+    this.handleGetPager();
+    // 默认选中
+  },
+  mounted() {
+    this.initTargetArr();
+    this.initTableforTag();
+  },
+  methods: {
+    sortChange({ column, prop, order }) {
+      if (order) {
+        this.query.sortBy =
+          prop == "income"
+            ? "1"
+            : prop == "estimatedRevenueEcpm"
+            ? "2"
+            : prop == "dau"
+            ? "3"
+            : prop == "arpu"
+            ? "4"
+            : prop == "deu"
+            ? "5"
+            : prop == "permeability"
+            ? "6"
+            : prop == "request"
+            ? "7"
+            : prop == "requestFilledRate"
+            ? "8"
+            : prop == "impressRate"
+            ? "9"
+            : prop == "aipu"
+            ? "10"
+            : prop == "aipau"
+            ? "11"
+            : prop == "advRequest"
+            ? "12"
+            : prop == "advRequestFilledRate"
+            ? "13"
+            : prop == "impress"
+            ? "14"
+            : prop == "click"
+            ? "15"
+            : prop == "clickRate"
+            ? "16"
+            : prop == "unitRevenue"
+            ? "17"
+            : prop == "unitEcpm"
+            ? "18"
+            : prop == "unitRequest"
+            ? "19"
+            : prop == "unitImpression"
+            ? "20"
+            : prop == "unitClick"
+            ? "21"
+            : prop == "unitCtr"
+            ? "22"
+            : prop == "impressionGap"
+            ? "23"
+            : prop == "clickGap"
+            ? "24"
+            : prop == "arpDeu"
+            ? "25"
+            : "";
+        this.query.sortOrder = order == "ascending" ? "asc" : "desc";
+      } else {
+        this.query.sortBy = "";
+        this.query.sortOrder = "";
+      }
+
+      this.handleGetPager();
+    },
+    changeEditApp(val) {
+      if (val) {
+        this.appOptionsAll.forEach((item) => {
+          if (item.id == val) {
+            this.temp.os = item.os;
+          }
+        });
+      } else {
+        this.temp.os = "";
+      }
+    },
+    renderHeader(h, { column, $index }) {
+      let prop = column.property;
+      let items = this.sureArr.filter((item) => {
+        return item.prop == prop;
+      });
+      let item = {};
+      if (items.length > 0) {
+        item = items[0];
+      }
+      if (item.prop && item.desc) {
+        return this.$createElement("tips", {
+          props: {
+            content: item.desc,
+            title: item.label,
+            isShow: true,
+          },
+        });
+      }
+      // 其他
+      return this.$createElement("tips", {
+        props: {
+          content: ``,
+          title: column.label,
+          isShow: false,
+        },
+      });
+    },
+
+    // 获取指标列表数组
+    initTargetArr() {
+      if (!localStorage.getItem(this.storageName)) {
+        return;
+      } else {
+        this.targetArr = JSON.parse(localStorage.getItem(this.storageName));
+      }
+    },
+    // 初始化显示列表
+    initTableforTag() {
+      this.targetArr.forEach((item) => {
+        if (item.checked) {
+          this.sureArr.push(JSON.parse(JSON.stringify(item)));
+        }
+      });
+    },
+    // 自定义指标确认事件
+    handelConfirmDialog(sureArr, targetArr) {
+      this.targetArr = JSON.parse(JSON.stringify(targetArr));
+      this.sureArr = JSON.parse(JSON.stringify(sureArr));
+    },
+    // 初始化时间
+    initpickerDate() {
+      let time = new Date().getTime() - 1000 * 60 * 60 * 24;
+      let year = new Date(time).getFullYear();
+      let month = new Date(time).getMonth() + 1;
+      let day = new Date(time).getDate();
+
+      let str = `${year}-${month < 10 ? "0" + month : month}-${
+        day < 10 ? "0" + day : day
+      }`;
+      this.date = [str, str];
+      this.query.endDate = str;
+      this.query.beginDate = str;
+    },
+    // 时间改变函数
+    getSTime() {
+      this.query.beginDate = this.date[0];
+      this.query.endDate = this.date[1];
+    },
+    selectListhandleApp(val) {
+      this.query.appIds = val;
+      this.changePlaceOptions(val);
+    },
+    selectListhandlePlace(val) {
+      this.query.adplaceIds = [...val];
+    },
+    handleSelectPosition(val) {
+      this.query.position = val;
+    },
+    async changePlaceOptions(val) {
+      this.query.appIds = val;
+      if (val && val.length > 0) {
+        this.placeOptions = this.placeOptionsAll.filter((item) => {
+          return !!~val.indexOf(item.appId);
+        });
+        if (this.query.placeIds && this.query.placeIds.length > 0) {
+          this.query.placeIds = this.query.placeIds.filter((id) => {
+            let flag = false;
+            this.placeOptions.forEach((place) => {
+              if (place.id === id) {
+                flag = true;
+              }
+            });
+            return flag;
+          });
+        }
+      } else {
+        let arr = this.appOptions.map((item) => {
+          return item.id;
+        });
+        let res = await appToAdvert(arr);
+        if (res.code !== 200) return;
+        this.placeOptions = res.data;
+        // this.placeOptions = this.placeOptionsAll;
+      }
+    },
+    async getMaterialTemp() {
+      const res = await materialTemp();
+      if (res.code == 200) {
+        this.materialTempList = res.data;
+      }
+    },
+    initAppOptions() {
+      getAppList().then((res) => {
+        this.appOptions = this.appOptionsAll = res.data;
+      });
+    },
+    initPlaceOptions() {
+      getPlaceList().then((res) => {
+        this.placeOptions = this.placeOptionsAll = res.data;
+      });
+    },
+    // 位置
+    initPositionOptions() {
+      getPositionList().then((res) => {
+        this.positionOptions = res.data;
+      });
+    },
+    initPlatOptions() {
+      getPlatOptions().then((res) => {
+        this.platOptions = res.data;
+        this.isShowCreativeTemplate = this.platOptions.findIndex(
+          (item) => item.accessType === "1"
+        );
+      });
+    },
+    filterAppIds(val) {
+      if (val) {
+        this.appOptions = this.appOptionsAll.filter((item) => {
+          return (
+            !!~item.id.toUpperCase().indexOf(val.toUpperCase()) ||
+            !!~item.name.toUpperCase().indexOf(val.toUpperCase())
+          );
+        });
+      } else {
+        this.appOptions = this.appOptionsAll;
+      }
+    },
+    filterPlaceIds(val) {
+      if (val) {
+        this.placeOptions = this.placeOptionsAll.filter((item) => {
+          return (
+            !!~item.id.toUpperCase().indexOf(val.toUpperCase()) ||
+            !!~item.name.toUpperCase().indexOf(val.toUpperCase())
+          );
+        });
+      } else {
+        this.placeOptions = this.placeOptionsAll;
+      }
+    },
+
+    async handleGetPager() {
+      this.listLoading = true;
+      let res = await getPlacePager(this.query);
+      if (res.code !== 200) return;
+      if (!res.data) {
+        this.total = 0;
+        this.listLoading = false;
+        return;
+      }
+      this.total = res.data.total;
+      this.list = res.data.items.map((item) => {
+        let reportData = item.reportData;
+        let obj = { ...item, ...reportData };
+        obj.appId = item.appId;
+        obj.appName = item.appName;
+        obj.os = item.os;
+
+        return obj;
+      });
+      this.listLoading = false;
+      this.$bus.$emit("totop");
+    },
+
+    handleAdd() {
+      this.temp = {
+        appId: "",
+        name: "",
+        position: "",
+        skip: "S",
+        templateIds: [],
+        auditSts: "S",
+        level: "",
+        divideIntoProportions: 100,
+        remark: "",
+        // closeButtonType: "A",
+        // countDown: 5,
+        // buttonSize: 50,
+      };
+      if (this.$route.query && this.$route.query.appId) {
+        this.temp.appId = this.$route.query.appId;
+        this.changeEditApp(this.temp.appId);
+      }
+
+      this.dialogType = 0;
+      this.dialogVisible = true;
+    },
+    handleUpdate(row) {
+      this.temp.auditSts = row.auditSts;
+      this.temp.level = row.level;
+      this.temp.divideIntoProportions = row.divideIntoProportions;
+      this.dialogType = 1;
+      this.temp = JSON.parse(JSON.stringify(row));
+      this.dialogVisible = true;
+    },
+    changePosition(val) {
+      if (this.dialogType == 0) {
+        let md = md5(
+          "" + new Date().getTime(),
+          this.temp.appId ? this.temp.appId : ""
+        );
+        this.temp.secKey = md;
+      }
+    },
+    changeVerify() {
+      if (this.dialogType == 1) {
+        let md = md5(
+          "" + new Date().getTime(),
+          this.temp.appId ? this.temp.appId : ""
+        );
+        this.temp.secKey = md;
+      }
+    },
+    refreshSecKey() {},
+    handleSubmitForm() {
+      let _this = this;
+      this.$refs.form.validate(async (valid) => {
+        if (valid) {
+          if (_this.dialogType === 0) {
+            await addAdplace(_this.temp).then((res) => {
+              Message({
+                message: "操作成功！",
+                type: "success",
+                duration: 5 * 1000,
+              });
+            });
+          } else if (_this.dialogType === 1) {
+            await updateAdplace(_this.temp).then((res) => {
+              Message({
+                message: "操作成功！",
+                type: "success",
+                duration: 5 * 1000,
+              });
+            });
+          }
+          _this.dialogVisible = false;
+          _this.handleGetPager();
+        }
+      });
+    },
+    copyId(id) {
+      let result = copy(id);
+      if (result === false) {
+        Message({
+          message: "不支持复制",
+          type: "error",
+          duration: 2 * 1000,
+        });
+      } else {
+        Message({
+          message: "复制成功",
+          type: "success",
+          duration: 2 * 1000,
+        });
+      }
+    },
+    getCreativeUrl(url) {
+      if (url) {
+        return this.$store.getters.resourceUrl + url;
+      } else {
+        return null;
+      }
+    },
+    getPositionNameById(id) {
+      let target = this.positionOptions.find((item) => item.id === id);
+      return target ? target.name : "-";
+    },
+    handleSizeChange(val) {
+      this.query.limit = val;
+      this.Query.limit = val;
+      this.handleGetPager();
+    },
+    handleCurrentChange(val) {
+      this.query.page = val;
+      this.Query.page = val;
+
+      this.handleGetPager();
+    },
+    searchBtn() {
+      this.query.page = 1;
+      this.Query = Object.assign({}, this.query);
+      this.handleGetPager();
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.app-td-container {
+  display: flex;
+  padding-left: 20px;
+  .app-icon {
+    flex: 40px 0 1;
+  }
+  .app-info-container {
+    flex: 1;
+    padding-left: 10px;
+    text-align: left;
+  }
+}
+.custtag {
+  position: absolute;
+  right: 50px;
+}
+.doicon {
+  cursor: pointer;
+  display: inline-block;
+  .svgicon {
+    font-size: 18px;
+  }
+}
+::v-deep .app-container .el-table th.is-leaf {
+  border-bottom: 1.5px solid #dfe6ec;
+  // margin-top: -100px;
+}
+
+::v-deep.app-container .el-table__fixed {
+  box-shadow: 0 0 10px rgb(0 0 0 / 12%);
+}
+// .refresh_btn{
+//   display: inline-block;
+//   height: 34px;
+//   width: 20%;
+//   border: 1px solid;
+//    vertical-align: bottom;
+// }
+</style>

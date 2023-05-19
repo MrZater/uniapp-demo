@@ -1,0 +1,1014 @@
+<template>
+  <div class="batch-add-container">
+    <div class="header">
+      <span class="goback" @click="goback"
+        ><i class="el-icon-back">返回</i></span
+      >
+      <h3>批量添加代码位</h3>
+    </div>
+    <!-- 内容区 -->
+    <div class="content">
+      <!-- 表头标题 -->
+      <div class="title">
+        <div class="title_app">
+          <div class="image">
+            <el-image
+              :src="iconUrl ? getCreativeUrl(iconUrl) : '/images/app-none.png'"
+              :fit="'fill'"
+            />
+          </div>
+          <div class="titlebox">
+            <p class="name">
+              <span class="label">
+                <svg-icon
+                  :icon-class="os === 1 ? 'android' : os === 0 ? 'ios' : ''"
+                />{{ appName }}</span
+              >
+            </p>
+            <p class="id"><span class="label"></span>{{ appId }}</p>
+          </div>
+        </div>
+        <div class="title_place">
+          <div class="titlebox">
+            <p class="name">
+              <span class="label">{{ placeName }}</span>
+            </p>
+            <p class="id">
+              <span class="label">{{ placeId }}</span>
+            </p>
+          </div>
+        </div>
+        <div class="title_position">
+          <div class="titlebox">
+            <p class="name position">
+              <span class="label">{{ positionName }}</span>
+            </p>
+          </div>
+        </div>
+      </div>
+      <!-- 广告源 -->
+      <div class="platform" v-if="appId">
+        <div class="label">广告源：</div>
+        <div class="platformbox">
+          <AppPlatform
+            class="appplatform"
+            :isBatch="true"
+            :app-id="appId"
+            :linked-show="false"
+            :active="null"
+            :disabled="false"
+            :is-edit="false"
+            @getplatrow="getplatrow"
+          />
+        </div>
+      </div>
+      <el-form
+        ref="platLinkForm"
+        :model="editplatquery"
+        label-width="100px"
+        label-position="left"
+        :rules="editplatrules"
+      >
+        <!-- 账户 -->
+        <el-form-item label="账户" prop="platAccountId">
+          <el-select v-model="editplatquery.platAccountId">
+            <el-option
+              v-for="account in accounts"
+              :key="account.id"
+              :label="account.name"
+              :value="account.id"
+            >
+            </el-option>
+          </el-select>
+
+          <span v-if="editplatquery.platId"
+            >创建<span
+              style="color: #338aff; cursor: pointer"
+              class="text-a"
+              @click="showNewAccount"
+              >新账户</span
+            ></span
+          >
+        </el-form-item>
+        <!-- appid -->
+        <el-form-item
+          label="AppId"
+          :prop="editplatquery.accessType == 1 ? '' : 'platAppId'"
+        >
+          <el-input
+            v-model.trim="editplatquery.platAppId"
+            placeholder="请输入"
+            style="width: 300px"
+          />
+          <p style="color: red; font-size: 12px">
+            注意：修改AppID后，该应用下的所有广告位配置都会同步生效！
+          </p>
+        </el-form-item>
+        <!-- appkey -->
+        <el-form-item
+          label="AppKey"
+          prop="appKey"
+          v-if="editplatquery.platId == 7 || editplatquery.platId == 11"
+        >
+          <el-input
+            v-model.trim="editplatquery.appKey"
+            placeholder="请输入"
+            style="width: 300px"
+          />
+        </el-form-item>
+      </el-form>
+      <div class="control">
+        <el-button
+          icon="el-icon-plus"
+          size="mini"
+          type="primary"
+          @click="addMore"
+          >代码位</el-button
+        >
+        <el-button
+          :disabled="selectData.length == 0"
+          type="warning "
+          size="mini"
+          @click="deleteData"
+          >批量删除</el-button
+        >
+      </div>
+      <div class="table">
+        <el-form ref="batchform" :model="query">
+          <el-table
+            :key="tableKey"
+            :data="query.sourceData"
+            style="width: 100%"
+            @selection-change="handleSelectionChange"
+          >
+            <!-- 选择栏 -->
+            <el-table-column align="center" type="selection" fixed>
+            </el-table-column>
+            <!-- 广告源名称 -->
+            <el-table-column align="center" label="广告源" fixed>
+              <template slot-scope="scope">
+                <el-form-item label="" prop="">
+                  {{ scope.row.platName }}
+                </el-form-item>
+              </template>
+            </el-table-column>
+            <!-- 代码位ID -->
+            <el-table-column
+              align="center"
+              label="代码位ID"
+              fixed
+              width="150px"
+            >
+              <template slot-scope="scope">
+                <el-form-item
+                  :prop="'sourceData[' + scope.$index + '].platPlaceId'"
+                  :rules="{
+                    required: true,
+                    message: '代码位ID不能为空',
+                    trigger: 'blur',
+                  }"
+                  label-width="0"
+                >
+                  <el-input
+                    size="mini"
+                    placeholder="请输入代码位ID"
+                    v-model="scope.row.platPlaceId"
+                  /> </el-form-item
+              ></template>
+            </el-table-column>
+            <!-- 代码位名称 -->
+            <el-table-column
+              align="center"
+              label="代码位名称"
+              fixed
+              width="150px"
+              ><template slot-scope="scope">
+                <el-form-item
+                  :prop="'sourceData[' + scope.$index + '].name'"
+                  :rules="{
+                    required: true,
+                    message: '代码位名称不能为空',
+                    trigger: 'blur',
+                  }"
+                  label-width="0"
+                >
+                  <el-input
+                    size="mini"
+                    placeholder="请输入代码位名称"
+                    v-model="scope.row.name"
+                  /> </el-form-item></template
+            ></el-table-column>
+            <!-- 价格类型 -->
+            <el-table-column align="center" label="价格类型" fixed width="120px"
+              ><template slot-scope="scope">
+                <el-form-item
+                  :prop="'sourceData[' + scope.$index + '].settleType'"
+                  :rules="{
+                    required: true,
+                    message: '请选择价格类型',
+                    trigger: 'change',
+                  }"
+                  label-width="0"
+                >
+                  <el-select
+                    size="mini"
+                    v-model="scope.row.settleType"
+                    placeholder=""
+                  >
+                    <el-option
+                      v-if="settleType == '1'"
+                      :label="'竞价'"
+                      :value="1"
+                    />
+                    <el-option :label="'固价'" :value="0" />
+                  </el-select> </el-form-item></template
+            ></el-table-column>
+            <!-- 价格 -->
+            <el-table-column align="center" label="价格" fixed width="120px"
+              ><template slot-scope="scope">
+                <div v-if="settleType == '1'">
+                  <el-form-item
+                    v-if="scope.row.settleType == '0'"
+                    :prop="'sourceData[' + scope.$index + '].bidfloor'"
+                    :rules="{
+                      required: true,
+                      message: '请输入底价',
+                      trigger: 'blur',
+                    }"
+                    label-width="0"
+                  >
+                    <el-input
+                      size="mini"
+                      placeholder="请输入底价"
+                      v-model="scope.row.bidfloor"
+                    />
+                  </el-form-item>
+                  <span v-else class="bidding">竞价</span>
+                </div>
+
+                <div v-else>
+                  <el-form-item
+                    :prop="'sourceData[' + scope.$index + '].bidfloor'"
+                    :rules="{
+                      required: true,
+                      message: '请输入底价',
+                      trigger: 'blur',
+                    }"
+                    label-width="0"
+                  >
+                    <span>
+                      <el-input
+                        size="mini"
+                        placeholder="请输入底价"
+                        v-model="scope.row.bidfloor" /></span
+                  ></el-form-item>
+                </div> </template
+            ></el-table-column>
+            <!-- 代码位状态 -->
+            <el-table-column align="center" label="状态" fixed width="60px"
+              ><template slot-scope="scope">
+                <el-form-item :prop="'sourceData[' + scope.$index + '].sts'">
+                  <el-switch
+                    v-model="scope.row.sts"
+                    active-value="A"
+                    inactive-value="S"
+                  /> </el-form-item></template
+            ></el-table-column>
+            <!-- 请求上限 -->
+            <el-table-column align="center" label="请求上限" width="150px">
+              <template slot-scope="scope">
+                <el-form-item
+                  :prop="'sourceData[' + scope.$index + '].requestFreq'"
+                  label-width="0"
+                >
+                  <el-input
+                    @keyup.native="proving($event)"
+                    @input="
+                      $event < 0
+                        ? (scope.row.requestFreq = 0)
+                        : (scope.row.requestFreq = +$event)
+                    "
+                    type="number"
+                    min="0"
+                    size="mini"
+                    placeholder="请输入请求上限"
+                    v-model="scope.row.requestFreq"
+                  /> </el-form-item
+              ></template>
+            </el-table-column>
+            <!-- 展示上限 -->
+            <el-table-column align="center" label="展示上限" width="150px">
+              <template slot-scope="scope">
+                <el-form-item
+                  :prop="'sourceData[' + scope.$index + '].impressFreq'"
+                  label-width="0"
+                >
+                  <el-input
+                    @keyup.native="proving($event)"
+                    @input="
+                      $event < 0
+                        ? (scope.row.impressFreq = 0)
+                        : (scope.row.impressFreq = +$event)
+                    "
+                    min="0"
+                    type="number"
+                    size="mini"
+                    placeholder="请输入展示上限"
+                    v-model="scope.row.impressFreq"
+                  /> </el-form-item
+              ></template>
+            </el-table-column>
+            <!-- 点击上限 -->
+            <el-table-column align="center" label="点击上限" width="150px">
+              <template slot-scope="scope">
+                <el-form-item
+                  :prop="'sourceData[' + scope.$index + '].clickFreq'"
+                  label-width="0"
+                >
+                  <el-input
+                    @keyup.native="proving($event)"
+                    @input="
+                      $event < 0
+                        ? (scope.row.clickFreq = 0)
+                        : (scope.row.clickFreq = +$event)
+                    "
+                    type="number"
+                    min="0"
+                    size="mini"
+                    placeholder="请输入点击上限"
+                    v-model="scope.row.clickFreq"
+                  /> </el-form-item
+              ></template>
+            </el-table-column>
+            <!-- 展示频次（天） -->
+            <el-table-column
+              align="center"
+              label="展示频次（天）"
+              width="150px"
+            >
+              <template slot-scope="scope">
+                <el-form-item
+                  :prop="'sourceData[' + scope.$index + '].impressFreqDay'"
+                  label-width="0"
+                >
+                  <el-input
+                    @keyup.native="proving($event)"
+                    @input="
+                      $event < 0
+                        ? (scope.row.impressFreqDay = 0)
+                        : (scope.row.impressFreqDay = +$event)
+                    "
+                    type="number"
+                    min="0"
+                    size="mini"
+                    placeholder="请输入展示频次（天）"
+                    v-model="scope.row.impressFreqDay"
+                  /> </el-form-item
+              ></template>
+            </el-table-column>
+            <!-- 展示频次（小时） -->
+            <el-table-column
+              align="center"
+              label="展示频次（小时）"
+              width="150px"
+            >
+              <template slot-scope="scope">
+                <el-form-item
+                  :prop="'sourceData[' + scope.$index + '].impressFreqHour'"
+                  label-width="0"
+                >
+                  <el-input
+                    @keyup.native="proving($event)"
+                    @input="
+                      $event < 0
+                        ? (scope.row.impressFreqHour = 0)
+                        : (scope.row.impressFreqHour = +$event)
+                    "
+                    type="number"
+                    min="0"
+                    size="mini"
+                    placeholder="请输入展示频次（小时）"
+                    v-model="scope.row.impressFreqHour"
+                  /> </el-form-item
+              ></template>
+            </el-table-column>
+            <!-- 展示间隔（秒） -->
+            <el-table-column
+              align="center"
+              label="展示间隔（秒）"
+              width="150px"
+            >
+              <template slot-scope="scope">
+                <el-form-item
+                  :prop="'sourceData[' + scope.$index + '].impressInterval'"
+                  label-width="0"
+                >
+                  <el-input
+                    @keyup.native="proving($event)"
+                    @input="
+                      $event < 0
+                        ? (scope.row.impressInterval = 0)
+                        : (scope.row.impressInterval = +$event)
+                    "
+                    type="number"
+                    min="0"
+                    size="mini"
+                    placeholder="请输入展示间隔（秒）"
+                    v-model="scope.row.impressInterval"
+                  /> </el-form-item
+              ></template>
+            </el-table-column>
+            <!-- 点击频次 -->
+            <el-table-column align="center" label="点击频次" width="150px">
+              <template slot-scope="scope">
+                <el-form-item
+                  :prop="'sourceData[' + scope.$index + '].clickInterval'"
+                  label-width="0"
+                >
+                  <el-input
+                    @keyup.native="proving($event)"
+                    @input="
+                      $event < 0
+                        ? (scope.row.clickInterval = 0)
+                        : (scope.row.clickInterval = +$event)
+                    "
+                    type="number"
+                    min="0"
+                    size="mini"
+                    placeholder="请输入点击频次"
+                    v-model="scope.row.clickInterval"
+                  /> </el-form-item
+              ></template>
+            </el-table-column>
+          </el-table>
+        </el-form>
+      </div>
+      <div class="footer">
+        <el-button
+          :disabled="query.sourceData.length == 0"
+          type="primary"
+          @click="handleBatchAdd"
+          >批量添加</el-button
+        >
+      </div>
+    </div>
+
+    <div>
+      <el-dialog
+        title="创建新账户"
+        :visible.sync="addAccountDialog"
+        append-to-body
+      >
+        <el-form
+          ref="account_form"
+          :model="addAccountQuery"
+          :rules="addAccountRules"
+          label-width="120px"
+          label-position="left"
+        >
+          <el-form-item label="广告源">
+            <span>{{ editplatquery.name }}</span>
+          </el-form-item>
+          <el-form-item label="账户名称" prop="name">
+            <el-input
+              v-model="addAccountQuery.name"
+              placeholder="输入名称以区分不同账号"
+              maxlength="30"
+              show-word-limit
+            />
+          </el-form-item>
+          <el-form-item
+            v-if="
+              editplatquery.platId == '993' ||
+              editplatquery.platId == '992' ||
+              editplatquery.platId == '991' ||
+              editplatquery.platId == '998' ||
+              editplatquery.platId == '996' ||
+              editplatquery.platId == '1000'
+            "
+            :label="
+              editplatquery.platId == '993'
+                ? 'MID'
+                : editplatquery.platId == '992'
+                ? 'ChannleId'
+                : editplatquery.platId == '991'
+                ? '发布商Id'
+                : editplatquery.platId == '998'
+                ? 'token'
+                : editplatquery.platId == '996'
+                ? '渠道ID'
+                : editplatquery.platId == '1000'
+                ? 'MID'
+                : ''
+            "
+            prop="mid"
+          >
+            <el-input
+              v-model="addAccountQuery.mid"
+              :placeholder="
+                editplatquery.platId == '993'
+                  ? '请输入MID'
+                  : editplatquery.platId == '992'
+                  ? '请输入ChannleId'
+                  : editplatquery.platId == '991'
+                  ? '请输入发布商Id'
+                  : editplatquery.platId == '998'
+                  ? '请输入token'
+                  : editplatquery.platId == '996'
+                  ? '请输入渠道ID'
+                  : editplatquery.platId == '1000'
+                  ? '请输入MID'
+                  : ''
+              "
+            />
+          </el-form-item>
+          <el-form-item
+            label="密钥Id  "
+            prop="keyId"
+            v-if="editplatquery.platId == '991'"
+          >
+            <el-input
+              v-model="addAccountQuery.keyId"
+              placeholder="请输入密钥Id "
+              prop="keyId"
+            />
+          </el-form-item>
+          <el-form-item
+            label="密钥  "
+            prop="signKey"
+            v-if="editplatquery.platId == '991'"
+          >
+            <el-input
+              v-model="addAccountQuery.signKey"
+              placeholder="请输入密钥 "
+              prop="signKey"
+            />
+          </el-form-item>
+          <el-form-item
+            label="请求环境"
+            v-if="
+              editplatquery.platId == 5 ||
+              (editplatquery.platId >= 900 && editplatquery.platId != 989)
+            "
+          >
+            <el-radio-group v-model="addAccountQuery.isDebug">
+              <el-radio :label="'1'" border>测试</el-radio>
+              <el-radio :label="'0'" border>正式</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="请求地址" v-if="editplatquery.platId == 989">
+            <el-input
+              placeholder="请输入请求地址"
+              v-model="editplatquery.requestUrl"
+            />
+          </el-form-item>
+          <el-form-item
+            label="报表API"
+            v-if="
+              editplatquery.accessType &&
+              editplatquery.accessType != '1' &&
+              editplatquery.accessType != '2'
+            "
+          >
+            <el-radio-group
+              v-model="addAccountQuery.openApiStatus"
+              :value="addAccountQuery.openApiStatus"
+              size="small"
+            >
+              <el-radio :label="1" border>已开通</el-radio>
+              <el-radio :label="0" border>未开通</el-radio>
+            </el-radio-group>
+          </el-form-item>
+
+          <el-form-item
+            v-if="addAccountQuery.openApiStatus && showUserId"
+            :label="'账户' + userIdLabel"
+            prop="accountId"
+          >
+            <el-input
+              v-model="addAccountQuery.accountId"
+              :placeholder="'请输入账户' + userIdLabel"
+              maxlength="30"
+              show-word-limit
+            />
+          </el-form-item>
+
+          <el-form-item
+            v-if="addAccountQuery.openApiStatus === 1 && showAccessKey"
+            :label="accessKeyLabel"
+            prop="accessKey"
+          >
+            <el-input
+              v-model="addAccountQuery.accessKey"
+              :placeholder="'请输入' + accessKeyLabel"
+            />
+          </el-form-item>
+          <el-form-item
+            v-if="addAccountQuery.openApiStatus && editplatquery.platId != 17"
+            :label="secretLabel"
+            prop="secretKey"
+          >
+            <el-input
+              v-model="addAccountQuery.secretKey"
+              :placeholder="'请输入' + secretLabel"
+            />
+          </el-form-item>
+        </el-form>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="addAccountDialog = false">取消</el-button>
+          <el-button type="primary" @click="handlePlatForm">确定</el-button>
+        </span>
+      </el-dialog>
+    </div>
+  </div>
+</template>
+
+<script>
+import AppPlatform from "@/components/Platform";
+import { getAppInfoById, batchAddSource } from "@/api/aggregate";
+import { getAccounts, addPlatform } from "@/api/plat";
+import { updateAppPlatLink } from "@/api/app";
+import {
+  getAccessKeyLabel,
+  getSecretLabel,
+  getUserIdLabel,
+  getshowUserId,
+  getShowAccessKey,
+} from "@/utils/autoPlatLabel";
+
+const HTTP_PREFIX = "http://creative.medproad.com/material/";
+export default {
+  name: "batchAdd",
+  components: {
+    AppPlatform,
+  },
+  data() {
+    const accessKeyValidator = (rule, value, callback) => {
+      if (!value || value === "") {
+        return callback(new Error("请输入" + this.accessKeyLabel));
+      } else {
+        callback();
+      }
+    };
+    const accountIdValidator = (rule, value, callback) => {
+      if (!value || value === "") {
+        return callback(new Error("请输入" + this.userIdLabel));
+      } else {
+        callback();
+      }
+    };
+    const secretKeyValidator = (rule, value, callback) => {
+      if (!value || value === "") {
+        return callback(new Error("请输入" + this.secretLabel));
+      } else {
+        callback();
+      }
+    };
+
+    return {
+      tableKey: "" + new Date(),
+      query: { sourceData: [] },
+      appId: "",
+      appName: "",
+      placeId: "",
+      placeName: "",
+      positionId: "",
+      positionName: "",
+      iconUrl: "",
+      os: "",
+      settleType: "",
+      platName: "",
+      platId: "",
+      testId: "",
+      groupId: "",
+      selectData: [],
+      editplatquery: {
+        platAccountId: "",
+        platId: "",
+        platAppId: "",
+        appKey: "",
+        appId: "",
+        id: "",
+        accessType: "",
+      },
+      accounts: [],
+      editplatrules: {
+        platAccountId: [
+          { required: true, message: "请选择账户", trigger: "change" },
+        ],
+        platAppId: [
+          { required: true, message: "请输入AppID", trigger: "blur" },
+        ],
+      },
+      addAccountDialog: false,
+      addAccountQuery: {
+        platId: "",
+        openApiStatus: 0,
+        isDebug: "0",
+      },
+      addAccountRules: {
+        name: [{ required: true, message: "请输入账户名称", trigger: "blur" }],
+        mid: [{ required: true, message: "请输入ID", trigger: "blur" }],
+        keyId: [{ required: true, message: "请输入密钥Id", trigger: "blur" }],
+        signKey: [{ required: true, message: "请输入密钥", trigger: "blur" }],
+        accountId: [
+          { required: true, validator: accountIdValidator, trigger: "blur" },
+        ],
+        secretKey: [
+          { required: true, validator: secretKeyValidator, trigger: "blur" },
+        ],
+        accessKey: [
+          { required: true, validator: accessKeyValidator, trigger: "blur" },
+        ],
+        // m_id: [{ required: true, message: "请输入渠道ID", trigger: "blur" }],
+      },
+    };
+  },
+  computed: {
+    // secretKey适应label
+    secretLabel() {
+      let label = getSecretLabel(this.editplatquery.platId);
+      return label;
+    },
+    // 是否显示accessKey输入框
+    showAccessKey() {
+      let isShow = getShowAccessKey(this.editplatquery.platId);
+      return isShow;
+    },
+    // 是否显示账户id输入框
+    showUserId() {
+      let isShow = getshowUserId(this.editplatquery.platId);
+      return isShow;
+    },
+    // accessKey适应label
+    accessKeyLabel() {
+      let label = getAccessKeyLabel(this.editplatquery.platId);
+      return label;
+    },
+    // 账户id适应label
+    userIdLabel() {
+      let label = getUserIdLabel(this.editplatquery.platId);
+      return label;
+    },
+  },
+  mounted() {
+    if (this.$route.query) {
+      this.appId = this.$route.query.appId ? this.$route.query.appId : "";
+      this.placeId = this.$route.query.placeId ? this.$route.query.placeId : "";
+      this.groupId = this.$route.query.groupId ? this.$route.query.groupId : "";
+      this.testId = this.$route.query.testId ? this.$route.query.testId : "";
+    }
+    this.getAppInfoById();
+  },
+  methods: {
+    handlePlatForm() {
+      let _this = this;
+      this.$refs.account_form.validate(async (valid) => {
+        if (valid) {
+          await addPlatform(_this.addAccountQuery).then((res) => {
+            this.$message({
+              message: "创建成功!",
+              type: "success",
+              duration: 5 * 1000,
+            });
+            _this.addAccountDialog = false;
+            _this.getAccounts(_this.addAccountQuery.platId);
+          });
+        }
+      });
+    },
+    showNewAccount() {
+      this.addAccountQuery = {
+        platId: this.editplatquery.platId,
+        openApiStatus: 0,
+        isDebug: "0",
+      };
+      this.addAccountDialog = true;
+    },
+    getAccounts(plat) {
+      getAccounts(plat).then((res) => {
+        this.accounts = res.data;
+      });
+    },
+    async getAppInfoById() {
+      let resp = await getAppInfoById({
+        id: this.appId,
+        placeId: this.placeId,
+      });
+      this.appName = resp.data[0] ? resp.data[0].name : "";
+      this.placeName = resp.data[0] ? resp.data[0].placeName : "";
+      this.positionId = resp.data[0] ? resp.data[0].position : "";
+      this.positionName = resp.data[0] ? resp.data[0].positionName : "";
+      this.iconUrl = resp.data[0] ? resp.data[0].iconUrl : "";
+      this.os = resp.data[0] ? resp.data[0].os : "";
+    },
+    getCreativeUrl(url) {
+      if (url) {
+        return HTTP_PREFIX + url;
+      } else {
+        return null;
+      }
+    },
+    addMore() {
+      if (!this.platId) {
+        this.$message.error("请选择广告源");
+        return;
+      }
+      this.tableKey = "" + new Date();
+      this.query.sourceData.push({
+        key: Math.random(),
+        platName: this.platName,
+        settleType: this.settleType,
+        sts: "A",
+        // 广告位id
+        placeId: this.placeId,
+        // 广告源id
+        platId: this.platId,
+        // 流量分组id
+        groupId: this.groupId,
+        // 测试分组id
+        testId: this.testId,
+        name:
+          "" +
+          this.appName +
+          "-" +
+          (this.os == 1 ? "Android" : "IOS") +
+          "-" +
+          this.positionName,
+      });
+    },
+    // 选中事件
+    handleSelectionChange(list) {
+      this.selectData = JSON.parse(JSON.stringify(list));
+    },
+    // 批量删除
+    deleteData() {
+      let indexArr = [];
+      this.selectData.forEach((child, c) => {
+        this.query.sourceData.forEach((item, i) => {
+          if (item.key == child.key) {
+            indexArr.push(i);
+          }
+        });
+      });
+      indexArr.reverse().forEach((item) => {
+        this.query.sourceData.splice(item, 1);
+      });
+    },
+
+    getplatrow(row) {
+      this.getAccounts(row.id);
+      this.query.sourceData = [];
+      this.platId = row.id;
+      this.platName = row.name;
+      this.settleType = row.settleType;
+      this.editplatquery = {
+        name: row.name,
+        appId: this.appId,
+        platAccountId: row.platAccountId,
+        platId: row.id,
+        platAppId: row.platAppId,
+        appKey: row.appKey,
+        accessType: row.accessType,
+      };
+    },
+    goback() {
+      this.$router.push({
+        path: "/traffic/aggregate",
+        query: { appId: this.appId, placeId: this.placeId },
+      });
+    },
+    async editUser() {
+      let resp = await updateAppPlatLink(this.editplatquery);
+      if (resp.code != 200) return;
+      this.editplatquerytemp = JSON.parse(JSON.stringify(this.editplatquery));
+      this.platAppId = this.editplatquery.platAppId;
+    },
+    async batchAddSource() {
+      let resp = await batchAddSource(this.query);
+      if (resp.code == 200) {
+        this.$message.success("操作成功！");
+        this.$router.push({
+          path: "/traffic/aggregate",
+          query: { appId: this.appId, placeId: this.placeId },
+        });
+      }
+    },
+    async handleBatchAdd() {
+      this.$refs.batchform.validate(async (val) => {
+        this.$refs.platLinkForm.validate(async (platVal) => {
+          if (!val || !platVal) return;
+          this.batchAddSource();
+          this.editUser();
+        });
+      });
+    },
+    proving(e) {
+      var val = e.target.value;
+      //限制只能输入一个小数点
+      if (val.indexOf(".") != -1) {
+        var str = val.substr(val.indexOf(".") + 1);
+        if (str.indexOf(".") != -1) {
+          val = val.substr(0, val.indexOf(".") + str.indexOf(".") + 1);
+        }
+      }
+      e.target.value = val.replace(/[^\d^\.]+/g, "");
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.batch-add-container {
+  width: 100%;
+  background-color: #fff;
+  .header {
+    padding: 10px;
+    display: flex;
+    .goback {
+      font-size: 16px;
+      margin-right: 30px;
+      cursor: pointer;
+      h3 {
+        font-size: 16px;
+      }
+      &:hover {
+        color: blue;
+      }
+    }
+  }
+  .appplatform {
+    margin-bottom: 20px;
+  }
+  .content {
+    padding-left: 30px;
+    width: 100%;
+    .title {
+      margin-top: 30px;
+      width: 100%;
+      display: flex;
+      .title_app,
+      .title_place {
+        line-height: 50px;
+        width: 320px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        .image {
+          width: 40px;
+          height: 40px;
+          overflow: hidden;
+          margin-right: 5px;
+        }
+      }
+      .titlebox {
+        .name {
+          font-size: 14px;
+          line-height: 30px;
+        }
+        .id {
+          font-size: 13px;
+          line-height: 20px;
+        }
+        .label {
+        }
+        .name.position {
+          line-height: 50px;
+        }
+      }
+    }
+    .platform {
+      margin-top: 40px;
+      display: flex;
+      .label {
+        width: 6%;
+        color: #666;
+      }
+      .platformbox {
+        width: 90%;
+      }
+    }
+    .control {
+      margin-top: 30px;
+      margin-bottom: 30px;
+      width: 100%;
+    }
+    .table {
+      width: 98%;
+      .bidding {
+        color: blue;
+        // margin-top: -10px;
+        position: absolute;
+        top: 18px;
+        left: 40%;
+      }
+    }
+    .footer {
+      margin-top: 20px;
+      padding-bottom: 20px;
+      display: flex;
+      justify-content: center;
+    }
+  }
+}
+</style>

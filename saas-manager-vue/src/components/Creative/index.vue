@@ -1,0 +1,102 @@
+<template>
+  <div
+    class="creative-container"
+    :style="'width:' + width + 'px'"
+  >
+    <div class="creative-header-container">
+      <div
+        v-if="creative.icon"
+        class="creative-icon-container"
+      >
+        <el-image
+          style="width: 30px;height: 30px"
+          :src="creative.icon"
+        />
+      </div>
+      <div class="creative-text-container">
+        <div class="creative-title">
+          {{ creative.title }}
+        </div>
+        <div class="creative-desc">
+          {{ creative.desc }}
+        </div>
+      </div>
+    </div>
+    <div class="creative-main-container">
+      <div
+        v-if="creative.type === 1"
+        class="creative-imgs-container"
+      >
+        <el-image
+          v-for="img in creative.imgUrls"
+          :key="img"
+          :src="img"
+          :style="'width:' + width/creative.imgUrls.length + 'px;'"
+          :preview-src-list="[creative.imgUrls]"
+          lazy
+        />
+      </div>
+      <video
+        v-if="creative.type === 2"
+        controls
+        preload="auto"
+        width="100%"
+        :poster="creative.imgUrls ? creative.imgUrls[0]: null"
+      >
+        <source :src="creative.videoUrl">
+      </video>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'Creative',
+  props: {
+    creative: {
+      type: Object,
+      required: true
+    },
+    width: {
+      type: Number,
+      required: true
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+  .creative-container {
+    position: relative;
+    margin: 0 auto;
+    .creative-header-container {
+      display: flex;
+      .creative-text-container {
+        width: 100%;
+        text-align: left;
+        .creative-title {
+          font-size: 14px;
+          line-height: 16px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .creative-desc {
+          font-size: 12px;
+          line-height: 14px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          display: -moz-box;
+          -moz-line-clamp: 2;
+          -moz-box-orient: vertical;
+          word-wrap: break-word;
+          word-break: break-all;
+          white-space: normal;
+        }
+      }
+    }
+  }
+</style>

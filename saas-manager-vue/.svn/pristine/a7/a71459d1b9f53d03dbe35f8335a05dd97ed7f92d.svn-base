@@ -1,0 +1,176 @@
+<template>
+  <div class="word-transfer-container">
+    <div class="left">
+      <textarea
+        rows="7"
+        tabindex="0"
+        type="text"
+        placeholder="多个关键词以换行或逗号分割"
+        v-model="tagword"
+      ></textarea>
+    </div>
+    <div class="center">
+      <span class="centerBtn" @click="addTags"
+        ><i class="el-icon-d-arrow-right"></i>添加</span
+      >
+    </div>
+    <div class="right">
+      <div class="search">
+        <el-input placeholder="请输入搜索字段" v-model="searchword" />
+      </div>
+      <div class="show_list">
+        <div class="item" v-for="(item, index) in showList" :key="index">
+          <span class="word">{{ item }}</span>
+          <span class="close" @click="handleRemove(item)"
+            ><i class="el-icon-close"></i
+          ></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "wordtransfer",
+  data() {
+    return {
+      tagword: "",
+      searchword: "",
+    };
+  },
+  props: {
+    model: Array,
+  },
+  computed: {
+    modelList() {
+      return JSON.parse(JSON.stringify(this.model));
+    },
+    showList() {
+      let arr = [];
+      if (this.searchword === "") {
+        arr = this.modelList;
+      } else {
+        this.modelList.forEach((item) => {
+          if (item.includes(this.searchword)) {
+            arr.push(item);
+          }
+        });
+      }
+      return arr;
+    },
+  },
+  methods: {
+    addTags() {
+      if (this.tagword == "") return;
+      let arr = this.tagword.split(",");
+      arr = [...this.modelList, ...arr];
+      this.$emit("addTags", arr);
+      this.searchword = "";
+      this.tagword = "";
+    },
+    handleRemove(item) {
+      this.modelList.forEach((child, c) => {
+        if (item === child) {
+          this.modelList.splice(c, 1);
+          this.$emit("removeTag", this.modelList);
+          return;
+        }
+      });
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.word-transfer-container {
+  width: 470px;
+  //   border: 1px solid #000;
+  height: 200px;
+  box-sizing: border-box;
+  display: flex;
+
+  .left,
+  .right {
+    position: relative;
+    width: 40%;
+    height: 100%;
+    // border: 1px solid #000;
+  }
+  .left {
+    textarea {
+      width: 100%;
+      height: 100%;
+      border: 1px solid #ccc;
+      resize: none;
+      border-radius: 5px;
+      padding: 5px;
+      line-height: 20px !important;
+      font-size: 13px !important;
+      &:focus {
+        outline: none !important;
+        border: 1.5px solid rgb(91, 146, 230);
+        // box-shadow: 0 0 10px #719ece;
+      }
+    }
+  }
+  .center {
+    width: 20%;
+    height: 100%;
+    // border: 1px solid #f40;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    .centerBtn {
+      border: 1px solid #aaa;
+      display: inline-block;
+      width: 4rem;
+      height: 30px;
+      text-align: center;
+      line-height: 28px;
+      border-radius: 3px;
+      background-color: #eee;
+      cursor: pointer;
+      &:hover {
+        color: rgb(49, 112, 207);
+        border: 1.5px solid rgb(91, 146, 230);
+      }
+    }
+  }
+  .right {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    .search {
+      border-bottom: 1px solid #ddd;
+      padding: 5px;
+      background-color: rgba(252, 252, 252, 1);
+    }
+    .show_list {
+      height: 75%;
+      padding: 0 5px;
+      overflow-y: scroll;
+      .item {
+        display: flex;
+        justify-content: space-between;
+        font-size: 18px;
+        margin: 3px 5px;
+        background-color: #eee;
+        padding: 0 5px;
+        .word {
+          display: inline-block;
+          width: 85%;
+          font-size: 13px;
+          line-height: 18px;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden;
+        }
+        .close {
+          cursor: pointer;
+          color: #888;
+        }
+      }
+    }
+  }
+}
+</style>

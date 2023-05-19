@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        iframe {
+            width: 1000px;
+            height: 700px;
+        }
+    </style>
+</head>
+
+<body>
+    <iframe
+        src="http://127.0.0.1:5500/web_%E7%80%91%E5%B8%83%E6%B5%81%E5%8A%9F%E8%83%BD%EF%BC%88%E6%87%92%E5%8A%A0%E8%BD%BD%EF%BC%89/index.html"
+        frameborder="0"></iframe>
+    <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.5.1.min.js"></script>
+    <script>
+        var flag = false;
+        $('iframe')[0].onload = function () {
+            if (!flag) {
+                $('iframe')[0].src = './demo.html'
+                flag = true;
+            } else {
+                console.log($('iframe')[0].contentWindow.name)
+            }
+        }
+        var a = '德玛西亚';
+        $('iframe')[0].src += '#' + a;
+        // console.log($('iframe')[0].src)
+    </script>
+</body>
+
+</html>

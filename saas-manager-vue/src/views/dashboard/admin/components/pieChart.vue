@@ -1,0 +1,266 @@
+<template>
+  <div class="pie-chart-container">
+    <div class="control">
+      <div>
+        <el-date-picker
+          v-model="time"
+          :clearable="false"
+          type="daterange"
+          value-format="yyyy-MM-dd"
+          align="left"
+          unlink-panels
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          :picker-options="pickerOptions"
+          style="width: 250px"
+          @change="getSTime"
+        />
+      </div>
+      <div class="select">
+        <el-select
+          v-model="query.dimension"
+          class="control_item"
+          placeholder="请选择维度"
+          style="width: 150px"
+          @change="getChartData"
+        >
+          <el-option
+            v-if="$store.getters.roles[0] == 'SUPER_ADMIN'"
+            label="Top账号"
+            value="1"
+          />
+          <el-option
+            label="Top应用"
+            value="2"
+          /><el-option
+            label="Top广告样式"
+            value="3"
+          /><el-option
+            label="Top广告源"
+            value="4"
+          />
+        </el-select>
+        <el-select
+          v-model="query.code"
+          placeholder=""
+          class="control_item"
+          style="width: 150px"
+          @change="getChartData"
+        >
+          <el-option
+            label="收益"
+            :value="'unitRevenue'"
+          />
+          <el-option
+            label="预估收益"
+            :value="'income'"
+          />
+          <el-option
+            v-if="query.dimension == '1' || query.dimension == '2'"
+            label="DAU"
+            :value="'dau'"
+          />
+        </el-select>
+      </div>
+    </div>
+    <div
+      ref="chart"
+      v-loading="isLoading"
+      class="chart"
+    />
+  </div>
+</template>
+
+<script>
+import { toDate } from '@/utils/toTimer'
+import { pieChartOption } from '@/utils/options'
+const echarts = require('echarts')
+import { getPieChartData } from '@/api/dashboard.js'
+export default {
+  name: 'PieChart',
+  data() {
+    return {
+      time: [],
+      pickerOptions: {
+        disabledDate(time) {
+          return time.getTime() > Date.now() || time.getTime() < 1633017600000
+        }
+      },
+      query: {
+        startDate: '',
+        endDate: '',
+        dimension: '1',
+        code: 'unitRevenue'
+      },
+
+      myChart: null,
+      option: pieChartOption,
+      colorList: [
+        '#7ACDED',
+        '#EF6666',
+        '#FAC858',
+        '#91CC75',
+        '#5470C6',
+        '#f40'
+      ],
+      isLoading: false,
+      iscreat: true
+    }
+  },
+  created() {},
+  destroyed() {
+    this.myEcharts.dispose()
+    window.removeEventListener('resize', this.getSize)
+  },
+  mounted() {
+    this.echartsInit()
+    if (this.$store.getters.roles[0] == 'SUPER_ADMIN') {
+      this.query.dimension = '1'
+    } else {
+      this.query.dimension = '2'
+    }
+    this.getDate()
+    this.getChartData()
+    window.addEventListener('resize', this.getSize)
+    this.getSize()
+  },
+
+  methods: {
+    getSize() {
+      // 判断是否是created时调用
+      if (!this.iscreat) {
+        this.myEcharts.resize()
+      }
+      this.iscreat = false
+    },
+    getDate() {
+      // 昨天
+      let today = toDate(Date.now() - 24 * 60 * 60 * 1000)
+      // 13天前
+      let day7Before = toDate(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      this.time = [day7Before, today]
+      this.query.startDate = this.time[0]
+      this.query.endDate = this.time[1]
+    },
+    getSTime() {
+      this.query.startDate = this.time[0]
+      this.query.endDate = this.time[1]
+      this.getChartData()
+    },
+    echartsInit() {
+      let myEcharts = echarts.init(this.$refs.chart)
+      myEcharts.setOption(this.option)
+      this.myEcharts = myEcharts
+    },
+    async getChartData() {
+      if (
+        (this.query.dimension == 3 || this.query.dimension == 4) &&
+        this.query.code == 'dau'
+      ) {
+        this.query.code = 'unitRevenue'
+      }
+      this.isLoading = true
+      let resp = await getPieChartData(this.query)
+      this.chartData = resp.data
+      this.isLoading = false
+      this.changecode()
+    },
+    changecode() {
+      if (!this.chartData.list || this.chartData.list.length == 0) {
+        this.option.series[0].data = []
+        this.option.series[0].label.normal.formatter = '汇总：-'
+        this.echartsInit()
+        return
+      }
+      let sum = 0
+      if (this.query.code == 'unitRevenue') {
+        sum = this.chartData.unitRevenueSum
+        this.option.series[0].label.normal.formatter = `汇总：￥${this.chartData.unitRevenueSum}`
+        this.option.series[0].data = []
+        this.chartData.list.forEach((item, index) => {
+          this.option.series[0].data.push({
+            name: '',
+            value: item.unitRevenue,
+            itemStyle: { color: this.colorList[index] }
+          })
+        })
+      } else if (this.query.code == 'dau') {
+        sum = this.chartData.dauSum
+        this.option.series[0].label.normal.formatter = `汇总：${this.chartData.dauSum}`
+        this.option.series[0].data = []
+        this.chartData.list.forEach((item, index) => {
+          this.option.series[0].data.push({
+            name: '',
+            value: item.dau,
+            itemStyle: { color: this.colorList[index] }
+          })
+        })
+      } else if (this.query.code == 'income') {
+        sum = this.chartData.incomeSum
+        this.option.series[0].label.normal.formatter = `汇总：￥${this.chartData.incomeSum}`
+        this.option.series[0].data = []
+        this.chartData.list.forEach((item, index) => {
+          this.option.series[0].data.push({
+            name: '',
+            value: item.income,
+            itemStyle: { color: this.colorList[index] }
+          })
+        })
+      }
+      this.chartData.list.forEach((item, index) => {
+        if (this.query.dimension == '1') {
+          this.option.series[0].data[index].name = item.company
+        } else if (this.query.dimension == '2') {
+          this.option.series[0].data[index].name = item.appName
+        } else if (this.query.dimension == '3') {
+          this.option.series[0].data[index].name = item.positionName
+        } else if (this.query.dimension == '4') {
+          this.option.series[0].data[index].name = item.platName
+        }
+      })
+      this.option.tooltip.formatter = (params) => {
+        return (
+          params.marker +
+          '<span>&nbsp;&nbsp;&nbsp;</ span>' +
+          params.name +
+          '<span>&nbsp;&nbsp;&nbsp;</ span>' +
+          params.data.value +
+          '<span>&nbsp;&nbsp;&nbsp;</ span>' +
+          (sum == 0 ? 0 : ((params.data.value / sum) * 100).toFixed(2)) +
+          '%'
+        )
+      }
+      this.echartsInit()
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+.pie-chart-container {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  padding: 10px 15px 0 15px;
+  display: flex;
+  flex-direction: column;
+  .control {
+    padding-top: 10px;
+    width: 100%;
+    .control_item {
+      margin-top: 10px;
+    }
+    .select {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+    }
+  }
+  .chart {
+    margin-top: 10px;
+    width: 100%;
+    flex: 1;
+  }
+}
+</style>

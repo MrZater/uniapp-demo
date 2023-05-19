@@ -1,0 +1,154 @@
+<template>
+  <div class="funnel-container">
+    <div class="funnel_box">
+      <div class="mainarrow_box">
+        <div class="arrow_body">
+          <span class="main_title">应用启动</span>
+        </div>
+        <div class="arrow_header"></div>
+        <div class="arrow_footer"></div>
+        <div class="arrow_body">
+          <span class="main_title">获取配置</span>
+        </div>
+        <div class="arrow_header"></div>
+        <div class="arrow_footer"></div>
+        <div class="arrow_body">
+          <span class="main_title">流量请求</span>
+          <PointArrow
+            :title="'流量填充率'"
+            :value="
+              (funnelData.requestFilledRate
+                ? funnelData.requestFilledRate
+                : 0) + '%'
+            "
+            :isTop="true"
+          ></PointArrow>
+        </div>
+        <div class="arrow_header"></div>
+        <div class="arrow_footer"></div>
+        <div class="arrow_body">
+          <span class="main_title">流量填充</span
+          ><PointArrow
+            :title="'广告触发率'"
+            :value="
+              (funnelData.advTriggerRate ? funnelData.advTriggerRate : 0) + '%'
+            "
+            :isTop="false"
+          ></PointArrow>
+        </div>
+        <div class="arrow_header"></div>
+        <div class="arrow_footer"></div>
+        <div class="arrow_body">
+          <span class="main_title">触发展示</span>
+          <PointArrow
+            :title="'展示成功率'"
+            :value="
+              (funnelData.triggerImpress ? funnelData.triggerImpress : 0) + '%'
+            "
+            :isTop="true"
+          ></PointArrow>
+        </div>
+        <div class="arrow_header"></div>
+        <div class="arrow_footer"></div>
+        <div class="arrow_body">
+          <span class="main_title">展示</span
+          ><PointArrow
+            :title="'展示GAP'"
+            :value="
+              (funnelData.impressionGap ? funnelData.impressionGap : 0) + '%'
+            "
+            :isTop="false"
+          ></PointArrow>
+          <PointArrow
+            :isJump="true"
+            :title="'点击率'"
+            :value="(funnelData.clickRate ? funnelData.clickRate : 0) + '%'"
+            :isTop="true"
+          ></PointArrow>
+        </div>
+        <div class="arrow_header"></div>
+        <div class="arrow_footer"></div>
+        <div class="arrow_body">
+          <span class="main_title">展示API</span>
+        </div>
+        <div class="arrow_header"></div>
+        <div class="arrow_footer"></div>
+        <div class="arrow_body">
+          <span class="main_title">点击</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import PointArrow from "./pointArrow.vue";
+export default {
+  components: { PointArrow },
+  props: {
+    funnelData: {
+      typeof: Object,
+      default: {
+        requestFilledRate: "0",
+        advTriggerRate: "0",
+        triggerImpress: "0",
+        impressionGap: "0",
+        clickRate: "0",
+      },
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+.funnel-container {
+  width: 100%;
+  height: 450px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  .funnel_box {
+    position: relative;
+    width: 93%;
+    height: 90%;
+    display: flex;
+    align-items: center;
+    .mainarrow_box {
+      position: relative;
+      height: 15%;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      .arrow_body,
+      .arrow_header,
+      .arrow_footer {
+        height: 80%;
+        box-sizing: border-box;
+      }
+      .arrow_body {
+        position: relative;
+        background-color: #1890ff;
+        width: 20%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        span.main_title {
+          font-size: 16px;
+          color: #fff;
+        }
+      }
+      .arrow_header {
+        border-left: 30px solid #1890ff;
+        border-top: 24px solid rgba(0, 0, 0, 0);
+        border-bottom: 24px solid rgba(0, 0, 0, 0);
+      }
+      .arrow_footer {
+        border-left: 30px solid rgba(0, 0, 0, 0);
+        border-top: 24px solid #1890ff;
+        border-bottom: 24px solid #1890ff;
+      }
+    }
+  }
+}
+</style>

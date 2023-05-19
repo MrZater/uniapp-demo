@@ -1,0 +1,443 @@
+<template>
+  <div class="saas-button-group">
+    <button
+      v-for="(platform, index) in platforms"
+      v-show="(disabled && platform.active) || !disabled"
+      :key="platform.id"
+      type="button"
+      class="saas-button"
+      :class="{ active: platform.active }"
+      @click="dealClick(platform)"
+    >
+      <div class="plat">
+        <div class="icon">
+          <el-image :class="index == 5 ? 'current' : ''" :src="platform.icon" />
+          <!-- <el-image
+            v-else-if="platform.id === 7"
+            :class="index == 5 ? 'current' : ''"
+            style="width: 60px margin-bottom: 25px;margin-top: 10px"
+            :src="platform.icon"
+          />
+
+          <el-image
+            v-else-if="platform.id === 11"
+            :class="index == 5 ? 'current' : ''"
+            style="width: 60px; margin-bottom: 0px; margin-top: 28px"
+            :src="platform.icon"
+          />
+          <el-image
+            v-else-if="platform.name === '科大讯飞'"
+            :class="index == 5 ? 'current' : ''"
+            style="width: 60px; margin-bottom: 0px; margin-top: 20px"
+            :src="platform.icon"
+          />
+
+          <el-image
+            v-else
+            :class="index == 5 ? 'current' : ''"
+            style="width: 40px; height: 40px"
+            :src="platform.icon"
+          /> -->
+        </div>
+        <div>
+          <!-- <span>{{ platform.name }}</span> -->
+        </div>
+        <div v-show="platform.isUsed === 0" class="plat-cover">配置</div>
+      </div>
+    </button>
+    <el-dialog
+      :title="platTemp.name"
+      :visible.sync="dialogPlatLinkVisible"
+      append-to-body
+    >
+      <el-form
+        ref="platLinkForm"
+        :model="link"
+        :rules="platRules"
+        label-width="100px"
+        label-position="left"
+      >
+        <el-form-item
+          label="选择账户"
+          prop="platAccountId"
+          :required="platTemp.isUsed !== 1"
+        >
+          <el-select
+            v-model="link.platAccountId"
+            :filter-method="accountFilter"
+            filterable
+            :disabled="platTemp.isUsed === 1"
+          >
+            <el-option
+              v-for="account in accountOptions"
+              :key="account.id"
+              :label="account.name"
+              :value="account.id"
+            >
+              <div>
+                <div style="font-size: 16px; line-height: 20px">
+                  {{ account.name }}
+                </div>
+                <div style="font-size: 12px; line-height: 12px">
+                  平台ID：{{ account.accountId }}
+                </div>
+              </div>
+            </el-option>
+          </el-select>
+          <span v-show="platTemp.isUsed === 0"
+            >创建<a class="text-a" @click="showNewAccount">新账户</a></span
+          >
+        </el-form-item>
+        <el-form-item label="AppId" prop="platAppId">
+          <el-input v-model.trim="link.platAppId" placeholder="请输入" />
+        </el-form-item>
+        <el-form-item label="AppKey" prop="appKey">
+          <el-input v-model.trim="link.appKey" placeholder="请输入" />
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="closeDialogPlatLink">取消</el-button>
+        <el-button type="primary" @click="handlePlatLinkForm">确定</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog
+      title="创建新账户"
+      :visible.sync="dialogAccountVisible"
+      append-to-body
+    >
+      <el-form
+        ref="account_form"
+        :model="accountTemp"
+        :rules="rules"
+        label-width="120px"
+        label-position="left"
+      >
+        <el-form-item label="广告源">
+          <span>{{ platTemp.name }}</span>
+        </el-form-item>
+        <el-form-item label="账户名称" prop="name">
+          <el-input
+            v-model="accountTemp.name"
+            placeholder="输入名称以区分不同账号"
+            maxlength="30"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="账户ID" prop="accountId">
+          <el-input
+            v-model="accountTemp.accountId"
+            placeholder="请输入账户ID"
+            maxlength="30"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="报表API">
+          <el-radio-group
+            v-model="accountTemp.openApiStatus"
+            :value="accountTemp.openApiStatus ? accountTemp.openApiStatus : 0"
+            size="small"
+          >
+            <el-radio :label="1" border>已开通</el-radio>
+            <el-radio :label="0" border>未开通</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item
+          :label="
+            platTemp.name == '穿山甲'
+              ? 'RoleId'
+              : platTemp.name == '快手'
+              ? 'Access-Key'
+              : platTemp.name == 'sigmob'
+              ? 'Public-Key'
+              : platTemp.name == '百度联盟'
+              ? 'Access-Key'
+              : 'Access-Key'
+          "
+          prop="accessKey"
+        >
+          <el-input
+            v-model="accountTemp.accessKey"
+            :placeholder="'请输入access_key'"
+          />
+        </el-form-item>
+        <el-form-item label="secret_key" prop="secretKey">
+          <el-input
+            v-model="accountTemp.secretKey"
+            placeholder="请输入secret_key"
+          />
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogAccountVisible = false">取消</el-button>
+        <el-button type="primary" @click="handlePlatForm">确定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import { platformLinkList, updateAppPlatLink } from "@/api/app";
+import { Message } from "element-ui";
+import { addPlatform, getAccounts } from "@/api/plat";
+export default {
+  name: "AppPlatform",
+  props: {
+    appId: {
+      type: String,
+      required: true,
+    },
+    linkedShow: {
+      type: Boolean,
+      required: true,
+      default: true,
+    },
+    active: {
+      type: Number,
+      required: false,
+      default: null,
+    },
+    disabled: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+  },
+  data() {
+    return {
+      platId: null,
+      platforms: [],
+      dialogPlatLinkVisible: false,
+      link: {},
+      platTemp: {},
+      accountTemp: {},
+      accountOptionsAll: [],
+      accountOptions: [],
+      dialogAccountVisible: false,
+      rules: {
+        name: [{ required: true, message: "请输入账户名称", trigger: "blur" }],
+        accountId: [
+          { required: true, message: "请输入账户ID", trigger: "blur" },
+        ],
+      },
+      platRules: {
+        platAccountId: [
+          { required: true, message: "请选择账户", trigger: "change" },
+        ],
+        platAppId: [
+          { required: true, message: "请输入账户应用ID", trigger: "blur" },
+        ],
+      },
+    };
+  },
+  watch: {
+    appId: {
+      handler(newValue) {
+        this.appId = newValue;
+        this.getAppPlatform();
+      },
+    },
+    platforms: {
+      handler(newValue) {
+        this.platforms = newValue;
+      },
+      deep: true,
+    },
+    active: {
+      handler(newValue) {
+        this.active = newValue;
+        this.freshPlatActive();
+      },
+      deep: true,
+    },
+  },
+  created() {
+    this.getAppPlatform();
+  },
+  methods: {
+    freshPlatActive() {
+      this.platforms.map((v) => {
+        if (this.active) {
+          v.active = v.id === this.active;
+          // this.$set(v, 'active', v.id === this.active)
+          if (this.active == v.id) {
+            console.log(v,'v')
+            this.$emit("platAppId", v.platAppId);
+            this.$emit("accessType", v.accessType);
+          }
+        } else {
+          v.active = false;
+          // this.$set(v, 'active', false)
+        }
+      });
+      this.$forceUpdate();
+    },
+    getAppPlatform() {
+      platformLinkList(this.appId).then((res) => {
+        res.data.map((v) => {
+          if (this.active) {
+            v.active = v.id === this.active;
+          }
+        });
+        this.platforms = res.data;
+        this.freshPlatActive();
+      });
+    },
+    accountFilter(val) {
+      if (val) {
+        this.accountOptions = this.accountOptionsAll.filter((item) => {
+          return (
+            !!~item.accountId.toUpperCase().indexOf(val.toUpperCase()) ||
+            !!~item.name.toUpperCase().indexOf(val.toUpperCase())
+          );
+        });
+      } else {
+        this.accountOptions = this.accountOptionsAll;
+      }
+    },
+    dealClick(plat) {
+      if (plat.isUsed === 1 && !this.linkedShow) {
+        // 用户在弹框中显示 平台对应得appid
+        this.$emit("platAppId", plat.platAppId);
+        this.$emit("accessType", plat.accessType);
+        this.$emit('settleType',plat.settleType)
+        if (!this.disabled) {
+          this.platforms.map((v) => {
+            v.active = false;
+            return v;
+          });
+          plat.active = true;
+          this.$forceUpdate();
+          this.$emit("selectPlatId", plat.id);
+        }
+      } else {
+        this.platTemp = plat;
+        this.link = {
+          appId: this.appId,
+          platId: plat.id,
+          platAccountId: plat.platAccountId,
+          platAppId: plat.platAppId,
+          appKey: plat.appKey,
+          accessType: plat.accessType,
+        };
+        this.freshAccountOptions();
+        this.dialogPlatLinkVisible = true;
+      }
+    },
+    freshAccountOptions() {
+      getAccounts(this.platTemp.id).then((res) => {
+        this.accountOptionsAll = this.accountOptions = res.data;
+      });
+    },
+    showNewAccount() {
+      this.accountTemp = { platId: this.platTemp.id };
+      this.dialogAccountVisible = true;
+    },
+    handlePlatForm() {
+      let _this = this;
+      this.$refs.account_form.validate(async (valid) => {
+        if (valid) {
+          await addPlatform(_this.accountTemp).then((res) => {
+            Message({
+              message: res.msg,
+              type: "success",
+              duration: 5 * 1000,
+            });
+            _this.dialogAccountVisible = false;
+            _this.freshAccountOptions();
+            _this.link.platAccountId = res.data;
+          });
+        }
+      });
+    },
+    handlePlatLinkForm() {
+      let _this = this;
+      this.$refs.platLinkForm.validate(async (valid) => {
+        if (valid) {
+          await updateAppPlatLink(this.link).then(() => {
+            _this.dialogPlatLinkVisible = false;
+            _this.getAppPlatform();
+            if (!_this.linkedShow) {
+              _this.active = this.platTemp.id;
+              _this.$emit("selectPlatId", this.platTemp.id);
+            }
+          });
+        }
+      });
+    },
+    closeDialogPlatLink() {
+      this.dialogPlatLinkVisible = false;
+      this.$refs.platLinkForm.resetFields();
+    },
+  },
+};
+</script>
+
+<style lang="scss" scoped>
+
+.saas-button-group {
+
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  // align-items: center;
+  .saas-button {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    margin: 0 10px 10px 0;
+    border: 1px solid #fff;
+    border-radius: 4px;
+    width: 80px;
+    height: 35px;
+    padding-top: 2px;
+    text-align: center;
+    cursor: pointer;
+    .plat {
+      // padding-top: 5px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+
+      width: 75px;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      span {
+        font-size: 12px;
+      }
+      .current {
+        width: 100% !important;
+      }
+      .plat-cover {
+        position: absolute;
+        display: flex;
+        top: 0;
+        left: 0;
+        z-index: 3;
+        width: 100%;
+        height: 34px;
+        margin-top: -4px;
+        border-radius: 4px;
+        background: rgba(0, 0, 0, 0.4);
+        font-size: 12px;
+        line-height: 24px;
+        color: #fff;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+  }
+  .active {
+    background-color: #ebf3ff;
+    border-color: #338aff;
+    color: #338aff;
+  }
+}
+
+.text-a {
+  color: #338aff;
+}
+</style>
