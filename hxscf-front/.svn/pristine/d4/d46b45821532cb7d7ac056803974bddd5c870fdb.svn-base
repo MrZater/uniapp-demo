@@ -1,0 +1,201 @@
+<template>
+    <div class="template-container" v-loading="loading">
+        <div class="tops">
+            <el-row :gutter="20">
+                <div class="paddings">
+                    <el-col :span="2">
+                        <div>
+                            <img style="width: 100px; height: 100px" src="@/assets/images/company.png" />
+                        </div>
+                    </el-col>
+                    <el-col :span="18">
+                        <div>
+                            <div class="title">{{ data.bizApplyMap.bizName  || '---'}}</div>
+                            <el-row>
+                                <el-col :span="12">
+                                    <div class="mb20">所属行业：{{data.bizApplyMap.tradeName || '---'}}</div>
+                                </el-col>
+                                <el-col :span="12">
+                                    <div class="mb20">业务人员：{{data.bizApplyMap.businessUserName || '---'}}</div>
+                                </el-col>
+                                <el-col :span="12">
+                                    <div>业务部门：{{data.bizApplyMap.businessOrgName || '---'}}</div>
+                                </el-col>
+                                <el-col :span="12">
+                                    <div>企业角色：{{handelRole(data.bizApplyMap.bizRoleList)}}</div>
+                                </el-col>
+                            </el-row>
+                        </div>
+                    </el-col>
+                    <el-col :span="4">
+                        <div>
+                            <el-button type="primary" class="br-btn-large">查看企业基础信息</el-button>
+                        </div>
+                    </el-col>
+                </div>
+            </el-row>
+        </div>
+
+        <div class="setps">
+            <el-tabs v-model="activeName">
+                <el-tab-pane label="企业基础信息" name="first">
+                    <el-tabs v-model="activeInner" type="border-card">
+                        <el-tab-pane name="first">
+                            <span slot="label"><i class="el-icon-user"></i> 基本信息</span>
+                            <BaseInfo :baseInfo="baseInfo" :isCreate="isCreate"></BaseInfo>
+                        </el-tab-pane>
+                        <el-tab-pane name="second">
+                            <span slot="label"><i class="el-icon-position"></i> 经营信息</span>
+                            <!-- <BusinessInfo :businessData="businessData" @getBusinessInfo="getBusinessInfo"></BusinessInfo> -->
+                            <BusinessInfo :businessData="businessData"></BusinessInfo>
+                        </el-tab-pane>
+                        <el-tab-pane name="third">
+                            <span slot="label"><i class="el-icon-bell"></i> 经营不良</span>
+                            <BusinessBad :data="businessBad"></BusinessBad>
+                        </el-tab-pane>
+                        <el-tab-pane name="fourth">
+                            <span slot="label"><i class="el-icon-suitcase"></i> 司法信息</span>
+                            <!-- <JudicialInfo :data="judicialData" @getJudicialInfo="getJudicialInfo"></JudicialInfo> -->
+                            <JudicialInfo :data="judicialData"></JudicialInfo>
+                        </el-tab-pane>
+                        <el-tab-pane name="five">
+                            <span slot="label"><i class="el-icon-suitcase-1"></i> 法代信息</span>
+                            <NormalBand :data="normalData"></NormalBand>
+                        </el-tab-pane>
+                    </el-tabs>
+                </el-tab-pane>
+                <el-tab-pane label="资信调查信息" name="second">
+
+                </el-tab-pane>
+                <el-tab-pane label="企业资信报告" name="third">
+                    <Report :data="reportData" :reportLoading="reportLoading"></Report>
+                </el-tab-pane>
+            </el-tabs>
+        </div>
+
+        <div class="sub-gap"></div>
+
+        <div class="template-content fixed">
+            <div class="template-bottom-button">
+                <el-button type="primary" size="small" @click="onClose">关闭</el-button>
+            </div>
+        </div>
+
+    </div>
+</template>
+
+<script lang="ts">
+import { Vue, Component } from "vue-property-decorator";
+import { namespace } from "vuex-class";
+const enterpriseCreditManage = namespace("enterpriseCreditManage");
+import BaseInfo from "@/views/businessInfoManage/enterpriseInfoSearch/tabs/BaseInfo.vue";
+import BusinessInfo from "@/views/businessInfoManage/enterpriseInfoSearch/tabs/BusinessInfo.vue";
+import BusinessBad from "@/views/businessInfoManage/enterpriseInfoSearch/tabs/BusinessBad.vue";
+import JudicialInfo from "@/views/businessInfoManage/enterpriseInfoSearch/tabs/JudicialInfo.vue";
+import NormalBand from "@/views/businessInfoManage/enterpriseInfoSearch/tabs/NormalBand.vue";
+import Report from "@/views/businessInfoManage/enterpriseInfoManage/survey/Report.vue";
+
+@Component({
+    components: {
+        BaseInfo,
+        BusinessInfo,
+        BusinessBad,
+        JudicialInfo,
+        NormalBand,
+        Report,
+    },
+})
+export default class creditInvestigation extends Vue {
+    @enterpriseCreditManage.Action getDetailFN; // 获取详情
+    public activeName = "first"; // 步骤条
+    public activeInner = "first";
+    public loading: boolean = false;
+    public isCreate: string = "1";
+    public reportData: any = {};
+    public reportLoading: boolean = false;
+    public data: any = {
+        bizApplyMap: {},
+    };
+    public baseInfo: any = {
+        bizBaseInfo: {
+            bizName: "",
+        },
+        empLoyees: [],
+    };
+    public businessData: any = {
+        assetsData: [],
+        providAassurance: [],
+        partners: [],
+        partnerInvest: { list: [] },
+        pledge: [],
+        bizInvest: { list: [] },
+        chattelMortgage: [],
+    };
+    public businessBad: any = {};
+    public judicialData: any = {
+        judgmentdoc: { list: [] },
+        executor: { list: [] },
+        uncreditexecutor: { list: [] },
+        openannounce: { list: [] },
+    };
+    public normalData: any = {};
+    mounted() {
+        // this.getDetailFN({
+        //     surveyId: this.$route.query.surveyId,
+        //     custId: this.$route.query.custId,
+        // }).then((res) => {
+        //     console.log(res, 1111);
+        // });
+    }
+    // 回到列表
+    onClose() {
+        this.$bus.$emit("jumpToTag", {
+            path: this.$route.path,
+            tag: "/enterpriseCreditManage",
+        });
+    }
+    // 格式化角色
+    handelRole(roleArr = []) {
+        if (roleArr && roleArr.length == 0) return "---";
+        if (roleArr && roleArr.length) {
+            let cacheArr: any = [];
+            roleArr.forEach((item) => {
+                cacheArr.push(this.$code("bizRoles", item));
+            });
+            return cacheArr.join("，");
+        }
+    }
+}
+</script>
+
+<style scoped lang="scss">
+.mb20 {
+    margin-bottom: 20px;
+}
+.tops {
+    background: #fff;
+    .paddings {
+        padding: 10px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        .title {
+            font-size: 17px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+    }
+}
+.setps {
+    margin-top: 20px;
+    background: #fff;
+    padding: 20px;
+}
+.template-container .fixed {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 295px !important;
+    z-index: 1;
+    width: calc(100% - 388px) !important;
+}
+</style>

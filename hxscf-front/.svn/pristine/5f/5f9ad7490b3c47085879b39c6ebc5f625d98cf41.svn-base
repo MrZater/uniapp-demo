@@ -1,0 +1,1785 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>企业资信报告</title>
+  <script src="/creditEngine/static/risk/vue.js"></script>
+  <script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.0.1/echarts.min.js"></script>
+  <script th:inline="javascript">
+    var data = [[${ data }]];
+  </script>
+  <style>
+    .el-tag {
+      vertical-align: middle;
+      margin: 20px;
+      height: 28px;
+      line-height: 26px;
+      background-color: #ecf5ff;
+      border-color: #d9ecff;
+      display: inline-block;
+      height: 32px;
+      padding: 0 10px;
+      line-height: 30px;
+      font-size: 12px;
+      color: #409EFF;
+      border-width: 1px;
+      border-style: solid;
+      border-radius: 4px;
+      -webkit-box-sizing: border-box;
+      box-sizing: border-box;
+      white-space: nowrap;
+    }
+
+    .vue-table {
+      width: 100%;
+      margin-top: 15px;
+      text-align: left;
+      border-spacing: 0;
+      table-layout: fixed;
+      word-break: break-all;
+    }
+
+    .vue-table th {
+      font-size: 14px;
+      color: #606266;
+      background: #F5F7FA;
+    }
+
+    .vue-table td {
+      font-size: 12px;
+      color: #606266;
+    }
+
+    .vue-table th,
+    .vue-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #EBEEF5;
+    }
+
+    .empty {
+      margin: 20px 0 0 15px;
+      font-size: 14px;
+      font-weight: 200;
+    }
+
+    .sub-gap {
+      height: 18px;
+    }
+  </style>
+  <style>
+    @font-face {
+      font-family: "TTF1";
+      src: url("/creditEngine/static/risk/font/msyh.ttf");
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      font-family: "TTF1";
+      font-size: 12px;
+      overflow-x: hidden;
+    }
+
+    .font18 {
+      font-size: 18px;
+    }
+
+    .clear {
+      clear: both;
+    }
+
+    .primary {
+      font-size: 18px;
+      color: #409eff;
+    }
+
+    .danger {
+      color: #f56c6c;
+    }
+
+    .warning {
+      color: #e6a23c;
+    }
+
+    .report-box {
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+      padding: 30px 20px;
+      position: relative;
+    }
+
+    .report-box .line-title {
+      position: relative;
+      font-size: 20px;
+      font-weight: 900;
+      padding-left: 14px;
+      line-height: 20px;
+      margin: 10px 0;
+      color: #4da1ff;
+    }
+
+    .report-box .line-title:before {
+      content: "";
+      position: absolute;
+      top: 2px;
+      display: block;
+      height: 18px;
+      width: 4px;
+      background: #4da1ff;
+      left: 0;
+    }
+
+    .report-box .divider-line-2 {
+      width: 100%;
+      height: 2px;
+      margin: 20px 0;
+      background-color: #409eff;
+    }
+
+
+    .report-box .divider-line-1 {
+      width: 100%;
+      height: 1px;
+      margin: 20px 0;
+      background-color: #409eff;
+    }
+
+    .report-box .main-title {
+      margin-top: 25px;
+      font-size: 33px;
+      font-weight: 600;
+      letter-spacing: 7px;
+      text-align: center;
+      color: #606266;
+    }
+
+    .report-box .main-title-desc {
+      margin-top: 25px;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 4px;
+      text-align: center;
+      color: #9d9d9d;
+    }
+
+    .report-box .report-header {
+      overflow: hidden;
+    }
+
+    .report-box .report-header .header-left {
+      float: left;
+      margin-right: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #606266;
+    }
+
+    .report-box .baseInfo {
+      padding-left: 10px;
+    }
+
+    .report-box .baseInfo .el-row {
+      margin: 20px 0;
+    }
+
+
+    .report-box .baseInfo .el-row .test-row {
+      margin: 20px 0;
+    }
+
+    .report-box .baseInfo .el-row .test-row .unit-key {
+      width: auto;
+      font-size: 16px;
+      color: #606266;
+    }
+
+    .report-box .baseInfo .el-row .test-row .unit-value {
+      font-size: 16px;
+      color: #606266;
+      font-weight: lighter;
+    }
+
+    .report-box .tips {
+      margin-bottom: 50px;
+      color: #606266;
+    }
+
+    .report-box .tips .tips-title {
+      font-size: 18px;
+    }
+
+    .report-box .tips p,
+    .report-box .tips span {
+      margin: 10px 0;
+      letter-spacing: 5px;
+      font-size: 18px;
+    }
+
+    .report-box .detail-table {
+      border-top: 1px solid #ebeef5;
+      border-bottom: 1px solid #ebeef5;
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      margin-bottom: 20px;
+    }
+
+    .report-box .detail-table td {
+      width: 20.33%;
+      padding: 0 18px;
+      height: 40px;
+      line-height: 40px;
+      border-right: 1px solid #ebeef5;
+      border-bottom: 1px solid #ebeef5;
+    }
+
+    .report-box .detail-table td:nth-child(odd) {
+      border-bottom: 1px solid #dcdfe6;
+      background-color: #F5F7FA;
+      color: #323c47;
+      font-weight: 600;
+      width: 7%;
+    }
+
+    .report-box .detail-table td:nth-child(even) {
+      background-color: #fff;
+      color: #3c3d40;
+    }
+
+    .report-box .detail-table td:last-child {
+      border-right: none;
+    }
+
+    .report-box .detail-table-tip {
+      float: right;
+      margin-top: 10px;
+      font-size: 16px;
+      color: #999;
+    }
+
+    .report-box .detail-table-tip span {
+      font-size: 16px;
+    }
+  </style>
+</head>
+<!--
+    wkhtmltopdf将html转换成pdf，默认剪切宽度为1200px，对应每一页的高度1697px
+ -->
+
+<body>
+  <div id="root">
+    <div id="pdfDom" class="report-box">
+      <div class="report-header">
+        <!-- <div class="header-left">报告编号： {{result.logDataMap && result.logDataMap.serialNumber}}</div> -->
+        <div class="header-left">报告生成时间： {{data.decisionResult && data.decisionResult.reportTime}}</div>
+      </div>
+      <div class="divider-line-2"></div>
+      <div class="main-title">企业资信报告-专业版</div>
+      <div class="tips">
+        <div class="tips-title">阅读须知:</div>
+        <p>1.报告生成时间：{{data.decisionResult && data.decisionResult.reportTime}}</p>
+        <p>2.您所看到的报告内容为截止至该时间点该公司的资信数据快照。</p>
+      </div>
+      <div align="center">
+        <div class="sub-gap"></div>
+        <img src="../../../../assets/images/report/start.png" alt="图片加载失败" style="width:70%;">
+      </div>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+      <br>
+
+      <div class="main-title">{{data.enterBaseInfo && data.enterBaseInfo.basicInfo &&
+        data.enterBaseInfo.basicInfo.bizBaseInfo &&
+        data.enterBaseInfo.basicInfo.bizBaseInfo.bizName}}</div>
+      <div class="main-title">目录</div>
+      <div class="line-title">01 企业综合策略建议</div>
+      <div class="divider-line-2"></div>
+      <div class="tips">
+        <div class="tips-title">阅读须知:</div>
+        <p>建议额度</p>
+        <p>信用评分</p>
+        <p>信用评级</p>
+        <p>企业资信评估</p>
+        <p>自然人信用评估 | 法定代表人 | <span v-for="(item,index) in data.relatedPersonInfo"
+            :key="'related_person_info'+index">关联人{{index+1}} |</span> </p>
+      </div>
+      <div class="sub-gap"></div>
+      <div class="line-title">02 企业基础信息详情</div>
+      <div class="divider-line-2"></div>
+      <div class="tips">
+        <p>基础信息 | 基本信息 | 补充信息 | 高管信息 | 分支机构 | 行政许可 | 变更</p>
+        <p>经营信息 | 资产状况息 | 对外保证 | 股东及出自信息 | 企业对外投资 | 股东对外投资 | 股权出质 | 动产抵押</p>
+        <p>经营异常 | 行政处罚 | 列入经营异常名录 | 列入严重违法失信黑名单 (工商) | 股权冻结 | 简易注销公告 | 清算 | 司法协助</p>
+        <p>司法 | 企业被执行 | 失信被执行 | 裁判文书 | 开庭公告</p>
+      </div>
+      <div class="sub-gap"></div>
+      <div class="line-title">03 法人基础信息详情代表</div>
+      <div class="divider-line-2"></div>
+      <div class="tips">
+        <p>执行公告</p>
+        <p>失信公告</p>
+        <p>裁判文书</p>
+        <p>法院公告</p>
+        <p>开庭公告</p>
+        <p>限制消费</p>
+      </div>
+      <div v-for="(item,index) in data.relatedPersonInfo" :key="'related'+index">
+        <div class="sub-gap"></div>
+        <div class="line-title">0{{4+index}} 关联人{{index+1}}基础信息详情</div>
+        <div class="divider-line-2"></div>
+        <div class="tips">
+          <p>执行公告</p>
+          <p>失信公告</p>
+          <p>裁判文书</p>
+          <p>法院公告</p>
+          <p>开庭公告</p>
+          <p>限制消费</p>
+        </div>
+      </div>
+      <div class="main-title">企业综合策略建议</div>
+      <div class="line-title">1 建议额度</div>
+      <div class="divider-line-2"></div>
+      <div class="tips">
+        <p>建议信用额度：<span class="primary font18">{{data.decisionResult && data.decisionResult.surveyMaxAmt}}</span></p>
+        <p>本额度为建议信用额度，最终额度以审核为准</p>
+        <br>
+      </div>
+      <div class="sub-gap"></div>
+      <div class="line-title">2 信用评分</div>
+      <div class="divider-line-2"></div>
+      <div class="tips">
+        <p>信用评分：<span class="primary font18">{{data.decisionResult && data.decisionResult.riskScore}}</span></p>
+        <br>
+      </div>
+      <div class="sub-gap"></div>
+      <div class="line-title">3 信用评级</div>
+      <div class="divider-line-2"></div>
+      <div class="tips">
+        <p>信用评级：<span class="primary font18">{{data.decisionResult && data.decisionResult.riskLevel}}</span></p>
+        <br>
+        <!-- 为 ECharts 准备一个具备大小（宽高）的 DOM -->
+        <div id="main" style="width: 100%;height:500px;"></div>
+      </div>
+      <div class="sub-gap"></div>
+      <div class="line-title">4 企业资信评估</div>
+      <div class="divider-line-2"></div>
+      <table class="detail-table">
+        <tr>
+          <td style="width:33%">企业规则命中</td>
+          <td style="width:33%;background-color:#F5F7FA">命中数 <span class="primary">{{ "3" }}</span></td>
+          <td style="width:33%">建议策略：<span class="primary">{{data.decisionResult && data.decisionResult.result}}</span>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="3" style="background:none">
+            <span class="el-tag">法人不为实际控制人</span>
+            <span class="el-tag">受益所有人</span>
+            <span class="el-tag">股东变更频繁</span>
+          </td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="line-title">4 自然人信用风险评估</div>
+      <div class="divider-line-2"></div>
+      <div class="line-title">4.1 法定代表人</div>
+      <table class="vue-table">
+        <tr>
+          <th>姓名</th>
+          <th>身份证</th>
+          <th>手机号</th>
+          <th>信用评分</th>
+          <th>建议策略</th>
+        </tr>
+        <tr v-for="(v, i) of []">
+          <td>{{v.name}}</td>
+          <td>{{v.id}}</td>
+          <td>{{v.phone}}</td>
+          <td>{{v.score}}</td>
+          <td>{{v.jian}}</td>
+        </tr>
+      </table>
+      <div class="detail-table-tip">
+        [300, 685) <span class="danger">拒绝</span>； [685, 719) <span class="warning">复议</span>； [720,1000] <span
+          class="primary">通过</span>
+      </div>
+      <div v-for="(item,index) in 1" :key="index+100" style="clear:both">
+        <div class="sub-gap"></div>
+        <div class="line-title">4.{{index+2}} 关联人{{index+1}}</div>
+        <table class="vue-table">
+          <tr>
+            <th>姓名</th>
+            <th>身份证</th>
+            <th>手机号</th>
+            <th>信用评分</th>
+            <th>建议策略</th>
+          </tr>
+          <tr v-for="(v, i) of item.list">
+            <td>{{v.name}}</td>
+            <td>{{v.id}}</td>
+            <td>{{v.phone}}</td>
+            <td>{{v.score}}</td>
+            <td>{{v.jian}}</td>
+          </tr>
+        </table>
+        <div class="detail-table-tip">
+          [300, 685) <span class="danger"> 拒绝</span>； [685, 719) <span class="warning"> 复议</span>； [720,1000] <span
+            class="primary"> 通过</span>
+        </div>
+      </div>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="main-title clear" style="clear:both">企业详细信息<span
+          style="color: #606266;font-weight: 600;font-size: 20px;">(全维信息，辅助判断)</span></div>
+      <div class="line-title">1 基本信息</div>
+      <div class="divider-line-2"></div>
+      <div class="line-title">1.1 基本信息</div>
+      <div class="divider-line-1"></div>
+      <div class="baseInfo">
+        <div class="el-row">
+          <div class="el-col">
+            <div class="test-row">
+              <span class="unit-key">企业名称：</span>
+              <span class="unit-value">
+                {{data.enterBaseInfo && data.enterBaseInfo.basicInfo && data.enterBaseInfo.basicInfo.bizBaseInfo &&
+                data.enterBaseInfo.basicInfo.bizBaseInfo.bizName}}
+              </span>
+            </div>
+          </div>
+          <div class="el-col">
+            <div class="test-row">
+              <span class="unit-key">法定代表人：</span>
+              <span class="unit-value">
+                {{data.enterBaseInfo && data.enterBaseInfo.basicInfo && data.enterBaseInfo.basicInfo.bizBaseInfo &&
+                data.enterBaseInfo.basicInfo.bizBaseInfo.operName}}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="el-row">
+          <div class="el-col">
+            <div class="test-row">
+              <span class="unit-key">统一社会信用代码：</span>
+              <span class="unit-value">
+                {{data.enterBaseInfo && data.enterBaseInfo.basicInfo && data.enterBaseInfo.basicInfo.bizBaseInfo &&
+                data.enterBaseInfo.basicInfo.bizBaseInfo.creditCode}}
+              </span>
+            </div>
+          </div>
+          <div class="el-col">
+            <div class="test-row">
+              <span class="unit-key">法定组织机构代码：</span>
+              <span class="unit-value">
+                {{data.enterBaseInfo && data.enterBaseInfo.basicInfo && data.enterBaseInfo.basicInfo.bizBaseInfo &&
+                data.enterBaseInfo.basicInfo.bizBaseInfo.orgNo}}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="el-row">
+          <div class="el-col">
+            <div class="test-row">
+              <span class="unit-key">注册号：</span>
+              <span class="unit-value">
+                {{data.enterBaseInfo && data.enterBaseInfo.basicInfo && data.enterBaseInfo.basicInfo.bizBaseInfo &&
+                data.enterBaseInfo.basicInfo.bizBaseInfo.regNo}}
+              </span>
+            </div>
+          </div>
+          <div class="el-col">
+            <div class="test-row">
+              <span class="unit-key">成立时间：</span>
+              <span class="unit-value">
+                {{data.enterBaseInfo && data.enterBaseInfo.basicInfo && data.enterBaseInfo.basicInfo.bizBaseInfo &&
+                data.enterBaseInfo.basicInfo.bizBaseInfo.startDate}}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="el-row">
+          <div class="el-col">
+            <div class="test-row">
+              <span class="unit-key">经营状态：</span>
+              <span class="unit-value">
+                {{data.enterBaseInfo && data.enterBaseInfo.basicInfo && data.enterBaseInfo.basicInfo.bizBaseInfo &&
+                data.enterBaseInfo.basicInfo.bizBaseInfo.detailStatus}}
+              </span>
+            </div>
+          </div>
+          <div class="el-col">
+            <div class="test-row">
+              <span class="unit-key">公司类型：</span>
+              <span class="unit-value">
+                {{data.enterBaseInfo && data.enterBaseInfo.basicInfo && data.enterBaseInfo.basicInfo.bizBaseInfo &&
+                data.enterBaseInfo.basicInfo.bizBaseInfo.entType}}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="el-row">
+          <div class="el-col">
+            <div class="test-row">
+              <span class="unit-key">注册资本：</span>
+              <span class="unit-value">
+                {{data.enterBaseInfo && data.enterBaseInfo.basicInfo && data.enterBaseInfo.basicInfo.bizBaseInfo &&
+                data.enterBaseInfo.basicInfo.bizBaseInfo.registCapi}}
+              </span>
+            </div>
+          </div>
+          <div class="el-col">
+            <div class="test-row">
+              <span class="unit-key">所属行业：</span>
+              <span class="unit-value">
+                {{data.enterBaseInfo && data.enterBaseInfo.basicInfo && data.enterBaseInfo.basicInfo.bizBaseInfo &&
+                data.enterBaseInfo.basicInfo.bizBaseInfo.tradeName}}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="el-row">
+          <div class="el-col">
+            <div class="test-row">
+              <span class="unit-key">核准日期：</span>
+              <span class="unit-value">
+                {{data.enterBaseInfo && data.enterBaseInfo.basicInfo && data.enterBaseInfo.basicInfo.bizBaseInfo &&
+                data.enterBaseInfo.basicInfo.bizBaseInfo.updatedDate}}
+              </span>
+            </div>
+          </div>
+          <div class="el-col">
+            <div class="test-row">
+              <span class="unit-key">营业期限：</span>
+              <span class="unit-value">
+                {{data.enterBaseInfo && data.enterBaseInfo.basicInfo && data.enterBaseInfo.basicInfo.bizBaseInfo &&
+                data.enterBaseInfo.basicInfo.bizBaseInfo.termStart}} 至
+                {{data.enterBaseInfo && data.enterBaseInfo.basicInfo && data.enterBaseInfo.basicInfo.bizBaseInfo &&
+                data.enterBaseInfo.basicInfo.bizBaseInfo.teamEnd}}
+
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="el-row">
+          <div class="el-col">
+            <div class="test-row">
+              <span class="unit-key">人员规模：</span>
+              <span class="unit-value">
+                {{data.enterBaseInfo && data.enterBaseInfo.basicInfo && data.enterBaseInfo.basicInfo.bizBaseInfo &&
+                data.enterBaseInfo.basicInfo.bizBaseInfo.insuredCount}}
+              </span>
+            </div>
+          </div>
+          <div class="el-col">
+            <div class="test-row">
+              <span class="unit-key">电话：</span>
+              <span class="unit-value">
+                <!-- {{data.enterBaseInfo && data.enterBaseInfo.basicInfo && data.enterBaseInfo.basicInfo.bizBaseInfo && data.enterBaseInfo.basicInfo.bizBaseInfo.insuredCount}} -->
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="el-row">
+          <div class="el-col">
+            <div class="test-row">
+              <span class="unit-key">邮箱：</span>
+              <span class="unit-value">
+                <!-- {{data.enterBaseInfo && data.enterBaseInfo.basicInfo && data.enterBaseInfo.basicInfo.bizBaseInfo && data.enterBaseInfo.basicInfo.bizBaseInfo.insuredCount}} -->
+              </span>
+            </div>
+          </div>
+          <div class="el-col">
+            <div class="test-row">
+              <span class="unit-key">登记机关：</span>
+              <span class="unit-value">
+                {{data.enterBaseInfo && data.enterBaseInfo.basicInfo && data.enterBaseInfo.basicInfo.bizBaseInfo &&
+                data.enterBaseInfo.basicInfo.bizBaseInfo.belongOrg}}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="el-row">
+          <div class="el-col">
+            <div class="test-row">
+              <span class="unit-key">注册地址：</span>
+              <span class="unit-value">
+                {{data.enterBaseInfo && data.enterBaseInfo.basicInfo && data.enterBaseInfo.basicInfo.bizBaseInfo &&
+                data.enterBaseInfo.basicInfo.bizBaseInfo.registAddress}}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="el-row">
+          <div class="el-col">
+            <div class="test-row">
+              <span class="unit-key">经营范围：</span>
+              <span class="unit-value">
+                {{data.enterBaseInfo && data.enterBaseInfo.basicInfo && data.enterBaseInfo.basicInfo.bizBaseInfo &&
+                data.enterBaseInfo.basicInfo.bizBaseInfo.detailScope}}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sub-gap"></div>
+      <div class="line-title">1.2 补充信息</div>
+      <div class="divider-line-1"></div>
+      <table class="vue-table">
+        <tr>
+          <th>所属行业</th>
+          <th>业务人员</th>
+          <th>业务部门</th>
+          <th>企业角色</th>
+          <th>是否做物流额度掌控</th>
+          <th>法人代表身份证</th>
+          <th>法人代表手机号码</th>
+        </tr>
+        <tr
+          v-for="(v, i) of data.enterBaseInfo && data.enterBaseInfo.basicInfo && data.enterBaseInfo.basicInfo.bizapply">
+          <td>{{v.tradeName}}</td>
+          <td>{{v.businessUserName}}</td>
+          <td>{{v.businessOrgName}}</td>
+          <td>{{v.bizRoles}}</td>
+          <td>{{v.creditFlag}}</td>
+          <td>{{v.operPaperId}}</td>
+          <td>{{v.operMobileNo}}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="line-title">1.3 高管信息</div>
+      <div class="divider-line-1"></div>
+      <table class="vue-table">
+        <tr>
+          <th>姓名</th>
+          <th>职位</th>
+          <th>关联企业</th>
+        </tr>
+        <tr
+          v-for="(v, i) of data.enterBaseInfo && data.enterBaseInfo.basicInfo && data.enterBaseInfo.basicInfo.empLoyees">
+          <td>{{v.employeName}}</td>
+          <td>{{v.employeJob}}</td>
+          <td>{{v.employeBizname}}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="line-title">1.4 分支机构</div>
+      <div class="divider-line-1"></div>
+      <table class="vue-table">
+        <tr>
+          <th>公司名称</th>
+          <th>注册号</th>
+          <th>负责人</th>
+          <th>统计社会信用代码</th>
+          <th>登记机关</th>
+        </tr>
+        <tr
+          v-for="(v, i) of data.enterBaseInfo && data.enterBaseInfo.basicInfo && data.enterBaseInfo.basicInfo.branches">
+          <td>{{v.bizName}}</td>
+          <td>{{v.regNo}}</td>
+          <td>{{v.operName}}</td>
+          <td>{{v.creditCode}}</td>
+          <td>{{v.belongOrg}}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="line-title">1.5 变更信息</div>
+      <div class="divider-line-1"></div>
+      <table class="vue-table">
+        <tr>
+          <th>变更日期</th>
+          <th>变更事项</th>
+          <th>变更前内容</th>
+          <th>变更后内容</th>
+        </tr>
+        <tr
+          v-for="(v, i) of data.enterBaseInfo && data.enterBaseInfo.basicInfo && data.enterBaseInfo.basicInfo.changeRecords">
+          <td>{{v.changeDate}}</td>
+          <td>{{v.projectName}}</td>
+          <td>{{v.beforeContent}}</td>
+          <td>{{v.afterContent}}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="line-title">1.6 行政许可</div>
+      <div class="divider-line-1"></div>
+      <table class="vue-table">
+        <tr>
+          <th>许可文件编号</th>
+          <th>许可文件名称</th>
+          <th>有效期自</th>
+          <th>有效期至</th>
+          <th>许可机关</th>
+          <th>许可内容</th>
+        </tr>
+        <tr
+          v-for="(v, i) of data.enterBaseInfo && data.enterBaseInfo.basicInfo && data.enterBaseInfo.basicInfo.permissioneci">
+          <td>{{v.licensDocno}}</td>
+          <td>{{v.licensDocname}}</td>
+          <td>{{v.validityFrom}}</td>
+          <td>{{v.validityTo}}</td>
+          <td>{{v.licensOffice}}</td>
+          <td>{{v.licensContent}}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="line-title">2 经营信息</div>
+      <div class="divider-line-2"></div>
+      <div class="line-title">2.1 资产情况</div>
+      <div class="divider-line-1"></div>
+      <table class="vue-table">
+        <tr>
+          <th>报送年度</th>
+          <th>所有者权益合计</th>
+          <th>营业总收入</th>
+          <th>利润总额</th>
+          <th>主营业务</th>
+          <th>净利润</th>
+          <th>纳税总额</th>
+          <th>负债总额</th>
+          <th>金融贷款</th>
+        </tr>
+        <tr
+          v-for="(v, i) of data.enterBaseInfo && data.enterBaseInfo.managementInfo && data.enterBaseInfo.managementInfo.assetsData">
+          <td>{{v.sendYear}}</td>
+          <td>{{v.totalOwnersEquity}}</td>
+          <td>{{v.cgrossTradingIncome}}</td>
+          <td>{{v.totalProfit}}</td>
+          <td>{{v.mainBusinessIncome}}</td>
+          <td>{{v.netProfit}}</td>
+          <td>{{v.totalTaxAmount}}</td>
+          <td>{{v.totalLiablities}}</td>
+          <td>{{v.bankingCredit}}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="line-title">2.2 对外保证</div>
+      <div class="divider-line-1"></div>
+      <table class="vue-table">
+        <tr>
+          <th>报送年度</th>
+          <th>债务人</th>
+          <th>债权人</th>
+          <th>主债权类型</th>
+          <th>主债权数额</th>
+          <th>债务期限</th>
+          <th>保证期间</th>
+          <th>保证方式</th>
+          <th>保证范围</th>
+        </tr>
+        <tr
+          v-for="(v, i) of data.enterBaseInfo && data.enterBaseInfo.managementInfo && data.enterBaseInfo.managementInfo.providAassurance">
+          <td>{{v.sendYear}}</td>
+          <td>{{v.debtor}}</td>
+          <td>{{v.creditor}}</td>
+          <td>{{v.creditorCategory}}</td>
+          <td>{{v.creditorAmount}}</td>
+          <td>{{v.fulfillObligation}}</td>
+          <td>{{v.assuranceDurn}}</td>
+          <td>{{v.assuranceType}}</td>
+          <td>{{v.assuranceScope}}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="line-title">2.3 股东及出资信息</div>
+      <div class="divider-line-1"></div>
+      <table class="vue-table">
+        <tr>
+          <th>股东名称</th>
+          <th>认缴出资额(万)</th>
+          <th>认缴出资方式</th>
+          <th>实缴出资额</th>
+          <th>出资比例</th>
+          <th>认缴出资日期</th>
+          <th>实缴时间</th>
+          <th>最终收益股份</th>
+        </tr>
+        <tr
+          v-for="(v, i) of data.enterBaseInfo && data.enterBaseInfo.managementInfo && data.enterBaseInfo.managementInfo.partners">
+          <td>{{v.stockName}}</td>
+          <td>{{v.shouldCapi}}</td>
+          <td>{{v.investType}}</td>
+          <td>{{v.realCapi}}</td>
+          <td>{{v.stockPercent}}</td>
+          <td>{{v.shoudDate}}</td>
+          <td>{{v.capiDate}}</td>
+          <td>{{v.finalBenefitPercent}}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="line-title">2.4 企业对外投资</div>
+      <div class="divider-line-1"></div>
+      <table class="vue-table">
+        <tr>
+          <th>企业名称</th>
+          <th>统一社会信用代码</th>
+          <th>法定代表人</th>
+          <th>企业类型</th>
+          <th>成立时间</th>
+          <th>注册资本(万)</th>
+          <th>出资比例</th>
+        </tr>
+        <tr
+          v-for="(v, i) of data.enterBaseInfo && data.enterBaseInfo.managementInfo && data.enterBaseInfo.managementInfo.bizInvest">
+          <td>{{v.bizName}}</td>
+          <td>{{v.creditCode}}</td>
+          <td>{{v.operName}}</td>
+          <td>{{v.econKind}}</td>
+          <td>{{v.startDate}}</td>
+          <td>{{v.registCapi}}</td>
+          <td>{{v.fundedRatio}}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="line-title">2.5 股东对外投资</div>
+      <div class="divider-line-1"></div>
+      <table class="vue-table">
+        <tr>
+          <th>股东姓名</th>
+          <th>企业名称</th>
+          <th>统一社会信用代码</th>
+          <th>企业类型</th>
+          <th>企业性质</th>
+          <th>成立日期</th>
+          <th>注册资本(万)</th>
+          <th>注册比例</th>
+        </tr>
+        <tr
+          v-for="(v, i) of data.enterBaseInfo && data.enterBaseInfo.managementInfo && data.enterBaseInfo.managementInfo.partnerInvest">
+          <td>{{v.stockName}}</td>
+          <td>{{v.bizName}}</td>
+          <td>{{v.creditCode}}</td>
+          <td>{{v.operName}}</td>
+          <td>{{v.econKind}}</td>
+          <td>{{v.startDate}}</td>
+          <td>{{v.registCapi}}</td>
+          <td>{{v.fundedRatio}}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="line-title">2.6 股权出质</div>
+      <div class="divider-line-1"></div>
+      <div class="empty"
+        v-if="data.enterBaseInfo && data.enterBaseInfo.managementInfo && data.enterBaseInfo.managementInfo.pledge.length === 0">
+        暂无数据</div>
+      <table class="detail-table"
+        v-for="(item,index) in data.enterBaseInfo && data.enterBaseInfo.managementInfo && data.enterBaseInfo.managementInfo.pledge"
+        :key="'pledge'+index">
+        <tr>
+          <td>质权登记编号</td>
+          <td>{{item.registNo}}</td>
+          <td>出质人</td>
+          <td>{{item.pledgor}}</td>
+        </tr>
+        <tr>
+          <td>出质人证件号码</td>
+          <td>{{ item.pledgorNo }}</td>
+          <td>出质股权数额</td>
+          <td>{{ item.pledgedAmount }}</td>
+        </tr>
+        <tr>
+          <td>质权人</td>
+          <td>{{ item.pledgee }}</td>
+          <td>质权人证件号码</td>
+          <td>{{ item.pledgeeNo }}</td>
+        </tr>
+        <tr>
+          <td>登记日期</td>
+          <td>{{item.regDate}}</td>
+          <td>出质状态</td>
+          <td>{{item.pledgStatus}}</td>
+        </tr>
+        <tr>
+          <td>公示日期</td>
+          <td>{{item.publicDate}}</td>
+          <td>注销日期</td>
+          <td>{{"---"}}</td>
+        </tr>
+        <tr>
+          <td>注销原因</td>
+          <td colspan="3">{{"---"}}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="line-title">2.7 动产抵押</div>
+      <div class="divider-line-1"></div>
+      <table class="vue-table">
+        <tr>
+          <th>登记编号</th>
+          <th>登记日期</th>
+          <th>登记机关</th>
+          <th>被担保债劵数额</th>
+          <th>状态</th>
+        </tr>
+        <tr
+          v-for="(v, i) of data.enterBaseInfo && data.enterBaseInfo.managementInfo && data.enterBaseInfo.managementInfo.chattelMortgage">
+          <td>{{v.registerNo}}</td>
+          <td>{{v.registerDate}}</td>
+          <td>{{v.registerOffice}}</td>
+          <td>{{v.debtsecuredAmount}}</td>
+          <td>{{v.registerStatus}}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="line-title">3 经营不良</div>
+      <div class="divider-line-2"></div>
+      <div class="line-title">3.1 行政处罚</div>
+      <div class="divider-line-1"></div>
+      <div class="empty"
+        v-if="data.enterBaseInfo && data.enterBaseInfo.managementBad && data.enterBaseInfo.managementBad.penalty.length === 0">
+        暂无数据</div>
+      <table class="detail-table"
+        v-for="(item,index) in data.enterBaseInfo && data.enterBaseInfo.managementBad && data.enterBaseInfo.managementBad.penalty"
+        :key="'pledge'+index">
+        <tr>
+          <td>决定文书号</td>
+          <td>{{item.docNo}}</td>
+          <td>决定机关名称</td>
+          <td>{{"---"}}</td>
+        </tr>
+        <tr>
+          <td>处罚日期</td>
+          <td>{{"---"}}</td>
+          <td>公示日期</td>
+          <td>{{"---"}}</td>
+        </tr>
+        <tr>
+          <td>违法金额</td>
+          <td>{{"---"}}</td>
+          <td>违法行为类型</td>
+          <td>{{"---"}}</td>
+        </tr>
+        <tr>
+          <td>处罚内容</td>
+          <td colspan="3">{{item.caseContent}}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="line-title">3.2 列入异常经营名录</div>
+      <div class="divider-line-1"></div>
+      <div class="empty"
+        v-if="data.enterBaseInfo && data.enterBaseInfo.managementBad && data.enterBaseInfo.managementBad.bizOpException.length === 0">
+        暂无数据</div>
+      <table class="detail-table"
+        v-for="(item,index) in data.enterBaseInfo && data.enterBaseInfo.managementBad && data.enterBaseInfo.managementBad.bizOpException"
+        :key="'bizOpException'+index">
+        <tr>
+          <td>列入日期</td>
+          <td>{{item.addDate}}</td>
+          <td>列入机关</td>
+          <td>{{item.addOffice}}</td>
+        </tr>
+        <tr>
+          <td>移除日期</td>
+          <td>{{item.removeDate}}</td>
+          <td>移除机关</td>
+          <td>{{item.removeOffice}}</td>
+        </tr>
+        <tr>
+          <td>列入原因</td>
+          <td colspan="3">{{item.addReason}}</td>
+        </tr>
+        <tr>
+          <td>移除原因</td>
+          <td colspan="3">{{item.removeReason}}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="line-title">3.3 列入严重违法失信黑名单（工商）</div>
+      <div class="divider-line-1"></div>
+      <div class="empty"
+        v-if="data.enterBaseInfo && data.enterBaseInfo.managementBad && data.enterBaseInfo.managementBad.bizSeriousViolation.length === 0">
+        暂无数据</div>
+      <table class="detail-table"
+        v-for="(item,index) in data.enterBaseInfo && data.enterBaseInfo.managementBad && data.enterBaseInfo.managementBad.bizSeriousViolation"
+        :key="'bizSeriousViolation'+index">
+        <tr>
+          <td>列入日期</td>
+          <td>{{item.addDate}}</td>
+          <td>列入机关</td>
+          <td>{{item.addOffice}}</td>
+        </tr>
+        <tr>
+          <td>移除日期</td>
+          <td>{{item.removeDate}}</td>
+          <td>移除机关</td>
+          <td>{{item.removeOffice}}</td>
+        </tr>
+        <tr>
+          <td>列入原因</td>
+          <td colspan="3">{{item.addReason}}</td>
+        </tr>
+        <tr>
+          <td>移除原因</td>
+          <td colspan="3">{{item.removeReason}}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="line-title">3.4 股权冻结</div>
+      <div class="divider-line-1"></div>
+      <div class="empty"
+        v-if="data.enterBaseInfo && data.enterBaseInfo.managementBad && data.enterBaseInfo.managementBad.freezeInfo.length === 0">
+        暂无数据</div>
+      <table class="detail-table"
+        v-for="(item,index) in data.enterBaseInfo && data.enterBaseInfo.managementBad && data.enterBaseInfo.managementBad.freezeInfo"
+        :key="'freezeInfo'+index">
+        <tr>
+          <td>冻结被执行人</td>
+          <td>{{item.executee}}</td>
+          <td>证件类型</td>
+          <td>{{item.executeeIdentifyType}}</td>
+        </tr>
+        <tr>
+          <td>证件号码</td>
+          <td>{{item.executeeIdentifyNo}}</td>
+          <td>冻结股数数额</td>
+          <td>{{item.equityAmount}}</td>
+        </tr>
+        <tr>
+          <td>冻结状态</td>
+          <td>{{item.equityStatus}}</td>
+          <td>冻结期限</td>
+          <td>{{item.freezeYears}}</td>
+        </tr>
+        <tr>
+          <td>开始日期</td>
+          <td>{{item.freezeStartDate}}</td>
+          <td>结束日期</td>
+          <td>{{item.freezeEndDate}}</td>
+        </tr>
+        <tr>
+          <td>公示日期</td>
+          <td>{{item.publicDate}}</td>
+          <td>裁定文书号</td>
+          <td>{{item.execNo}}</td>
+        </tr>
+        <tr>
+          <td>通知文书号</td>
+          <td>{{item.docNo}}</td>
+          <td>执行法院</td>
+          <td>{{item.execCourt}}</td>
+        </tr>
+        <tr>
+          <td>执行事项</td>
+          <td colspan="3">{{item.execItem}}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="line-title">3.5 企业简易注销公告</div>
+      <div class="divider-line-1"></div>
+      <table class="vue-table">
+        <tr>
+          <th>企业名称</th>
+          <th>登记机关</th>
+          <th>开始日期</th>
+          <th>结束日期</th>
+        </tr>
+        <tr
+          v-for="(v, i) of data.enterBaseInfo && data.enterBaseInfo.managementBad && data.enterBaseInfo.managementBad.bizLogout">
+          <td>{{v.bizName}}</td>
+          <td>{{v.belongOrg}}</td>
+          <td>{{v.logoutFrom}}</td>
+          <td>{{v.logoutTo}}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="line-title">3.6 清算</div>
+      <div class="divider-line-1"></div>
+      <table class="vue-table">
+        <tr>
+          <th>清算责任人</th>
+          <th>清算组成员</th>
+        </tr>
+        <tr
+          v-for="(v, i) of data.enterBaseInfo && data.enterBaseInfo.managementBad && data.enterBaseInfo.managementBad.liquidation">
+          <td>{{v.leader}}</td>
+          <td>{{v.member}}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="line-title">3.7 司法协助信息</div>
+      <div class="divider-line-1"></div>
+      <table class="vue-table">
+        <tr>
+          <th>被执行人</th>
+          <th>股权数额</th>
+          <th>股权数额类型</th>
+          <th>执行法院</th>
+          <th>执行通知书文号</th>
+          <th>类型 | 状态</th>
+        </tr>
+        <tr
+          v-for="(v, i) of data.enterBaseInfo && data.enterBaseInfo.managementBad && data.enterBaseInfo.managementBad.bizJustice">
+          <td>{{v.executee}}</td>
+          <td>{{v.equityAmount}}</td>
+          <td>{{v.equityAmountType}}</td>
+          <td>{{v.execCourt}}</td>
+          <td>{{v.execNo}}</td>
+          <td>{{v.equityStatus}}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="line-title">4 司法</div>
+      <div class="divider-line-2"></div>
+      <div class="line-title">4.1 被执行人</div>
+      <div class="divider-line-1"></div>
+      <table class="vue-table">
+        <tr>
+          <th>案号</th>
+          <th>执行法院名称</th>
+          <th>组织机构代码</th>
+          <th>执行依据案号</th>
+          <th>立案时间</th>
+          <th>标的金额</th>
+        </tr>
+        <tr
+          v-for="(v, i) of data.enterBaseInfo && data.enterBaseInfo.judicialInfo && data.enterBaseInfo.judicialInfo.executor">
+          <td>{{v.caseNo}}</td>
+          <td>{{v.courtName}}</td>
+          <td>{{v.orgNo}}</td>
+          <td>{{v.executorDependDocumentno}}</td>
+          <td>{{v.registerTime}}</td>
+          <td>{{v.executorMoney}}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="line-title">4.2 企业失信被执行</div>
+      <div class="divider-line-1"></div>
+      <div class="empty"
+        v-if="data.enterBaseInfo && data.enterBaseInfo.judicialInfo && data.enterBaseInfo.judicialInfo.uncreditexecutor.length === 0">
+        暂无数据</div>
+      <table class="detail-table"
+        v-for="(item,index) in data.enterBaseInfo && data.enterBaseInfo.judicialInfo && data.enterBaseInfo.judicialInfo.uncreditexecutor"
+        :key="'uncreditexecutor'+index">
+        <tr>
+          <td>案号</td>
+          <td>{{item.caseNo}}</td>
+          <td>公司名称</td>
+          <td>{{item.bizName}}</td>
+        </tr>
+        <tr>
+          <td>法定代表人</td>
+          <td>{{item.operName}}</td>
+          <td>执行单位</td>
+          <td>{{item.courtName}}</td>
+        </tr>
+        <tr>
+          <td>执行依据案号</td>
+          <td>{{item.executorDependDocumentno}}</td>
+          <td>立案时间</td>
+          <td>{{item.registerTime}}</td>
+        </tr>
+        <tr>
+          <td>发布时间</td>
+          <td>{{item.publishTime}}</td>
+          <td>作出执行依据单位</td>
+          <td>{{item.gistUnit}}</td>
+        </tr>
+        <tr>
+          <td>已履行部分</td>
+          <td>{{item.fulfillPart}}</td>
+          <td>未履行部门</td>
+          <td>{{item.unfulfillPart}}</td>
+        </tr>
+        <tr>
+          <td>生效法律文书确定的义务</td>
+          <td colspan="3">{{item.legalDuty}}</td>
+        </tr>
+        <tr>
+          <td>失信被执行人行为具体情形</td>
+          <td colspan="3">{{item.fulfillPerformance}}</td>
+        </tr>
+        <tr>
+          <td>失信被执行人行为具体情形</td>
+          <td colspan="3">{{item.disruptLegalType}}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="line-title">4.3 裁判文书</div>
+      <div class="divider-line-1"></div>
+      <div class="empty"
+        v-if="data.enterBaseInfo && data.enterBaseInfo.judicialInfo && data.enterBaseInfo.judicialInfo.judgmentdoc.length === 0">
+        暂无数据</div>
+      <table class="detail-table"
+        v-for="(item,index) in data.enterBaseInfo && data.enterBaseInfo.judicialInfo && data.enterBaseInfo.judicialInfo.judgmentdoc"
+        :key="'judgmentdoc'+index">
+        <tr>
+          <td>裁判文书编号</td>
+          <td>{{item.caseNo}}</td>
+          <td>裁判文书类型</td>
+          <td>{{item.caseType}}</td>
+        </tr>
+        <tr>
+          <td>案由类型</td>
+          <td>{{item.caseReasonType}}</td>
+          <td>审批时间</td>
+          <td>{{item.updateDate}}</td>
+        </tr>
+        <tr>
+          <td>执行法院</td>
+          <td>{{item.courtName}}</td>
+          <td>审判时间</td>
+          <td>{{item.updateDate}}</td>
+        </tr>
+        <tr>
+          <td>案件金额</td>
+          <td>{{item.caseAmount}}</td>
+          <td>是否原告</td>
+          <td>{{item.isProsecutor}}</td>
+        </tr>
+        <tr>
+          <td>涉案人员角色</td>
+          <td colspan="3">{{item.caseRole}}</td>
+        </tr>
+        <tr>
+          <td>裁判文书名字</td>
+          <td colspan="3">{{item.caseName}}</td>
+        </tr>
+        <tr>
+          <td>案由</td>
+          <td colspan="3">{{item.caseReason}}</td>
+        </tr>
+        <tr>
+          <td>裁判结果</td>
+          <td colspan="3">{{"---"}}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="line-title">4.4 开庭公告</div>
+      <div class="divider-line-1"></div>
+      <div class="empty"
+        v-if="data.enterBaseInfo && data.enterBaseInfo.judicialInfo && data.enterBaseInfo.judicialInfo.openannounce.length === 0">
+        暂无数据</div>
+      <table class="detail-table"
+        v-for="(item,index) in data.enterBaseInfo && data.enterBaseInfo.judicialInfo && data.enterBaseInfo.judicialInfo.openannounce"
+        :key="'openannounce'+index">
+        <tr>
+          <td>开庭公告ID</td>
+          <td>{{item.ktggId}}</td>
+          <td>案号</td>
+          <td>{{item.caseNo}}</td>
+        </tr>
+        <tr>
+          <td>开庭时间</td>
+          <td>{{item.sortTime}}</td>
+          <td>法院名称</td>
+          <td>{{item.courtName}}</td>
+        </tr>
+        <tr>
+          <td>原告</td>
+          <td colspan="3">{{item.plainTiff}}</td>
+        </tr>
+        <tr>
+          <td>案由</td>
+          <td colspan="3">{{item.caseCause}}</td>
+        </tr>
+        <tr>
+          <td>内容概要</td>
+          <td colspan="3">{{ item.caseBody }}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="main-title">法人代表基础信息详情</div>
+      <div class="line-title">1 执行公告</div>
+      <div class="divider-line-1"></div>
+      <div class="empty" v-if="data.methodOfGneraInfo && data.methodOfGneraInfo.hxcourtzxgg.length === 0">暂无数据</div>
+      <table class="detail-table" v-for="(item,index) in data.methodOfGneraInfo && data.methodOfGneraInfo.hxcourtzxgg"
+        :key="'hxcourtzxgg'+index">
+        <tr>
+          <td>姓名</td>
+          <td>{{item.pname}}</td>
+          <td>身份证号码</td>
+          <td>{{item.idCardNo}}</td>
+        </tr>
+        <tr>
+          <td>执行法院名称</td>
+          <td>{{item.courtName}}</td>
+          <td>立案时间</td>
+          <td>{{item.sortTimeString}}</td>
+        </tr>
+        <tr>
+          <td>案号</td>
+          <td>{{item.caseNo}}</td>
+          <td>执行标的</td>
+          <td>{{item.execMoney}}</td>
+        </tr>
+        <tr>
+          <td>案件状态</td>
+          <td colspan="3">{{item.caseState}}</td>
+        </tr>
+        <tr>
+          <td>标题</td>
+          <td colspan="3">{{item.caseTitle}}</td>
+        </tr>
+        <tr>
+          <td>内容概要</td>
+          <td colspan="3">{{ item.caseBody }}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="line-title">2 失信公告</div>
+      <div class="divider-line-1"></div>
+      <div class="empty" v-if="data.methodOfGneraInfo && data.methodOfGneraInfo.hxcourtsxgg.length === 0">暂无数据</div>
+      <table class="detail-table" v-for="(item,index) in data.methodOfGneraInfo && data.methodOfGneraInfo.hxcourtsxgg"
+        :key="'hxcourtsxgg'+index">
+        <tr>
+          <td>姓名</td>
+          <td>{{item.pname}}</td>
+          <td>立案时间</td>
+          <td>{{item.sortTimeString}}</td>
+        </tr>
+        <tr>
+          <td>身份证号</td>
+          <td>{{item.idCardNo}}</td>
+          <td>履行情况</td>
+          <td>{{item.shixinLxqk}}</td>
+        </tr>
+        <tr>
+          <td>执行法院</td>
+          <td>{{item.courtName}}</td>
+          <td>作出执行依据单位</td>
+          <td>{{item.execYjdw}}</td>
+        </tr>
+        <tr>
+          <td>案号</td>
+          <td colspan="3">{{item.caseNo}}</td>
+        </tr>
+        <tr>
+          <td>失信被执行人行为具体情形</td>
+          <td colspan="3">{{ item.shixinJtqx }}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="line-title">3 裁判文书</div>
+      <div class="divider-line-1"></div>
+      <div class="empty" v-if="data.methodOfGneraInfo && data.methodOfGneraInfo.hxcourtcpws.length === 0">暂无数据</div>
+      <table class="detail-table" v-for="(item,index) in data.methodOfGneraInfo && data.methodOfGneraInfo.hxcourtcpws"
+        :key="'hxcourtcpws'+index">
+        <tr>
+          <td>裁判文书ID</td>
+          <td>{{item.cpwsId}}</td>
+          <td>案件类型</td>
+          <td>{{item.caseType}}</td>
+        </tr>
+        <tr>
+          <td>审结时间</td>
+          <td>{{item.sortTimeString}}</td>
+          <td>法院名称</td>
+          <td>{{item.courtName}}</td>
+        </tr>
+        <tr>
+          <td>审理程序</td>
+          <td>{{item.trialProcedure}}</td>
+          <td>案号</td>
+          <td>{{item.caseNo}}</td>
+        </tr>
+        <tr>
+          <td>案由</td>
+          <td colspan="3">{{item.caseCause}}</td>
+        </tr>
+        <tr>
+          <td>标题</td>
+          <td colspan="3">{{ item.caseTitle }}</td>
+        </tr>
+        <tr>
+          <td>内容概要</td>
+          <td colspan="3">{{ item.caseBody }}</td>
+        </tr>
+        <tr>
+          <td>裁判结果</td>
+          <td colspan="3">{{ item.judgeResult }}</td>
+        </tr>
+        <tr>
+          <td>依据</td>
+          <td colspan="3">{{ item.cpwsYiju }}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="line-title">4 法院公告</div>
+      <div class="divider-line-1"></div>
+      <div class="empty" v-if="data.methodOfGneraInfo && data.methodOfGneraInfo.hxcourtfygg.length === 0">暂无数据</div>
+      <table class="detail-table" v-for="(item,index) in data.methodOfGneraInfo && data.methodOfGneraInfo.hxcourtfygg"
+        :key="'hxcourtfygg'+index">
+        <tr>
+          <td>法院公告ID</td>
+          <td>{{item.fyggId}}</td>
+          <td>公告类型</td>
+          <td>{{item.ggType}}</td>
+        </tr>
+        <tr>
+          <td>姓名</td>
+          <td>{{item.pname}}</td>
+          <td>发布时间</td>
+          <td>{{item.sortTimeString}}</td>
+        </tr>
+        <tr>
+          <td>法院名称</td>
+          <td>{{item.courtName}}</td>
+          <td>标题</td>
+          <td>{{item.caseTitle}}</td>
+        </tr>
+        <tr>
+          <td>内容概要</td>
+          <td colspan="3">{{ item.caseBody }}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="line-title">5 开庭公告</div>
+      <div class="divider-line-1"></div>
+      <div class="empty" v-if="data.methodOfGneraInfo && data.methodOfGneraInfo.hxcourtktgg.length === 0">暂无数据</div>
+      <table class="detail-table" v-for="(item,index) in data.methodOfGneraInfo && data.methodOfGneraInfo.hxcourtktgg"
+        :key="'hxcourtktgg'+index">
+        <tr>
+          <td>开庭公告ID</td>
+          <td>{{item.ktggId}}</td>
+          <td>开庭时间</td>
+          <td>{{item.sortTimeString}}</td>
+        </tr>
+        <tr>
+          <td>原告</td>
+          <td>{{item.plainTiff}}</td>
+          <td>法院名称</td>
+          <td>{{item.courtName}}</td>
+        </tr>
+        <tr>
+          <td>案号</td>
+          <td colspan="3">{{ item.caseNo }}</td>
+        </tr>
+        <tr>
+          <td>案由</td>
+          <td colspan="3">{{ item.caseCause }}</td>
+        </tr>
+        <tr>
+          <td>内容概要</td>
+          <td colspan="3">{{ item.caseBody }}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="line-title">6 限制消费</div>
+      <div class="divider-line-1"></div>
+      <table class="vue-table">
+        <tr>
+          <th>案号</th>
+          <th>性别</th>
+          <th>年龄</th>
+          <th>执行法院</th>
+          <th>地域名称</th>
+          <th>发布时间</th>
+          <th>立案时间</th>
+        </tr>
+        <tr v-for="(v, i) of data.methodOfGneraInfo && data.methodOfGneraInfo.hxcourtxzxf">
+          <td>{{v.elxgCaseCode}}</td>
+          <td>{{v.elxgSexName}}</td>
+          <td>{{v.elxgAge}}</td>
+          <td>{{v.elxgCourtName}}</td>
+          <td>{{v.elxgAreaName}}</td>
+          <td>{{v.elxgPublishDate}}</td>
+          <td>{{v.elxgRegDate}}</td>
+        </tr>
+      </table>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div class="sub-gap"></div>
+      <div v-for="(item,index) in data.relatedPersonInfo" :key="'relatedPersonInfo'+index">
+        <div class="main-title">相关人{{index+1}}基础信息详情</div>
+        <div class="line-title">1 执行公告</div>
+        <div class="divider-line-1"></div>
+        <div class="empty" v-if="item.hxcourtzxgg.length === 0">暂无数据</div>
+        <table class="detail-table" v-for="(sub,sIndex) in item.hxcourtzxgg" :key="'hxcourtzxgg_sub'+sIndex">
+          <tr>
+            <td>姓名</td>
+            <td>{{sub.pname}}</td>
+            <td>身份证号码</td>
+            <td>{{sub.idCardNo}}</td>
+          </tr>
+          <tr>
+            <td>执行法院名称</td>
+            <td>{{sub.courtName}}</td>
+            <td>立案时间</td>
+            <td>{{sub.courtName}}</td>
+          </tr>
+          <tr>
+            <td>案号</td>
+            <td>{{sub.caseNo}}</td>
+            <td>执行标的</td>
+            <td>{{sub.execMoney}}</td>
+          </tr>
+          <tr>
+            <td>案件状态</td>
+            <td colspan="3">{{sub.caseState}}</td>
+          </tr>
+          <tr>
+            <td>标题</td>
+            <td colspan="3">{{sub.caseTitle}}</td>
+          </tr>
+          <tr>
+            <td>内容概要</td>
+            <td colspan="3">{{ sub.caseBody }}</td>
+          </tr>
+        </table>
+        <div class="line-title">2 失信公告</div>
+        <div class="divider-line-1"></div>
+        <div class="empty" v-if="item.hxcourtsxgg.length === 0">暂无数据</div>
+        <table class="detail-table" v-for="(sub,sIndex) in item.hxcourtsxgg" :key="'hxcourtsxgg_sub'+sIndex">
+          <tr>
+            <td>姓名</td>
+            <td>{{sub.pname}}</td>
+            <td>立案时间</td>
+            <td>{{sub.sortTimeString}}</td>
+          </tr>
+          <tr>
+            <td>身份证号</td>
+            <td>{{sub.idCardNo}}</td>
+            <td>履行情况</td>
+            <td>{{sub.shixinLxqk}}</td>
+          </tr>
+          <tr>
+            <td>执行法院</td>
+            <td>{{sub.courtName}}</td>
+            <td>作出执行依据单位</td>
+            <td>{{sub.execYjdw}}</td>
+          </tr>
+          <tr>
+            <td>案号</td>
+            <td colspan="3">{{sub.caseNo}}</td>
+          </tr>
+          <tr>
+            <td>失信被执行人行为具体情形</td>
+            <td colspan="3">{{ sub.shixinJtqx }}</td>
+          </tr>
+        </table>
+        <div class="line-title">3 裁判文书</div>
+        <div class="divider-line-1"></div>
+        <div class="empty" v-if="item.hxcourtcpws.length === 0">暂无数据</div>
+        <table class="detail-table" v-for="(sub,sIndex) in item.hxcourtcpws" :key="'hxcourtcpws_sub'+sIndex">
+          <tr>
+            <td>裁判文书ID</td>
+            <td>{{sub.cpwsId}}</td>
+            <td>案件类型</td>
+            <td>{{sub.caseType}}</td>
+          </tr>
+          <tr>
+            <td>审结时间</td>
+            <td>{{sub.sortTimeString}}</td>
+            <td>法院名称</td>
+            <td>{{sub.courtName}}</td>
+          </tr>
+          <tr>
+            <td>审理程序</td>
+            <td>{{sub.trialProcedure}}</td>
+            <td>案号</td>
+            <td>{{sub.caseNo}}</td>
+          </tr>
+          <tr>
+            <td>案由</td>
+            <td colspan="3">{{sub.caseCause}}</td>
+          </tr>
+          <tr>
+            <td>标题</td>
+            <td colspan="3">{{ sub.caseTitle }}</td>
+          </tr>
+          <tr>
+            <td>内容概要</td>
+            <td colspan="3">{{ sub.caseBody }}</td>
+          </tr>
+          <tr>
+            <td>裁判结果</td>
+            <td colspan="3">{{ sub.judgeResult }}</td>
+          </tr>
+          <tr>
+            <td>依据</td>
+            <td colspan="3">{{ sub.cpwsYiju }}</td>
+          </tr>
+        </table>
+        <div class="line-title">4 法院公告</div>
+        <div class="divider-line-1"></div>
+        <div class="empty" v-if="item.hxcourtfygg.length === 0">暂无数据</div>
+        <table class="detail-table" v-for="(sub,sIndex) in item.hxcourtfygg" :key="'hxcourtfygg_sub'+sIndex">
+          <tr>
+            <td>法院公告ID</td>
+            <td>{{sub.fyggId}}</td>
+            <td>公告类型</td>
+            <td>{{sub.ggType}}</td>
+          </tr>
+          <tr>
+            <td>姓名</td>
+            <td>{{sub.pname}}</td>
+            <td>发布时间</td>
+            <td>{{sub.sortTimeString}}</td>
+          </tr>
+          <tr>
+            <td>法院名称</td>
+            <td>{{sub.courtName}}</td>
+            <td>标题</td>
+            <td>{{sub.caseTitle}}</td>
+          </tr>
+          <tr>
+            <td>内容概要</td>
+            <td colspan="3">{{ sub.caseBody }}</td>
+          </tr>
+        </table>
+
+        <div class="line-title">5 开庭公告</div>
+        <div class="divider-line-1"></div>
+        <div class="empty" v-if="item.hxcourtktgg.length === 0">暂无数据</div>
+        <table class="detail-table" v-for="(sub,sIndex) in item.hxcourtktgg" :key="'hxcourtktgg_sub'+sIndex">
+          <tr>
+            <td>开庭公告ID</td>
+            <td>{{sub.ktggId}}</td>
+            <td>开庭时间</td>
+            <td>{{sub.sortTimeString}}</td>
+          </tr>
+          <tr>
+            <td>原告</td>
+            <td>{{sub.plainTiff}}</td>
+            <td>法院名称</td>
+            <td>{{sub.courtName}}</td>
+          </tr>
+          <tr>
+            <td>案号</td>
+            <td colspan="3">{{ sub.caseNo }}</td>
+          </tr>
+          <tr>
+            <td>案由</td>
+            <td colspan="3">{{ sub.caseCause }}</td>
+          </tr>
+          <tr>
+            <td>内容概要</td>
+            <td colspan="3">{{ sub.caseBody }}</td>
+          </tr>
+        </table>
+
+        <div class="line-title">6 限制消费</div>
+        <div class="divider-line-1"></div>
+        <table class="vue-table">
+          <tr>
+            <th>案号</th>
+            <th>性别</th>
+            <th>年龄</th>
+            <th>执行法院</th>
+            <th>地域名称</th>
+            <th>发布时间</th>
+            <th>立案时间</th>
+          </tr>
+          <tr v-for="(v, i) of item.hxcourtxzxf">
+            <td>{{v.elxgCaseCode}}</td>
+            <td>{{v.elxgSexName}}</td>
+            <td>{{v.elxgAge}}</td>
+            <td>{{v.elxgCourtName}}</td>
+            <td>{{v.elxgAreaName}}</td>
+            <td>{{v.elxgPublishDate}}</td>
+            <td>{{v.elxgRegDate}}</td>
+          </tr>
+        </table>
+        <div class="sub-gap"></div>
+        <div class="sub-gap"></div>
+        <div class="sub-gap"></div>
+        <div class="sub-gap"></div>
+        <div class="sub-gap"></div>
+        <div class="sub-gap"></div>
+      </div>
+      <div class="main-title">企业资信档案库</div>
+      <div class="main-title-desc">核心着力于企业风控，致力于数据赋能、科技赋能，提高线上杠杆，风控效率</div>
+      <div align="center">
+        <img src="../../../../assets/images/report/end.png" alt="图片加载失败" style="width:100%;">
+        <div class="sub-gap"></div>
+        <div class="sub-gap"></div>
+      </div>
+      <div class="main-title">报告使用说明</div>
+      <div class="main-title-desc">客户使用本报告，需经过被查询人授权，客户承担因授权不充分引起的任何法律责任</div>
+      <div class="main-title-desc">本报告仅限客户内部使用，请妥善保存本报告，不得向任何第三方泄露或允许任何第三方使用本报告</div>
+      <div class="main-title-desc">本报告仅供客户参考，不作为客户决策的依据</div>
+    </div>
+  </div>
+  <script>
+    var myChart = echarts.init(document.getElementById('main'));
+
+    // 指定图表的配置项和数据
+    var option = {
+      color: ["#409EFF", "#67C23A", "#F5A623", "#A840FF"],
+      tooltip: {
+        trigger: "item",
+        formatter: (info) => {
+          return `${info.marker}${info.name}<br/>数量：${info.value}<br/>占比：${info.percent}%`;
+        },
+      },
+      radar: [
+        {
+          indicator: [
+            { text: "经营规模", max: 100 },
+            { text: "成长性", max: 100 },
+            { text: "负面消息", max: 100 },
+            { text: "基本面", max: 100 },
+            { text: "稳定性", max: 100 },
+          ],
+          center: ["45%", "50%"],
+          radius: "80%",
+        },
+      ],
+      series: [
+        {
+          type: "radar",
+          areaStyle: {},
+          // data: data && data.map((i) => i),
+          data: [
+            {
+              value: [60, 73, 85, 40, 90],
+              name: "某软件",
+            },
+          ]
+        },
+      ],
+    };
+
+    // 使用刚指定的配置项和数据显示图表。
+    myChart.setOption(option);
+  </script>
+  <script>
+    var app = new Vue({
+      el: "#root",
+      data: {
+        data: data,
+      }
+    })
+  </script>
+</body>
+
+</html>

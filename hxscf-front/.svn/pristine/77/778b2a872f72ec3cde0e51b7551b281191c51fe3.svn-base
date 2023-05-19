@@ -1,0 +1,214 @@
+/*
+ * @Author: mingliang.zhu 
+ * @Date: 2020-09-15 11:39:53 
+ * @Last Modified by: mingliang.zhu
+ * @Last Modified time: 2021-02-24 16:16:40
+ */
+<template>
+    <div v-loading="loading">
+        <!-- <content-wrapper>
+            <template slot="grid">
+                <el-row :gutter="14">
+                    <el-col :span="4" v-for="(item,index) in menus" :key="index">
+                        <el-card class="box-card" :body-style="{ padding: '10px' }">
+                            <div class="card-header">
+                                <b :style="{background:item.iconColor}"> <i :class="item.icon"></i></b>
+                                <span @click="handleDetail(item)"> {{item.name}}</span>
+                            </div>
+                        </el-card>
+                    </el-col>
+                </el-row>
+            </template>
+            <template slot="grid">
+                <el-row :gutter="14">
+                    <el-col :span="8" v-for="(item,index) in list" :key="index">
+                        <el-card class="box-card-large" :body-style="{ padding: '10px' }">
+                            <div slot="header" class="clearfix">
+                                <span class="mainTitle">{{item.name}}
+                                    <el-badge class="mark" :value="data[item.key].length" />
+                                </span>
+                                <el-button style="float: right; padding: 3px 0" type="text">查看全部</el-button>
+                            </div>
+                            <div v-for="(sub,subIndex) in data[item.key].slice(0,2)" :key="subIndex" style="cursor:pointer">
+                                <div class="subTitle">{{sub.title}}</div>
+
+                                <div class="info">
+                                    {{sub.info}}
+                                </div>
+                                <time class="time">{{ $moment(sub.date).format("YYYY-MM-DD HH:mm:ss") }}</time>
+                                <el-divider v-if="subIndex != 1"></el-divider>
+                            </div>
+                        </el-card>
+                    </el-col>
+                </el-row>
+            </template>
+        </content-wrapper>
+        <br> -->
+        <NoticeMessage></NoticeMessage>
+
+    </div>
+</template>
+
+<script lang="ts">
+import { Vue, Component } from "vue-property-decorator";
+import { namespace } from "vuex-class";
+const home = namespace("home");
+import { ContentWrapper } from "@/components";
+import NoticeMessage from "./noticeMessage/index.vue";// 通知消息
+@Component({
+    components: {
+        "content-wrapper": ContentWrapper,
+        NoticeMessage,
+    },
+})
+export default class Home extends Vue {
+    @home.State data;
+    @home.Action getHomeData;
+    @home.State loading;
+    public menus: any = [
+        {
+            name: "企业资信管理",
+            icon: "iconfont icon-gongzuotai",
+            iconColor: "#ffd77a",
+        },
+        {
+            name: "企业授信管理",
+            icon: "iconfont icon-guibin1",
+            iconColor: "#132379",
+        },
+        {
+            name: "企业风险追溯管理",
+            icon: "iconfont icon-suofang",
+            iconColor: "#6e72d7",
+        },
+        {
+            name: "行业分析管理",
+            icon: "iconfont icon-store",
+            iconColor: "#ffbb1f",
+        },
+        {
+            name: "模型平台",
+            icon: "iconfont icon-app",
+            iconColor: "#cf0e40",
+        },
+        {
+            name: "数据平台",
+            icon: "iconfont icon-system",
+            iconColor: "#d78fe9",
+        },
+    ];
+    public list: any = [
+        { name: "系统通知", key: "sysInforList" },
+        { name: "待办事项", key: "toDoList" },
+        { name: "审核通知", key: "auditList" },
+    ];
+    created() {
+        this.getHomeData();
+    }
+    handleDetail(row) {}
+}
+</script>
+
+<style scoped lang="scss">
+.box-card-large {
+    height: 350px;
+    .mainTitle {
+        font-weight: bold;
+        font-size: 22px;
+        padding: 20px 10px 0;
+    }
+    .subTitle {
+        font-weight: bold;
+        font-size: 17px;
+        padding: 10px 20px 0;
+    }
+    .info {
+        color: #909399;
+        padding: 15px 20px;
+        font-size: 14px;
+    }
+    .time {
+        padding: 20px;
+        color: #999;
+    }
+}
+.box-card {
+    background: linear-gradient(50deg, #b9c4fd, #7988ff);
+    // background: linear-gradient(to top, #74ebd5, #acb6e5);
+    // background: linear-gradient(to top, #00d2ff, #3a7bd5);
+    transition: all ease 0.3s;
+    padding: 18px;
+    position: relative;
+    height: 150px;
+    margin-bottom: 14px;
+    &:hover {
+        box-shadow: 0 2px 18px 0 rgba(0, 0, 0, 0.3);
+        .card-header {
+            b {
+                padding: 10px;
+                margin: 0;
+                i.iconfont {
+                    font-size: 34px;
+                }
+            }
+        }
+    }
+    .card-header {
+        padding-top: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+
+        b {
+            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            margin: 10px;
+            line-height: 38px;
+            text-align: center;
+            transition: all ease 0.3s;
+        }
+        i {
+            font-size: 20px;
+            color: #fff;
+            transition: all ease 0.3s;
+        }
+        span {
+            font-weight: bold;
+            font-size: 20px;
+            color: #3c3d40;
+            display: inline-block;
+            margin: 10px 0;
+            position: relative;
+            cursor: pointer;
+            &:hover {
+                animation: shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+                transform: translate3d(0, 0, 0);
+                backface-visibility: hidden;
+                perspective: 1000px;
+            }
+        }
+    }
+}
+
+@keyframes shake {
+    10%,
+    90% {
+        transform: translate3d(-1px, 0, 0);
+    }
+    20%,
+    80% {
+        transform: translate3d(2px, 0, 0);
+    }
+    30%,
+    50%,
+    70% {
+        transform: translate3d(-4px, 0, 0);
+    }
+    40%,
+    60% {
+        transform: translate3d(4px, 0, 0);
+    }
+}
+</style>

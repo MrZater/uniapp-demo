@@ -1,0 +1,28 @@
+<template>
+  <div>
+    <content-wrapper>
+     
+    </content-wrapper>
+  </div>
+</template>
+
+<script lang="ts">
+import { Vue, Component } from "vue-property-decorator";
+import ContentWrapper from "@/components/ContentWrapper.vue";
+import { Pages } from "@/components";
+import { namespace, State } from "vuex-class";
+const {{name}} = namespace('{{name}}');
+
+@Component({
+  components: {
+    "content-wrapper": ContentWrapper,
+    Pages
+  }
+})
+export default class Grid extends Vue {
+
+}
+</script>
+
+<style scoped lang="scss">
+</style>

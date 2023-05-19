@@ -1,0 +1,29 @@
+/* 重置 el-step 步骤条样式 */
+.custom {
+  margin-top: 30px;
+  .el-step__title.is-process {
+    color: #409eff;
+  }
+  .el-step__head.is-process {
+    color: #409eff;
+    .el-step__icon.is-text {
+      border: 2px solid #409eff;
+    }
+  }
+  .el-step__title.is-success {
+    color: #409eff;
+  }
+  .el-step__head.is-success {
+    color: #409eff;
+    border-color: #409eff;
+    .el-step__icon.is-icon {
+      width: 24px;
+      height: 24px;
+      border: 2px solid #409eff;
+      border-radius: 50%;
+    }
+    .el-step__icon.is-text {
+      border: 2px solid #409eff;
+    }
+  }
+}

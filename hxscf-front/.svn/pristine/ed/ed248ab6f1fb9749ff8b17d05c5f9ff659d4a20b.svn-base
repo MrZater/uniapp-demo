@@ -1,0 +1,38 @@
+{
+  "code": "00000",
+  "data": {
+    "loan_usages": [
+      {
+        "id": "1",
+        "value": "买房"
+      },
+      {
+        "id": "2",
+        "value": "买车"
+      },
+      {
+        "id": "3",
+        "value": "装修"
+      },
+      {
+        "id": "4",
+        "value": "创业"
+      },
+      {
+        "id": "5",
+        "value": "投资"
+      }
+    ],
+    "cust_source": [
+      {
+        "id": "1",
+        "value": "H5注册"
+      },
+      {
+        "id": "2",
+        "value": "APP注册"
+      }
+    ]
+  },
+  "msg": "success"
+}

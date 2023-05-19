@@ -1,0 +1,88 @@
+import Mock from "mockjs";
+// 授信通知管理
+Mock.mock(/\/approve\/creditNotice\/list/, "post", () => {
+  return {
+    code: "00000",
+    data: {
+      total: 4,
+      list: [
+        {
+          "id": "1",
+          "code1": "放假了",
+          "code2": "1",
+          "code3": "朱明亮",
+          "code4": 1606824307000,
+          "code5": "朱明亮",
+        },
+        {
+          "id": "2",
+          "code1": "放假了",
+          "code2": "1",
+          "code3": "朱明亮",
+          "code4": 1606824307000,
+          "code5": "朱明亮",
+        },
+        {
+          "id": "3",
+          "code1": "放假了",
+          "code2": "1",
+          "code3": "朱明亮",
+          "code4": 1606824307000,
+          "code5": "朱明亮",
+        }
+      ],
+      pageNum: 2,
+      pageSize: 10,
+
+    },
+    msg: "操作成功!",
+  };
+});
+// 启停用
+Mock.mock(/\/approve\/creditNotice\/startOrStop/, "post", () => {
+  return {
+    code: "00000",
+    data: null,
+    msg: "操作成功!",
+  };
+});
+
+// 详情
+Mock.mock(/\/approve\/creditNotice\/detail/, "post", () => {
+  return {
+    code: "00000",
+    data: {
+      roleName: "张三",
+      noticeMode: ["01"],
+      orgIdList: ["systemmanageorg"],
+      noticeUsers: [
+        {
+          code11: "张三",
+          code22: "海峡",
+          code33: "财务",
+          code44: "主管",
+        },
+        {
+          code11: "张三",
+          code22: "海峡",
+          code33: "财务",
+          code44: "主管",
+        },
+        {
+          code11: "张三",
+          code22: "海峡",
+          code33: "财务",
+          code44: "主管",
+        },
+        {
+          code11: "张三",
+          code22: "海峡",
+          code33: "财务",
+          code44: "主管",
+        },
+      ],
+
+    },
+    msg: "操作成功!",
+  };
+});

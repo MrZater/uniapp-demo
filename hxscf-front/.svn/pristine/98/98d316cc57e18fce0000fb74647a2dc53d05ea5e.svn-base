@@ -1,0 +1,143 @@
+<template>
+    <el-dialog :title="dialogForm.keyNo ? '编辑' : '新增'" :visible.sync="visible" @closed="reset" width="460px" class="br-dialog">
+        <el-form :model="dialogForm" :rules="rules" ref="forms" label-width="100px" size="small">
+            <el-form-item class="br-form-item-label" label="组织名称" prop="orgName">
+                <el-select v-model="dialogForm.orgName" placeholder="请选择组织名称" class="br-select-large tree-select" :popper-append-to-body="false" ref="treeSelect">
+                    <el-option value="null">
+                        <el-tree :data="orgNameList" @node-click="onLeavesClick" node-key="id" :props="defaultProps"></el-tree>
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item class="br-form-item-label" label="行业名称" prop="tradeName">
+                <el-input class="br-input-large" placeholder="请输入行业名称" v-model.trim="dialogForm.tradeName"></el-input>
+            </el-form-item>
+            <el-form-item class="br-form-item-label" label="资信调查模板" prop="bizsurveyModel">
+                <el-select class="br-select-large" v-model="dialogForm.bizsurveyModel">
+                    <el-option v-for="(item,index) of $select('modelType')" :key="index" :label="item.text" :value="item.value">
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item class="br-form-item-label" label="动态追溯模板" prop="dyntrackModel">
+                <el-select class="br-select-large" v-model="dialogForm.dyntrackModel">
+                    <el-option v-for="(item,index) of $select('dynamicModelType')" :key="index" :label="item.text" :value="item.value">
+                    </el-option>
+                </el-select>
+            </el-form-item>
+
+        </el-form>
+        <div slot="footer" class="br-dialog-footer">
+            <el-button type="primary" class="br-btn-large" @click="handleSubmit" :loading="btnloading">保存</el-button>
+            <el-button class="br-btn-large" @click="visible = false">取消</el-button>
+        </div>
+
+    </el-dialog>
+</template>
+<script lang="ts">
+import { namespace } from "vuex-class";
+import { Vue, Component } from "vue-property-decorator";
+const configManage = namespace("configManage");
+const tradeInfoManage = namespace("tradeInfoManage");
+
+@Component({})
+export default class Dialog extends Vue {
+    @tradeInfoManage.Action queryAddOrUpdate;
+    @tradeInfoManage.Action queryList;
+    @tradeInfoManage.State searchData;
+    @configManage.State orgNameList;
+    dialogForm: any = {
+        keyNo: "",
+        tradeCode: "",
+        tradeName: "",
+        bizsurveyModel: "",
+        dyntrackModel: "",
+        orgName: "",
+        orgPcode: "",
+    };
+    btnloading: boolean = false;
+    visible: boolean = false;
+    rules: object = {
+        tradeName: [
+            { required: true, trigger: "blur", message: "请输入行业名称" },
+        ],
+        bizsurveyModel: [
+            {
+                required: true,
+                trigger: "change",
+                message: "请选择资信调查模板",
+            },
+        ],
+        dyntrackModel: [
+            {
+                required: true,
+                trigger: "change",
+                message: "请选择动态追溯模板",
+            },
+        ],
+        orgName: [
+            {
+                required: true,
+                trigger: "change",
+                message: "请选选择组织名称",
+            },
+        ],
+    };
+    defaultProps = {
+        children: "children",
+        label: "label",
+    };
+
+    init(row) {
+        this.visible = true;
+        this.$nextTick(() => {
+            if (row.keyNo) {
+                this.dialogForm = {
+                    keyNo: row.keyNo,
+                    tradeCode: row.tradeCode,
+                    tradeName: row.tradeName,
+                    bizsurveyModel: row.bizsurveyModel,
+                    dyntrackModel: row.dyntrackModel,
+                    orgName: row.orgName,
+                    orgPcode: row.orgPcode,
+                };
+            }
+        });
+    }
+
+    reset() {
+        let $ele: any = this.$refs["forms"];
+        $ele.resetFields();
+        this.dialogForm.keyNo = "";
+        this.dialogForm.orgPcode = "";
+    }
+    handleSubmit() {
+        let $ele: any = this.$refs["forms"];
+        $ele.validate((valid) => {
+            if (valid) {
+                this.btnloading = true;
+                this.queryAddOrUpdate(this.dialogForm)
+                    .then((msg) => {
+                        this.$message({
+                            type: "success",
+                            message: msg,
+                        });
+                        this.visible = false;
+                        this.queryList(this.searchData);
+                    })
+                    .finally(() => (this.btnloading = false));
+            } else {
+                return false;
+            }
+        });
+    }
+
+    //点击组织名称
+    onLeavesClick(data, node, el) {
+        this.dialogForm["orgName"] = data.label;
+        this.dialogForm["orgPcode"] = data.id;
+        this.$refs.treeSelect["handleClose"]();
+    }
+}
+</script>
+
+<style lang="scss" scoped>
+</style>

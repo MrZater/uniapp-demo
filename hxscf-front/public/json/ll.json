@@ -1,0 +1,22 @@
+{
+    "code": "00000",
+    "data": [
+        {
+            "postName": "文案策划专员",
+            "postCode": "421771c917c640398f2403443166394a",
+            "orgName": "运营部",
+            "orgCode": "b0f8c844da3f4f329c53389996f33cd2",
+            "orgPname": "海峡供应链公司",
+            "orgPcode": "ddd8b5268515489c92c9b54998467313"
+        },
+        {
+            "postName": "运营主管",
+            "postCode": "645751da2f9046babab8c6b10079fa07",
+            "orgName": "运营部",
+            "orgCode": "b0f8c844da3f4f329c53389996f33cd2",
+            "orgPname": "海峡供应链公司",
+            "orgPcode": "ddd8b5268515489c92c9b54998467313"
+        }
+    ],
+    "msg": "操作成功!"
+}

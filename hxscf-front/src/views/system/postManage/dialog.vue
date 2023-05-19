@@ -1,0 +1,84 @@
+<template>
+    <el-dialog class="br-dialog" :title="dialogForm.postCode?'编辑':'新增'" :visible.sync="dialogVisible" width="400px" @close="reset">
+        <el-form ref="forms" :model="dialogForm" label-width="100px" :rules="rules" size="small">
+            <el-form-item class="br-form-item-label" label="岗位名称" prop="postName">
+                <el-input class="br-input" v-model.trim="dialogForm.postName" placeholder="请输入"></el-input>
+            </el-form-item>
+            <el-form-item class="br-form-item-label" label="岗位描述" prop="remark">
+                <el-input type="textarea" show-word-limit maxlength="200" class="br-input" v-model.trim="dialogForm.remark" placeholder="请输入"></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="br-dialog-footer">
+            <el-button type="primary" class="br-btn-large" @click="handleSubmit" :loading="btnloading">保存</el-button>
+            <el-button class="br-btn-large" @click="dialogVisible = false">取消</el-button>
+        </div>
+    </el-dialog>
+</template>
+<script lang="ts">
+import { namespace } from "vuex-class";
+import { Vue, Component } from "vue-property-decorator";
+const postManage = namespace("postManage");
+
+@Component({})
+export default class Dialog extends Vue {
+    @postManage.Action addAndUpdatePostFN;
+    @postManage.Action queryPostList;
+
+    dialogForm: any = {
+        postName: "", //岗位名称
+        remark: "", // 描述
+        postCode: "", // 岗位编码
+    };
+    btnloading: boolean = false;
+    dialogVisible: boolean = false;
+    rules = {
+        postName: [
+            { required: true, message: "请输入岗位名称", trigger: "blur" },
+        ],
+    };
+
+    init(row) {
+        this.dialogVisible = true;
+        this.$nextTick(() => {
+            if (row && row.postCode) {
+                this.dialogForm = {
+                    postName: row.postName,
+                    remark: row.remark,
+                    postCode: row.postCode,
+                };
+            }
+        });
+    }
+    reset() {
+        let $ele: any = this.$refs["forms"];
+        $ele.resetFields();
+    }
+    handleSubmit() {
+        let $ele: any = this.$refs["forms"];
+        $ele.validate((valid) => {
+            if (valid) {
+                this.btnloading = true;
+                this.addAndUpdatePostFN(this.dialogForm)
+                    .then((msg) => {
+                        this.$message({
+                            type: "success",
+                            message: msg,
+                        });
+                        this.dialogVisible = false;
+                        this.queryPostList({
+                            pageNum: 1,
+                            pageSize: 10,
+                            postName: "",
+                        });
+                    })
+                    .finally(() => (this.btnloading = false));
+            } else {
+                return false;
+            }
+        });
+    }
+}
+</script>
+
+<style lang="scss">
+</style>

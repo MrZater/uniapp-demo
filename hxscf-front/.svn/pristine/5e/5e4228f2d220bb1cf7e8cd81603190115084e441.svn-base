@@ -1,0 +1,29 @@
+<template>
+    <div>
+        <search-wrapper>
+            <el-form :inline="true" :model="formParams" label-width="65px" ref="searchForm" size="small">
+            </el-form>
+        </search-wrapper>
+    </div>
+</template>
+
+<script lang="ts">
+
+    import {Vue, Component} from "vue-property-decorator";
+    import SearchWrapper from "@/components/SearchWrapper.vue";
+    import { namespace, Action } from "vuex-class";
+    const {{name}} = namespace('{{name}}');
+
+    @Component({
+        components: {
+            "search-wrapper": SearchWrapper
+        }
+    })
+    export default class Search extends Vue {
+        
+    }
+</script>
+
+<style scoped lang="scss">
+
+</style>

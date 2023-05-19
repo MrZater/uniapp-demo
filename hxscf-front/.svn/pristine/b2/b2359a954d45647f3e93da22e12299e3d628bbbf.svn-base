@@ -1,0 +1,237 @@
+<template>
+    <div>
+        <content-wrapper>
+            <template slot="title">
+                企业资信管理列表
+            </template>
+            <template slot="extra-btn">
+                <renderBtn code="enterprise_credits_manage_export">
+                    <el-button class="br-btn" type="primary" :disabled="(checkedRows.length > 0 ? false : true)" @click="onExport">导出</el-button>
+                </renderBtn>
+                <renderBtn code="enterprise_credits_manage_downform">
+                    <el-button class="br-btn-large" type="primary" :disabled="(checkedRows.length > 0 ? false : true)">下载审批表</el-button>
+                </renderBtn>
+            </template>
+            <template slot="grid">
+                <el-table stripe :data="list.list" class="br-table" border v-loading="loading" @selection-change="handleSelectionChange">
+                    <el-table-column type="selection" width="55" />
+                    <el-table-column type="expand">
+                        <template slot-scope="{row}">
+                            <el-form label-position="left" inline class="demo-table-expand">
+                                <el-form-item label="资信编号">
+                                    <span>{{ row.surveyId }}</span>
+                                </el-form-item>
+                                <el-form-item label="企业角色">
+                                    <span>{{handleRules(row.bizRoles)}}</span>
+                                </el-form-item>
+                                <el-form-item label="组织机构">
+                                    <span>{{ row.businessOrgPname }}</span>
+                                </el-form-item>
+                                <el-form-item label="业务部门">
+                                    <span>{{ row.businessOrgName }}</span>
+                                </el-form-item>
+                                <el-form-item label="创建人">
+                                    <span>{{ row.createUserName }}</span>
+                                </el-form-item>
+                                <el-form-item label="创建时间">
+                                    <span>{{ row.createTime | time }}</span>
+                                </el-form-item>
+
+                                <el-form-item label="资信到期日">
+                                    <span>{{ row.endDate | time }}</span>
+                                </el-form-item>
+                            </el-form>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="企业名称" prop="bizName" min-width="300">
+                        <template slot-scope="{row}">
+                            <el-link type="primary" :underline="false" @click="enterprise(row)">{{row.bizName}}</el-link>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="信用等级" prop="riskLevel" min-width="120" />
+                    <el-table-column label="信用评分" prop="riskScore" min-width="120" />
+                    <el-table-column label="状态" prop="apprState" min-width="120">
+                        <template slot-scope="{row}">
+                            <el-tag size="mini" :type="row.apprState | statusFilter">{{ $code("templateStatus",row.apprState ) }}</el-tag>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="审批表" width="100">
+                        <template slot-scope="{row}">
+                            <renderBtn code="enterprise_credit_manage_prev" v-if="row.apprState == '03' || row.apprState == '04'">
+                                <el-button type="text" size="mini" @click="onPreview(row)">预览</el-button>
+                            </renderBtn>
+                        </template>
+                    </el-table-column>
+                    <el-table-column label="操作" width="250">
+                        <template slot-scope="{row}">
+                            <renderBtn code="enterprise_credits_manage_subcheck">
+                                <el-button type="text" size="mini" @click="onSubmit(row)" :disabled="!(row.apprState == '01' && row.apprPhase == 'A01')">提交审核</el-button>
+                            </renderBtn>
+                            <renderBtn code="enterprise_credits_manage_resub">
+                                <el-button type="text" size="mini" @click="onRetrySubmit(row)" :disabled="!(row.apprState == '01' && row.apprPhase == 'A03')">重新提交</el-button>
+                            </renderBtn>
+                            <renderBtn code="enterprise_credits_manage_dets">
+                                <el-button type="text" size="mini" @click="onDetail(row)" :disabled="!(row.apprState != '01')">详情</el-button>
+                            </renderBtn>
+                            <renderBtn code="enterprise_credits_manage_back">
+                                <el-button type="text" size="mini" :disabled="!(row.apprState == '02')" @click="onRevoke(row)">撤回</el-button>
+                            </renderBtn>
+                            <renderBtn code="enterprise_credits_manage_del">
+                                <el-popconfirm title="确认删除吗？" @onConfirm="onDelete(row)">
+                                    <el-button type="text" size="mini" slot="reference" :disabled="!(row.apprState == '01')">删除</el-button>
+                                </el-popconfirm>
+                            </renderBtn>
+                        </template>
+                    </el-table-column>
+                </el-table>
+                <Pages :pageNum="list.pageNum" :pageSize="list.pageSize" :total="list.total" @changePage="onChangePage" />
+            </template>
+        </content-wrapper>
+        <Preview ref="preview"></Preview>
+    </div>
+</template>
+
+<script lang="ts">
+import { Vue, Component } from "vue-property-decorator";
+import { namespace } from "vuex-class";
+const enterpriseCreditManage = namespace("enterpriseCreditManage");
+import ContentWrapper from "@/components/ContentWrapper.vue";
+import { Pages } from "@/components";
+import Preview from "./preview.vue";
+
+@Component({
+    components: {
+        "content-wrapper": ContentWrapper,
+        Pages,
+        Preview,
+    },
+    filters: {
+        statusFilter(status) {
+            const statusMap = {
+                "01": "info", // 待送审
+                "02": "", // 审核中
+                "03": "success", // 生效中
+                "04": "danger", // 已停用
+                "05": "warning", // 已拒绝
+            };
+            return statusMap[status];
+        },
+    },
+})
+export default class Grid extends Vue {
+    @enterpriseCreditManage.State list;
+    @enterpriseCreditManage.State searchData;
+    @enterpriseCreditManage.State loading;
+    @enterpriseCreditManage.Action queryList;
+    @enterpriseCreditManage.Action saveSearchDataFN;
+    @enterpriseCreditManage.Action queryDeleteFN;
+    @enterpriseCreditManage.Action queryRevoke;
+
+    checkedRows = [];
+
+    // 多选
+    handleSelectionChange(row) {
+        this.checkedRows = row;
+    }
+    // 企业名称
+    enterprise(row) {
+        this.$router.push({
+            path: "/enterpriseInfoDetail",
+            name: "enterpriseInfoDetail",
+            query: {
+                custId: row.custId || "",
+                creditCode: row.creditCode || "",
+                isCreate: "1",
+            },
+        });
+    }
+    // 处理企业角色
+    handleRules(row) {
+        if (row && row instanceof Array) {
+            let list: any = [];
+            row.map((item) => {
+                list.push(this.$code("bizRoles", item));
+            });
+            return list.join("，");
+        }
+    }
+    // 预览
+    onPreview(row) {
+        (this.$refs["preview"] as any).init(row);
+    }
+
+    // 详情
+    onDetail(row) {
+        this.$router.push({
+            path: "/enterpriseCreditManage/detail",
+            name: "enterpriseCreditManageDetail",
+            query: {
+                surveyId: row.surveyId,
+                custId: row.custId,
+                apprState: row.apprState,
+            },
+        });
+    }
+    // 撤回
+    onRevoke(row) {
+        this.queryRevoke({ surveyId: row.surveyId }).then((msg) => {
+            this.$message({ type: "success", message: msg });
+            this.queryList(this.searchData);
+        });
+    }
+    // 提交审核
+    onSubmit(row) {
+        this.$router.push({
+            path: "/enterpriseInfoManage/survey",
+            name: "survey",
+            query: row,
+        });
+    }
+    // 重新提交
+    onRetrySubmit(row) {}
+
+    // 删除
+    onDelete(row) {
+        this.queryDeleteFN({ surveyId: row.surveyId }).then((msg) => {
+            this.$message({ type: "success", message: msg });
+            this.queryList(this.searchData);
+        });
+    }
+    // 页码
+    onChangePage(val) {
+        let parame = {
+            ...this.searchData,
+            pageNum: val.pageNum,
+            pageSize: val.pageSize,
+        };
+        this.queryList(parame);
+        this.saveSearchDataFN(parame);
+    }
+    // 导出
+    onExport() {
+        let ids = this.checkedRows.map((item: any) => item.surveyId);
+        window.location.href = `/approve/loanFile/creditStad/exportCredit/${ids}`;
+    }
+}
+</script>
+<style lang="scss" scoped>
+.demo-table-expand {
+    font-size: 0;
+}
+.demo-table-expand /deep/label.el-form-item__label {
+    width: 75px;
+    color: #99a9bf;
+    font-size: 12px;
+}
+.demo-table-expand /deep/ .el-form-item {
+    margin-left: 112px;
+    margin-right: 0;
+    margin-bottom: 0;
+    width: 400px;
+    .el-form-item__content {
+        .expand-collapse {
+            margin-left: 5px;
+        }
+    }
+}
+</style>

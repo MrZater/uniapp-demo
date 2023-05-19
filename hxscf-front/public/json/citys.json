@@ -1,0 +1,5004 @@
+{
+  "city": [
+    {
+      "areaCode": "11",
+      "areaPcode": "0",
+      "areaName": "北京"
+    },
+    {
+      "areaCode": "12",
+      "areaPcode": "0",
+      "areaName": "天津"
+    },
+    {
+      "areaCode": "13",
+      "areaPcode": "0",
+      "areaName": "河北"
+    },
+    {
+      "areaCode": "14",
+      "areaPcode": "0",
+      "areaName": "山西"
+    },
+    {
+      "areaCode": "15",
+      "areaPcode": "0",
+      "areaName": "内蒙古"
+    },
+    {
+      "areaCode": "21",
+      "areaPcode": "0",
+      "areaName": "辽宁"
+    },
+    {
+      "areaCode": "22",
+      "areaPcode": "0",
+      "areaName": "吉林"
+    },
+    {
+      "areaCode": "23",
+      "areaPcode": "0",
+      "areaName": "黑龙江"
+    },
+    {
+      "areaCode": "31",
+      "areaPcode": "0",
+      "areaName": "上海"
+    },
+    {
+      "areaCode": "32",
+      "areaPcode": "0",
+      "areaName": "江苏"
+    },
+    {
+      "areaCode": "33",
+      "areaPcode": "0",
+      "areaName": "浙江"
+    },
+    {
+      "areaCode": "34",
+      "areaPcode": "0",
+      "areaName": "安徽"
+    },
+    {
+      "areaCode": "35",
+      "areaPcode": "0",
+      "areaName": "福建"
+    },
+    {
+      "areaCode": "36",
+      "areaPcode": "0",
+      "areaName": "江西"
+    },
+    {
+      "areaCode": "37",
+      "areaPcode": "0",
+      "areaName": "山东"
+    },
+    {
+      "areaCode": "41",
+      "areaPcode": "0",
+      "areaName": "河南"
+    },
+    {
+      "areaCode": "42",
+      "areaPcode": "0",
+      "areaName": "湖北"
+    },
+    {
+      "areaCode": "43",
+      "areaPcode": "0",
+      "areaName": "湖南"
+    },
+    {
+      "areaCode": "44",
+      "areaPcode": "0",
+      "areaName": "广东"
+    },
+    {
+      "areaCode": "45",
+      "areaPcode": "0",
+      "areaName": "广西"
+    },
+    {
+      "areaCode": "46",
+      "areaPcode": "0",
+      "areaName": "海南"
+    },
+    {
+      "areaCode": "50",
+      "areaPcode": "0",
+      "areaName": "重庆"
+    },
+    {
+      "areaCode": "51",
+      "areaPcode": "0",
+      "areaName": "四川"
+    },
+    {
+      "areaCode": "52",
+      "areaPcode": "0",
+      "areaName": "贵州"
+    },
+    {
+      "areaCode": "53",
+      "areaPcode": "0",
+      "areaName": "云南"
+    },
+    {
+      "areaCode": "54",
+      "areaPcode": "0",
+      "areaName": "西藏"
+    },
+    {
+      "areaCode": "61",
+      "areaPcode": "0",
+      "areaName": "陕西"
+    },
+    {
+      "areaCode": "62",
+      "areaPcode": "0",
+      "areaName": "甘肃"
+    },
+    {
+      "areaCode": "63",
+      "areaPcode": "0",
+      "areaName": "青海"
+    },
+    {
+      "areaCode": "64",
+      "areaPcode": "0",
+      "areaName": "宁夏回族自治区"
+    },
+    {
+      "areaCode": "65",
+      "areaPcode": "0",
+      "areaName": "新疆维吾尔自治区"
+    },
+    {
+      "areaCode": "71",
+      "areaPcode": "0",
+      "areaName": "台湾"
+    },
+    {
+      "areaCode": "81",
+      "areaPcode": "0",
+      "areaName": "香港"
+    },
+    {
+      "areaCode": "91",
+      "areaPcode": "0",
+      "areaName": "澳门"
+    },
+    {
+      "areaCode": "1101",
+      "areaPcode": "11",
+      "areaName": "北京市辖"
+    },
+    {
+      "areaCode": "1102",
+      "areaPcode": "11",
+      "areaName": "北京县辖"
+    },
+    {
+      "areaCode": "1201",
+      "areaPcode": "12",
+      "areaName": "天津市辖"
+    },
+    {
+      "areaCode": "1202",
+      "areaPcode": "12",
+      "areaName": "天津县辖"
+    },
+    {
+      "areaCode": "1301",
+      "areaPcode": "13",
+      "areaName": "石家庄"
+    },
+    {
+      "areaCode": "1302",
+      "areaPcode": "13",
+      "areaName": "唐山"
+    },
+    {
+      "areaCode": "1303",
+      "areaPcode": "13",
+      "areaName": "秦皇岛"
+    },
+    {
+      "areaCode": "1304",
+      "areaPcode": "13",
+      "areaName": "邯郸"
+    },
+    {
+      "areaCode": "1305",
+      "areaPcode": "13",
+      "areaName": "邢台"
+    },
+    {
+      "areaCode": "1306",
+      "areaPcode": "13",
+      "areaName": "保定"
+    },
+    {
+      "areaCode": "1307",
+      "areaPcode": "13",
+      "areaName": "张家口"
+    },
+    {
+      "areaCode": "1308",
+      "areaPcode": "13",
+      "areaName": "承德"
+    },
+    {
+      "areaCode": "1309",
+      "areaPcode": "13",
+      "areaName": "沧州"
+    },
+    {
+      "areaCode": "1310",
+      "areaPcode": "13",
+      "areaName": "廊坊"
+    },
+    {
+      "areaCode": "1311",
+      "areaPcode": "13",
+      "areaName": "衡水"
+    },
+    {
+      "areaCode": "1401",
+      "areaPcode": "14",
+      "areaName": "太原"
+    },
+    {
+      "areaCode": "1402",
+      "areaPcode": "14",
+      "areaName": "大同"
+    },
+    {
+      "areaCode": "1403",
+      "areaPcode": "14",
+      "areaName": "阳泉"
+    },
+    {
+      "areaCode": "1404",
+      "areaPcode": "14",
+      "areaName": "长治"
+    },
+    {
+      "areaCode": "1405",
+      "areaPcode": "14",
+      "areaName": "晋城"
+    },
+    {
+      "areaCode": "1406",
+      "areaPcode": "14",
+      "areaName": "朔州"
+    },
+    {
+      "areaCode": "1407",
+      "areaPcode": "14",
+      "areaName": "晋中"
+    },
+    {
+      "areaCode": "1408",
+      "areaPcode": "14",
+      "areaName": "运城"
+    },
+    {
+      "areaCode": "1409",
+      "areaPcode": "14",
+      "areaName": "忻州"
+    },
+    {
+      "areaCode": "1410",
+      "areaPcode": "14",
+      "areaName": "临汾"
+    },
+    {
+      "areaCode": "1423",
+      "areaPcode": "14",
+      "areaName": "吕梁地区"
+    },
+    {
+      "areaCode": "1501",
+      "areaPcode": "15",
+      "areaName": "呼和浩特"
+    },
+    {
+      "areaCode": "1502",
+      "areaPcode": "15",
+      "areaName": "包头"
+    },
+    {
+      "areaCode": "1503",
+      "areaPcode": "15",
+      "areaName": "乌海"
+    },
+    {
+      "areaCode": "1504",
+      "areaPcode": "15",
+      "areaName": "赤峰"
+    },
+    {
+      "areaCode": "1505",
+      "areaPcode": "15",
+      "areaName": "通辽"
+    },
+    {
+      "areaCode": "1521",
+      "areaPcode": "15",
+      "areaName": "呼伦贝尔盟"
+    },
+    {
+      "areaCode": "1522",
+      "areaPcode": "15",
+      "areaName": "兴安盟"
+    },
+    {
+      "areaCode": "1525",
+      "areaPcode": "15",
+      "areaName": "锡林郭勒盟"
+    },
+    {
+      "areaCode": "1526",
+      "areaPcode": "15",
+      "areaName": "乌兰察布盟"
+    },
+    {
+      "areaCode": "1527",
+      "areaPcode": "15",
+      "areaName": "伊克昭盟"
+    },
+    {
+      "areaCode": "1528",
+      "areaPcode": "15",
+      "areaName": "巴彦淖尔盟"
+    },
+    {
+      "areaCode": "1529",
+      "areaPcode": "15",
+      "areaName": "阿拉善盟"
+    },
+    {
+      "areaCode": "2101",
+      "areaPcode": "21",
+      "areaName": "沈阳"
+    },
+    {
+      "areaCode": "2102",
+      "areaPcode": "21",
+      "areaName": "大连"
+    },
+    {
+      "areaCode": "2103",
+      "areaPcode": "21",
+      "areaName": "鞍山"
+    },
+    {
+      "areaCode": "2104",
+      "areaPcode": "21",
+      "areaName": "抚顺"
+    },
+    {
+      "areaCode": "2105",
+      "areaPcode": "21",
+      "areaName": "本溪"
+    },
+    {
+      "areaCode": "2106",
+      "areaPcode": "21",
+      "areaName": "丹东"
+    },
+    {
+      "areaCode": "2107",
+      "areaPcode": "21",
+      "areaName": "锦州"
+    },
+    {
+      "areaCode": "2108",
+      "areaPcode": "21",
+      "areaName": "营口"
+    },
+    {
+      "areaCode": "2109",
+      "areaPcode": "21",
+      "areaName": "阜新"
+    },
+    {
+      "areaCode": "2110",
+      "areaPcode": "21",
+      "areaName": "辽阳"
+    },
+    {
+      "areaCode": "2111",
+      "areaPcode": "21",
+      "areaName": "盘锦"
+    },
+    {
+      "areaCode": "2112",
+      "areaPcode": "21",
+      "areaName": "铁岭"
+    },
+    {
+      "areaCode": "2113",
+      "areaPcode": "21",
+      "areaName": "朝阳"
+    },
+    {
+      "areaCode": "2114",
+      "areaPcode": "21",
+      "areaName": "葫芦岛"
+    },
+    {
+      "areaCode": "2201",
+      "areaPcode": "22",
+      "areaName": "长春"
+    },
+    {
+      "areaCode": "2202",
+      "areaPcode": "22",
+      "areaName": "吉林"
+    },
+    {
+      "areaCode": "2203",
+      "areaPcode": "22",
+      "areaName": "四平"
+    },
+    {
+      "areaCode": "2204",
+      "areaPcode": "22",
+      "areaName": "辽源"
+    },
+    {
+      "areaCode": "2205",
+      "areaPcode": "22",
+      "areaName": "通化"
+    },
+    {
+      "areaCode": "2206",
+      "areaPcode": "22",
+      "areaName": "白山"
+    },
+    {
+      "areaCode": "2207",
+      "areaPcode": "22",
+      "areaName": "松原"
+    },
+    {
+      "areaCode": "2208",
+      "areaPcode": "22",
+      "areaName": "白城"
+    },
+    {
+      "areaCode": "2224",
+      "areaPcode": "22",
+      "areaName": "延边朝鲜族自治州"
+    },
+    {
+      "areaCode": "2301",
+      "areaPcode": "23",
+      "areaName": "哈尔滨"
+    },
+    {
+      "areaCode": "2302",
+      "areaPcode": "23",
+      "areaName": "齐齐哈尔"
+    },
+    {
+      "areaCode": "2303",
+      "areaPcode": "23",
+      "areaName": "鸡西"
+    },
+    {
+      "areaCode": "2304",
+      "areaPcode": "23",
+      "areaName": "鹤岗"
+    },
+    {
+      "areaCode": "2305",
+      "areaPcode": "23",
+      "areaName": "双鸭山"
+    },
+    {
+      "areaCode": "2306",
+      "areaPcode": "23",
+      "areaName": "大庆"
+    },
+    {
+      "areaCode": "2307",
+      "areaPcode": "23",
+      "areaName": "伊春"
+    },
+    {
+      "areaCode": "2308",
+      "areaPcode": "23",
+      "areaName": "佳木斯"
+    },
+    {
+      "areaCode": "2309",
+      "areaPcode": "23",
+      "areaName": "七台河"
+    },
+    {
+      "areaCode": "2310",
+      "areaPcode": "23",
+      "areaName": "牡丹江"
+    },
+    {
+      "areaCode": "2311",
+      "areaPcode": "23",
+      "areaName": "黑河"
+    },
+    {
+      "areaCode": "2312",
+      "areaPcode": "23",
+      "areaName": "绥化"
+    },
+    {
+      "areaCode": "2327",
+      "areaPcode": "23",
+      "areaName": "大兴安岭地区"
+    },
+    {
+      "areaCode": "3101",
+      "areaPcode": "31",
+      "areaName": "上海市辖"
+    },
+    {
+      "areaCode": "3102",
+      "areaPcode": "31",
+      "areaName": "上海县辖"
+    },
+    {
+      "areaCode": "3201",
+      "areaPcode": "32",
+      "areaName": "南京"
+    },
+    {
+      "areaCode": "3202",
+      "areaPcode": "32",
+      "areaName": "无锡"
+    },
+    {
+      "areaCode": "3203",
+      "areaPcode": "32",
+      "areaName": "徐州"
+    },
+    {
+      "areaCode": "3204",
+      "areaPcode": "32",
+      "areaName": "常州"
+    },
+    {
+      "areaCode": "3205",
+      "areaPcode": "32",
+      "areaName": "苏州"
+    },
+    {
+      "areaCode": "3206",
+      "areaPcode": "32",
+      "areaName": "南通"
+    },
+    {
+      "areaCode": "3207",
+      "areaPcode": "32",
+      "areaName": "连云港"
+    },
+    {
+      "areaCode": "3208",
+      "areaPcode": "32",
+      "areaName": "淮安"
+    },
+    {
+      "areaCode": "3209",
+      "areaPcode": "32",
+      "areaName": "盐城"
+    },
+    {
+      "areaCode": "3210",
+      "areaPcode": "32",
+      "areaName": "扬州"
+    },
+    {
+      "areaCode": "3211",
+      "areaPcode": "32",
+      "areaName": "镇江"
+    },
+    {
+      "areaCode": "3212",
+      "areaPcode": "32",
+      "areaName": "泰州"
+    },
+    {
+      "areaCode": "3213",
+      "areaPcode": "32",
+      "areaName": "宿迁"
+    },
+    {
+      "areaCode": "3301",
+      "areaPcode": "33",
+      "areaName": "杭州"
+    },
+    {
+      "areaCode": "3302",
+      "areaPcode": "33",
+      "areaName": "宁波"
+    },
+    {
+      "areaCode": "3303",
+      "areaPcode": "33",
+      "areaName": "温州"
+    },
+    {
+      "areaCode": "3304",
+      "areaPcode": "33",
+      "areaName": "嘉兴"
+    },
+    {
+      "areaCode": "3305",
+      "areaPcode": "33",
+      "areaName": "湖州"
+    },
+    {
+      "areaCode": "3306",
+      "areaPcode": "33",
+      "areaName": "绍兴"
+    },
+    {
+      "areaCode": "3307",
+      "areaPcode": "33",
+      "areaName": "金华"
+    },
+    {
+      "areaCode": "3308",
+      "areaPcode": "33",
+      "areaName": "衢州"
+    },
+    {
+      "areaCode": "3309",
+      "areaPcode": "33",
+      "areaName": "舟山"
+    },
+    {
+      "areaCode": "3310",
+      "areaPcode": "33",
+      "areaName": "台州"
+    },
+    {
+      "areaCode": "3311",
+      "areaPcode": "33",
+      "areaName": "丽水"
+    },
+    {
+      "areaCode": "3401",
+      "areaPcode": "34",
+      "areaName": "合肥"
+    },
+    {
+      "areaCode": "3402",
+      "areaPcode": "34",
+      "areaName": "芜湖"
+    },
+    {
+      "areaCode": "3403",
+      "areaPcode": "34",
+      "areaName": "蚌埠"
+    },
+    {
+      "areaCode": "3404",
+      "areaPcode": "34",
+      "areaName": "淮南"
+    },
+    {
+      "areaCode": "3405",
+      "areaPcode": "34",
+      "areaName": "马鞍山"
+    },
+    {
+      "areaCode": "3406",
+      "areaPcode": "34",
+      "areaName": "淮北"
+    },
+    {
+      "areaCode": "3407",
+      "areaPcode": "34",
+      "areaName": "铜陵"
+    },
+    {
+      "areaCode": "3408",
+      "areaPcode": "34",
+      "areaName": "安庆"
+    },
+    {
+      "areaCode": "3410",
+      "areaPcode": "34",
+      "areaName": "黄山"
+    },
+    {
+      "areaCode": "3411",
+      "areaPcode": "34",
+      "areaName": "滁州"
+    },
+    {
+      "areaCode": "3412",
+      "areaPcode": "34",
+      "areaName": "阜阳"
+    },
+    {
+      "areaCode": "3413",
+      "areaPcode": "34",
+      "areaName": "宿州"
+    },
+    {
+      "areaCode": "3414",
+      "areaPcode": "34",
+      "areaName": "巢湖"
+    },
+    {
+      "areaCode": "3415",
+      "areaPcode": "34",
+      "areaName": "六安"
+    },
+    {
+      "areaCode": "3416",
+      "areaPcode": "34",
+      "areaName": "亳州"
+    },
+    {
+      "areaCode": "3417",
+      "areaPcode": "34",
+      "areaName": "池州"
+    },
+    {
+      "areaCode": "3418",
+      "areaPcode": "34",
+      "areaName": "宣城"
+    },
+    {
+      "areaCode": "3501",
+      "areaPcode": "35",
+      "areaName": "福州"
+    },
+    {
+      "areaCode": "3502",
+      "areaPcode": "35",
+      "areaName": "厦门"
+    },
+    {
+      "areaCode": "3503",
+      "areaPcode": "35",
+      "areaName": "莆田"
+    },
+    {
+      "areaCode": "3504",
+      "areaPcode": "35",
+      "areaName": "三明"
+    },
+    {
+      "areaCode": "3505",
+      "areaPcode": "35",
+      "areaName": "泉州"
+    },
+    {
+      "areaCode": "3506",
+      "areaPcode": "35",
+      "areaName": "漳州"
+    },
+    {
+      "areaCode": "3507",
+      "areaPcode": "35",
+      "areaName": "南平"
+    },
+    {
+      "areaCode": "3508",
+      "areaPcode": "35",
+      "areaName": "龙岩"
+    },
+    {
+      "areaCode": "3509",
+      "areaPcode": "35",
+      "areaName": "宁德"
+    },
+    {
+      "areaCode": "3601",
+      "areaPcode": "36",
+      "areaName": "南昌"
+    },
+    {
+      "areaCode": "3602",
+      "areaPcode": "36",
+      "areaName": "景德镇"
+    },
+    {
+      "areaCode": "3603",
+      "areaPcode": "36",
+      "areaName": "萍乡"
+    },
+    {
+      "areaCode": "3604",
+      "areaPcode": "36",
+      "areaName": "九江"
+    },
+    {
+      "areaCode": "3605",
+      "areaPcode": "36",
+      "areaName": "新余"
+    },
+    {
+      "areaCode": "3606",
+      "areaPcode": "36",
+      "areaName": "鹰潭"
+    },
+    {
+      "areaCode": "3607",
+      "areaPcode": "36",
+      "areaName": "赣州"
+    },
+    {
+      "areaCode": "3608",
+      "areaPcode": "36",
+      "areaName": "吉安"
+    },
+    {
+      "areaCode": "3609",
+      "areaPcode": "36",
+      "areaName": "宜春"
+    },
+    {
+      "areaCode": "3610",
+      "areaPcode": "36",
+      "areaName": "抚州"
+    },
+    {
+      "areaCode": "3611",
+      "areaPcode": "36",
+      "areaName": "上饶"
+    },
+    {
+      "areaCode": "3701",
+      "areaPcode": "37",
+      "areaName": "济南"
+    },
+    {
+      "areaCode": "3702",
+      "areaPcode": "37",
+      "areaName": "青岛"
+    },
+    {
+      "areaCode": "3703",
+      "areaPcode": "37",
+      "areaName": "淄博"
+    },
+    {
+      "areaCode": "3704",
+      "areaPcode": "37",
+      "areaName": "枣庄"
+    },
+    {
+      "areaCode": "3705",
+      "areaPcode": "37",
+      "areaName": "东营"
+    },
+    {
+      "areaCode": "3706",
+      "areaPcode": "37",
+      "areaName": "烟台"
+    },
+    {
+      "areaCode": "3707",
+      "areaPcode": "37",
+      "areaName": "潍坊"
+    },
+    {
+      "areaCode": "3708",
+      "areaPcode": "37",
+      "areaName": "济宁"
+    },
+    {
+      "areaCode": "3709",
+      "areaPcode": "37",
+      "areaName": "泰安"
+    },
+    {
+      "areaCode": "3710",
+      "areaPcode": "37",
+      "areaName": "威海"
+    },
+    {
+      "areaCode": "3711",
+      "areaPcode": "37",
+      "areaName": "日照"
+    },
+    {
+      "areaCode": "3712",
+      "areaPcode": "37",
+      "areaName": "莱芜"
+    },
+    {
+      "areaCode": "3713",
+      "areaPcode": "37",
+      "areaName": "临沂"
+    },
+    {
+      "areaCode": "3714",
+      "areaPcode": "37",
+      "areaName": "德州"
+    },
+    {
+      "areaCode": "3715",
+      "areaPcode": "37",
+      "areaName": "聊城"
+    },
+    {
+      "areaCode": "3716",
+      "areaPcode": "37",
+      "areaName": "滨州"
+    },
+    {
+      "areaCode": "3717",
+      "areaPcode": "37",
+      "areaName": "菏泽"
+    },
+    {
+      "areaCode": "4101",
+      "areaPcode": "41",
+      "areaName": "郑州"
+    },
+    {
+      "areaCode": "4102",
+      "areaPcode": "41",
+      "areaName": "开封"
+    },
+    {
+      "areaCode": "4103",
+      "areaPcode": "41",
+      "areaName": "洛阳"
+    },
+    {
+      "areaCode": "4104",
+      "areaPcode": "41",
+      "areaName": "平顶山"
+    },
+    {
+      "areaCode": "4105",
+      "areaPcode": "41",
+      "areaName": "安阳"
+    },
+    {
+      "areaCode": "4106",
+      "areaPcode": "41",
+      "areaName": "鹤壁"
+    },
+    {
+      "areaCode": "4107",
+      "areaPcode": "41",
+      "areaName": "新乡"
+    },
+    {
+      "areaCode": "4108",
+      "areaPcode": "41",
+      "areaName": "焦作"
+    },
+    {
+      "areaCode": "4109",
+      "areaPcode": "41",
+      "areaName": "濮阳"
+    },
+    {
+      "areaCode": "4110",
+      "areaPcode": "41",
+      "areaName": "许昌"
+    },
+    {
+      "areaCode": "4111",
+      "areaPcode": "41",
+      "areaName": "漯河"
+    },
+    {
+      "areaCode": "4112",
+      "areaPcode": "41",
+      "areaName": "三门峡"
+    },
+    {
+      "areaCode": "4113",
+      "areaPcode": "41",
+      "areaName": "南阳"
+    },
+    {
+      "areaCode": "4114",
+      "areaPcode": "41",
+      "areaName": "商丘"
+    },
+    {
+      "areaCode": "4115",
+      "areaPcode": "41",
+      "areaName": "信阳"
+    },
+    {
+      "areaCode": "4116",
+      "areaPcode": "41",
+      "areaName": "周口"
+    },
+    {
+      "areaCode": "4117",
+      "areaPcode": "41",
+      "areaName": "驻马店"
+    },
+    {
+      "areaCode": "4201",
+      "areaPcode": "42",
+      "areaName": "武汉"
+    },
+    {
+      "areaCode": "4202",
+      "areaPcode": "42",
+      "areaName": "黄石"
+    },
+    {
+      "areaCode": "4203",
+      "areaPcode": "42",
+      "areaName": "十堰"
+    },
+    {
+      "areaCode": "4205",
+      "areaPcode": "42",
+      "areaName": "宜昌"
+    },
+    {
+      "areaCode": "4206",
+      "areaPcode": "42",
+      "areaName": "襄樊"
+    },
+    {
+      "areaCode": "4207",
+      "areaPcode": "42",
+      "areaName": "鄂州"
+    },
+    {
+      "areaCode": "4208",
+      "areaPcode": "42",
+      "areaName": "荆门"
+    },
+    {
+      "areaCode": "4209",
+      "areaPcode": "42",
+      "areaName": "孝感"
+    },
+    {
+      "areaCode": "4210",
+      "areaPcode": "42",
+      "areaName": "荆州"
+    },
+    {
+      "areaCode": "4211",
+      "areaPcode": "42",
+      "areaName": "黄冈"
+    },
+    {
+      "areaCode": "4212",
+      "areaPcode": "42",
+      "areaName": "咸宁"
+    },
+    {
+      "areaCode": "4213",
+      "areaPcode": "42",
+      "areaName": "随州"
+    },
+    {
+      "areaCode": "4228",
+      "areaPcode": "42",
+      "areaName": "恩施土家族苗族自治州"
+    },
+    {
+      "areaCode": "4290",
+      "areaPcode": "42",
+      "areaName": "省直辖行政单位"
+    },
+    {
+      "areaCode": "4301",
+      "areaPcode": "43",
+      "areaName": "长沙"
+    },
+    {
+      "areaCode": "4302",
+      "areaPcode": "43",
+      "areaName": "株洲"
+    },
+    {
+      "areaCode": "4303",
+      "areaPcode": "43",
+      "areaName": "湘潭"
+    },
+    {
+      "areaCode": "4304",
+      "areaPcode": "43",
+      "areaName": "衡阳"
+    },
+    {
+      "areaCode": "4305",
+      "areaPcode": "43",
+      "areaName": "邵阳"
+    },
+    {
+      "areaCode": "4306",
+      "areaPcode": "43",
+      "areaName": "岳阳"
+    },
+    {
+      "areaCode": "4307",
+      "areaPcode": "43",
+      "areaName": "常德"
+    },
+    {
+      "areaCode": "4308",
+      "areaPcode": "43",
+      "areaName": "张家界"
+    },
+    {
+      "areaCode": "4309",
+      "areaPcode": "43",
+      "areaName": "益阳"
+    },
+    {
+      "areaCode": "4310",
+      "areaPcode": "43",
+      "areaName": "郴州"
+    },
+    {
+      "areaCode": "4311",
+      "areaPcode": "43",
+      "areaName": "永州"
+    },
+    {
+      "areaCode": "4312",
+      "areaPcode": "43",
+      "areaName": "怀化"
+    },
+    {
+      "areaCode": "4313",
+      "areaPcode": "43",
+      "areaName": "娄底"
+    },
+    {
+      "areaCode": "4331",
+      "areaPcode": "43",
+      "areaName": "湘西土家族苗族自治州"
+    },
+    {
+      "areaCode": "4401",
+      "areaPcode": "44",
+      "areaName": "广州"
+    },
+    {
+      "areaCode": "4402",
+      "areaPcode": "44",
+      "areaName": "韶关"
+    },
+    {
+      "areaCode": "4403",
+      "areaPcode": "44",
+      "areaName": "深圳"
+    },
+    {
+      "areaCode": "4404",
+      "areaPcode": "44",
+      "areaName": "珠海"
+    },
+    {
+      "areaCode": "4405",
+      "areaPcode": "44",
+      "areaName": "汕头"
+    },
+    {
+      "areaCode": "4406",
+      "areaPcode": "44",
+      "areaName": "佛山"
+    },
+    {
+      "areaCode": "4407",
+      "areaPcode": "44",
+      "areaName": "江门"
+    },
+    {
+      "areaCode": "4408",
+      "areaPcode": "44",
+      "areaName": "湛江"
+    },
+    {
+      "areaCode": "4409",
+      "areaPcode": "44",
+      "areaName": "茂名"
+    },
+    {
+      "areaCode": "4412",
+      "areaPcode": "44",
+      "areaName": "肇庆"
+    },
+    {
+      "areaCode": "4413",
+      "areaPcode": "44",
+      "areaName": "惠州"
+    },
+    {
+      "areaCode": "4414",
+      "areaPcode": "44",
+      "areaName": "梅州"
+    },
+    {
+      "areaCode": "4415",
+      "areaPcode": "44",
+      "areaName": "汕尾"
+    },
+    {
+      "areaCode": "4416",
+      "areaPcode": "44",
+      "areaName": "河源"
+    },
+    {
+      "areaCode": "4417",
+      "areaPcode": "44",
+      "areaName": "阳江"
+    },
+    {
+      "areaCode": "4418",
+      "areaPcode": "44",
+      "areaName": "清远"
+    },
+    {
+      "areaCode": "4419",
+      "areaPcode": "44",
+      "areaName": "东莞"
+    },
+    {
+      "areaCode": "4420",
+      "areaPcode": "44",
+      "areaName": "中山"
+    },
+    {
+      "areaCode": "4451",
+      "areaPcode": "44",
+      "areaName": "潮州"
+    },
+    {
+      "areaCode": "4452",
+      "areaPcode": "44",
+      "areaName": "揭阳"
+    },
+    {
+      "areaCode": "4453",
+      "areaPcode": "44",
+      "areaName": "云浮"
+    },
+    {
+      "areaCode": "4501",
+      "areaPcode": "45",
+      "areaName": "南宁"
+    },
+    {
+      "areaCode": "4502",
+      "areaPcode": "45",
+      "areaName": "柳州"
+    },
+    {
+      "areaCode": "4503",
+      "areaPcode": "45",
+      "areaName": "桂林"
+    },
+    {
+      "areaCode": "4504",
+      "areaPcode": "45",
+      "areaName": "梧州"
+    },
+    {
+      "areaCode": "4505",
+      "areaPcode": "45",
+      "areaName": "北海"
+    },
+    {
+      "areaCode": "4506",
+      "areaPcode": "45",
+      "areaName": "防城港"
+    },
+    {
+      "areaCode": "4507",
+      "areaPcode": "45",
+      "areaName": "钦州"
+    },
+    {
+      "areaCode": "4508",
+      "areaPcode": "45",
+      "areaName": "贵港"
+    },
+    {
+      "areaCode": "4509",
+      "areaPcode": "45",
+      "areaName": "玉林"
+    },
+    {
+      "areaCode": "4521",
+      "areaPcode": "45",
+      "areaName": "南宁地区"
+    },
+    {
+      "areaCode": "4522",
+      "areaPcode": "45",
+      "areaName": "柳州地区"
+    },
+    {
+      "areaCode": "4524",
+      "areaPcode": "45",
+      "areaName": "贺州地区"
+    },
+    {
+      "areaCode": "4526",
+      "areaPcode": "45",
+      "areaName": "百色地区"
+    },
+    {
+      "areaCode": "4527",
+      "areaPcode": "45",
+      "areaName": "河池地区"
+    },
+    {
+      "areaCode": "4601",
+      "areaPcode": "46",
+      "areaName": "海南"
+    },
+    {
+      "areaCode": "4602",
+      "areaPcode": "46",
+      "areaName": "海口"
+    },
+    {
+      "areaCode": "4603",
+      "areaPcode": "46",
+      "areaName": "三亚"
+    },
+    {
+      "areaCode": "5001",
+      "areaPcode": "50",
+      "areaName": "重庆市辖"
+    },
+    {
+      "areaCode": "5002",
+      "areaPcode": "50",
+      "areaName": "重庆县辖"
+    },
+    {
+      "areaCode": "5003",
+      "areaPcode": "50",
+      "areaName": "重庆县级"
+    },
+    {
+      "areaCode": "5101",
+      "areaPcode": "51",
+      "areaName": "成都"
+    },
+    {
+      "areaCode": "5103",
+      "areaPcode": "51",
+      "areaName": "自贡"
+    },
+    {
+      "areaCode": "5104",
+      "areaPcode": "51",
+      "areaName": "攀枝花"
+    },
+    {
+      "areaCode": "5105",
+      "areaPcode": "51",
+      "areaName": "泸州"
+    },
+    {
+      "areaCode": "5106",
+      "areaPcode": "51",
+      "areaName": "德阳"
+    },
+    {
+      "areaCode": "5107",
+      "areaPcode": "51",
+      "areaName": "绵阳"
+    },
+    {
+      "areaCode": "5108",
+      "areaPcode": "51",
+      "areaName": "广元"
+    },
+    {
+      "areaCode": "5109",
+      "areaPcode": "51",
+      "areaName": "遂宁"
+    },
+    {
+      "areaCode": "5110",
+      "areaPcode": "51",
+      "areaName": "内江"
+    },
+    {
+      "areaCode": "5111",
+      "areaPcode": "51",
+      "areaName": "乐山"
+    },
+    {
+      "areaCode": "5113",
+      "areaPcode": "51",
+      "areaName": "南充"
+    },
+    {
+      "areaCode": "5114",
+      "areaPcode": "51",
+      "areaName": "眉山"
+    },
+    {
+      "areaCode": "5115",
+      "areaPcode": "51",
+      "areaName": "宜宾"
+    },
+    {
+      "areaCode": "5116",
+      "areaPcode": "51",
+      "areaName": "广安"
+    },
+    {
+      "areaCode": "5117",
+      "areaPcode": "51",
+      "areaName": "达州"
+    },
+    {
+      "areaCode": "5118",
+      "areaPcode": "51",
+      "areaName": "雅安"
+    },
+    {
+      "areaCode": "5119",
+      "areaPcode": "51",
+      "areaName": "巴中"
+    },
+    {
+      "areaCode": "5120",
+      "areaPcode": "51",
+      "areaName": "资阳"
+    },
+    {
+      "areaCode": "5132",
+      "areaPcode": "51",
+      "areaName": "阿坝藏族羌族自治州"
+    },
+    {
+      "areaCode": "5133",
+      "areaPcode": "51",
+      "areaName": "甘孜藏族自治州"
+    },
+    {
+      "areaCode": "5134",
+      "areaPcode": "51",
+      "areaName": "凉山彝族自治州"
+    },
+    {
+      "areaCode": "5201",
+      "areaPcode": "52",
+      "areaName": "贵阳"
+    },
+    {
+      "areaCode": "5202",
+      "areaPcode": "52",
+      "areaName": "六盘水"
+    },
+    {
+      "areaCode": "5203",
+      "areaPcode": "52",
+      "areaName": "遵义"
+    },
+    {
+      "areaCode": "5204",
+      "areaPcode": "52",
+      "areaName": "安顺"
+    },
+    {
+      "areaCode": "5222",
+      "areaPcode": "52",
+      "areaName": "铜仁地区"
+    },
+    {
+      "areaCode": "5223",
+      "areaPcode": "52",
+      "areaName": "黔西南布依族苗族自治"
+    },
+    {
+      "areaCode": "5224",
+      "areaPcode": "52",
+      "areaName": "毕节地区"
+    },
+    {
+      "areaCode": "5226",
+      "areaPcode": "52",
+      "areaName": "黔东南苗族侗族自治州"
+    },
+    {
+      "areaCode": "5227",
+      "areaPcode": "52",
+      "areaName": "黔南布依族苗族自治州"
+    },
+    {
+      "areaCode": "5301",
+      "areaPcode": "53",
+      "areaName": "昆明"
+    },
+    {
+      "areaCode": "5303",
+      "areaPcode": "53",
+      "areaName": "曲靖"
+    },
+    {
+      "areaCode": "5304",
+      "areaPcode": "53",
+      "areaName": "玉溪"
+    },
+    {
+      "areaCode": "5305",
+      "areaPcode": "53",
+      "areaName": "保山"
+    },
+    {
+      "areaCode": "5321",
+      "areaPcode": "53",
+      "areaName": "昭通地区"
+    },
+    {
+      "areaCode": "5323",
+      "areaPcode": "53",
+      "areaName": "楚雄彝族自治州"
+    },
+    {
+      "areaCode": "5325",
+      "areaPcode": "53",
+      "areaName": "红河哈尼族彝族自治州"
+    },
+    {
+      "areaCode": "5326",
+      "areaPcode": "53",
+      "areaName": "文山壮族苗族自治州"
+    },
+    {
+      "areaCode": "5327",
+      "areaPcode": "53",
+      "areaName": "思茅地区"
+    },
+    {
+      "areaCode": "5328",
+      "areaPcode": "53",
+      "areaName": "西双版纳傣族自治州"
+    },
+    {
+      "areaCode": "5329",
+      "areaPcode": "53",
+      "areaName": "大理白族自治州"
+    },
+    {
+      "areaCode": "5331",
+      "areaPcode": "53",
+      "areaName": "德宏傣族景颇族自治州"
+    },
+    {
+      "areaCode": "5332",
+      "areaPcode": "53",
+      "areaName": "丽江地区"
+    },
+    {
+      "areaCode": "5333",
+      "areaPcode": "53",
+      "areaName": "怒江傈僳族自治州"
+    },
+    {
+      "areaCode": "5334",
+      "areaPcode": "53",
+      "areaName": "迪庆藏族自治州"
+    },
+    {
+      "areaCode": "5335",
+      "areaPcode": "53",
+      "areaName": "临沧地区"
+    },
+    {
+      "areaCode": "5401",
+      "areaPcode": "54",
+      "areaName": "拉萨"
+    },
+    {
+      "areaCode": "5421",
+      "areaPcode": "54",
+      "areaName": "昌都地区"
+    },
+    {
+      "areaCode": "5422",
+      "areaPcode": "54",
+      "areaName": "山南地区"
+    },
+    {
+      "areaCode": "5423",
+      "areaPcode": "54",
+      "areaName": "日喀则地区"
+    },
+    {
+      "areaCode": "5424",
+      "areaPcode": "54",
+      "areaName": "那曲地区"
+    },
+    {
+      "areaCode": "5425",
+      "areaPcode": "54",
+      "areaName": "阿里地区"
+    },
+    {
+      "areaCode": "5426",
+      "areaPcode": "54",
+      "areaName": "林芝地区"
+    },
+    {
+      "areaCode": "6101",
+      "areaPcode": "61",
+      "areaName": "西安"
+    },
+    {
+      "areaCode": "6102",
+      "areaPcode": "61",
+      "areaName": "铜川"
+    },
+    {
+      "areaCode": "6103",
+      "areaPcode": "61",
+      "areaName": "宝鸡"
+    },
+    {
+      "areaCode": "6104",
+      "areaPcode": "61",
+      "areaName": "咸阳"
+    },
+    {
+      "areaCode": "6105",
+      "areaPcode": "61",
+      "areaName": "渭南"
+    },
+    {
+      "areaCode": "6106",
+      "areaPcode": "61",
+      "areaName": "延安"
+    },
+    {
+      "areaCode": "6107",
+      "areaPcode": "61",
+      "areaName": "汉中"
+    },
+    {
+      "areaCode": "6108",
+      "areaPcode": "61",
+      "areaName": "榆林"
+    },
+    {
+      "areaCode": "6109",
+      "areaPcode": "61",
+      "areaName": "安康"
+    },
+    {
+      "areaCode": "6125",
+      "areaPcode": "61",
+      "areaName": "商洛地区"
+    },
+    {
+      "areaCode": "6201",
+      "areaPcode": "62",
+      "areaName": "兰州"
+    },
+    {
+      "areaCode": "6202",
+      "areaPcode": "62",
+      "areaName": "嘉峪关"
+    },
+    {
+      "areaCode": "6203",
+      "areaPcode": "62",
+      "areaName": "金昌"
+    },
+    {
+      "areaCode": "6204",
+      "areaPcode": "62",
+      "areaName": "白银"
+    },
+    {
+      "areaCode": "6205",
+      "areaPcode": "62",
+      "areaName": "天水"
+    },
+    {
+      "areaCode": "6221",
+      "areaPcode": "62",
+      "areaName": "酒泉地区"
+    },
+    {
+      "areaCode": "6222",
+      "areaPcode": "62",
+      "areaName": "张掖地区"
+    },
+    {
+      "areaCode": "6223",
+      "areaPcode": "62",
+      "areaName": "武威地区"
+    },
+    {
+      "areaCode": "6224",
+      "areaPcode": "62",
+      "areaName": "定西地区"
+    },
+    {
+      "areaCode": "6226",
+      "areaPcode": "62",
+      "areaName": "陇南地区"
+    },
+    {
+      "areaCode": "6227",
+      "areaPcode": "62",
+      "areaName": "平凉地区"
+    },
+    {
+      "areaCode": "6228",
+      "areaPcode": "62",
+      "areaName": "庆阳地区"
+    },
+    {
+      "areaCode": "6229",
+      "areaPcode": "62",
+      "areaName": "临夏回族自治州"
+    },
+    {
+      "areaCode": "6230",
+      "areaPcode": "62",
+      "areaName": "甘南藏族自治州"
+    },
+    {
+      "areaCode": "6301",
+      "areaPcode": "63",
+      "areaName": "西宁"
+    },
+    {
+      "areaCode": "6321",
+      "areaPcode": "63",
+      "areaName": "海东地区"
+    },
+    {
+      "areaCode": "6322",
+      "areaPcode": "63",
+      "areaName": "海北藏族自治州"
+    },
+    {
+      "areaCode": "6323",
+      "areaPcode": "63",
+      "areaName": "黄南藏族自治州"
+    },
+    {
+      "areaCode": "6325",
+      "areaPcode": "63",
+      "areaName": "海南藏族自治州"
+    },
+    {
+      "areaCode": "6326",
+      "areaPcode": "63",
+      "areaName": "果洛藏族自治州"
+    },
+    {
+      "areaCode": "6327",
+      "areaPcode": "63",
+      "areaName": "玉树藏族自治州"
+    },
+    {
+      "areaCode": "6328",
+      "areaPcode": "63",
+      "areaName": "海西蒙古族藏族自治州"
+    },
+    {
+      "areaCode": "6401",
+      "areaPcode": "64",
+      "areaName": "银川"
+    },
+    {
+      "areaCode": "6402",
+      "areaPcode": "64",
+      "areaName": "石嘴山"
+    },
+    {
+      "areaCode": "6403",
+      "areaPcode": "64",
+      "areaName": "吴忠"
+    },
+    {
+      "areaCode": "6422",
+      "areaPcode": "64",
+      "areaName": "固原地区"
+    },
+    {
+      "areaCode": "6501",
+      "areaPcode": "65",
+      "areaName": "乌鲁木齐"
+    },
+    {
+      "areaCode": "6502",
+      "areaPcode": "65",
+      "areaName": "克拉玛依"
+    },
+    {
+      "areaCode": "6521",
+      "areaPcode": "65",
+      "areaName": "吐鲁番地区"
+    },
+    {
+      "areaCode": "6522",
+      "areaPcode": "65",
+      "areaName": "哈密地区"
+    },
+    {
+      "areaCode": "6523",
+      "areaPcode": "65",
+      "areaName": "昌吉回族自治州"
+    },
+    {
+      "areaCode": "6527",
+      "areaPcode": "65",
+      "areaName": "博尔塔拉蒙古自治州"
+    },
+    {
+      "areaCode": "6528",
+      "areaPcode": "65",
+      "areaName": "巴音郭楞蒙古自治州"
+    },
+    {
+      "areaCode": "6529",
+      "areaPcode": "65",
+      "areaName": "阿克苏地区"
+    },
+    {
+      "areaCode": "140301",
+      "areaPcode": "1403",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "140302",
+      "areaPcode": "1403",
+      "areaName": "城区"
+    },
+    {
+      "areaCode": "140303",
+      "areaPcode": "1403",
+      "areaName": "矿区"
+    },
+    {
+      "areaCode": "140311",
+      "areaPcode": "1403",
+      "areaName": "郊区"
+    },
+    {
+      "areaCode": "140321",
+      "areaPcode": "1403",
+      "areaName": "平定县"
+    },
+    {
+      "areaCode": "140322",
+      "areaPcode": "1403",
+      "areaName": "盂县"
+    },
+    {
+      "areaCode": "140401",
+      "areaPcode": "1404",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "140402",
+      "areaPcode": "1404",
+      "areaName": "城区"
+    },
+    {
+      "areaCode": "140411",
+      "areaPcode": "1404",
+      "areaName": "郊区"
+    },
+    {
+      "areaCode": "140421",
+      "areaPcode": "1404",
+      "areaName": "长治县"
+    },
+    {
+      "areaCode": "140423",
+      "areaPcode": "1404",
+      "areaName": "襄垣县"
+    },
+    {
+      "areaCode": "140424",
+      "areaPcode": "1404",
+      "areaName": "屯留县"
+    },
+    {
+      "areaCode": "140425",
+      "areaPcode": "1404",
+      "areaName": "平顺县"
+    },
+    {
+      "areaCode": "140426",
+      "areaPcode": "1404",
+      "areaName": "黎城县"
+    },
+    {
+      "areaCode": "140427",
+      "areaPcode": "1404",
+      "areaName": "壶关县"
+    },
+    {
+      "areaCode": "140428",
+      "areaPcode": "1404",
+      "areaName": "长子县"
+    },
+    {
+      "areaCode": "140429",
+      "areaPcode": "1404",
+      "areaName": "武乡县"
+    },
+    {
+      "areaCode": "140430",
+      "areaPcode": "1404",
+      "areaName": "沁县"
+    },
+    {
+      "areaCode": "140431",
+      "areaPcode": "1404",
+      "areaName": "沁源县"
+    },
+    {
+      "areaCode": "140481",
+      "areaPcode": "1404",
+      "areaName": "潞城市"
+    },
+    {
+      "areaCode": "140501",
+      "areaPcode": "1405",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "140502",
+      "areaPcode": "1405",
+      "areaName": "城区"
+    },
+    {
+      "areaCode": "140521",
+      "areaPcode": "1405",
+      "areaName": "沁水县"
+    },
+    {
+      "areaCode": "140522",
+      "areaPcode": "1405",
+      "areaName": "阳城县"
+    },
+    {
+      "areaCode": "140524",
+      "areaPcode": "1405",
+      "areaName": "陵川县"
+    },
+    {
+      "areaCode": "140525",
+      "areaPcode": "1405",
+      "areaName": "泽州县"
+    },
+    {
+      "areaCode": "140581",
+      "areaPcode": "1405",
+      "areaName": "高平市"
+    },
+    {
+      "areaCode": "140601",
+      "areaPcode": "1406",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "140602",
+      "areaPcode": "1406",
+      "areaName": "朔城区"
+    },
+    {
+      "areaCode": "140603",
+      "areaPcode": "1406",
+      "areaName": "平鲁区"
+    },
+    {
+      "areaCode": "140621",
+      "areaPcode": "1406",
+      "areaName": "山阴县"
+    },
+    {
+      "areaCode": "140622",
+      "areaPcode": "1406",
+      "areaName": "应县"
+    },
+    {
+      "areaCode": "140623",
+      "areaPcode": "1406",
+      "areaName": "右玉县"
+    },
+    {
+      "areaCode": "140624",
+      "areaPcode": "1406",
+      "areaName": "怀仁县"
+    },
+    {
+      "areaCode": "140701",
+      "areaPcode": "1407",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "140702",
+      "areaPcode": "1407",
+      "areaName": "榆次区"
+    },
+    {
+      "areaCode": "140721",
+      "areaPcode": "1407",
+      "areaName": "榆社县"
+    },
+    {
+      "areaCode": "140722",
+      "areaPcode": "1407",
+      "areaName": "左权县"
+    },
+    {
+      "areaCode": "140723",
+      "areaPcode": "1407",
+      "areaName": "和顺县"
+    },
+    {
+      "areaCode": "140724",
+      "areaPcode": "1407",
+      "areaName": "昔阳县"
+    },
+    {
+      "areaCode": "140725",
+      "areaPcode": "1407",
+      "areaName": "寿阳县"
+    },
+    {
+      "areaCode": "140726",
+      "areaPcode": "1407",
+      "areaName": "太谷县"
+    },
+    {
+      "areaCode": "140727",
+      "areaPcode": "1407",
+      "areaName": "祁县"
+    },
+    {
+      "areaCode": "140728",
+      "areaPcode": "1407",
+      "areaName": "平遥县"
+    },
+    {
+      "areaCode": "140729",
+      "areaPcode": "1407",
+      "areaName": "灵石县"
+    },
+    {
+      "areaCode": "6530",
+      "areaPcode": "65",
+      "areaName": "克孜勒苏柯尔克孜自治"
+    },
+    {
+      "areaCode": "6531",
+      "areaPcode": "65",
+      "areaName": "喀什地区"
+    },
+    {
+      "areaCode": "6532",
+      "areaPcode": "65",
+      "areaName": "和田地区"
+    },
+    {
+      "areaCode": "6540",
+      "areaPcode": "65",
+      "areaName": "伊犁哈萨克自治州"
+    },
+    {
+      "areaCode": "6541",
+      "areaPcode": "65",
+      "areaName": "伊犁地区"
+    },
+    {
+      "areaCode": "6542",
+      "areaPcode": "65",
+      "areaName": "塔城地区"
+    },
+    {
+      "areaCode": "6543",
+      "areaPcode": "65",
+      "areaName": "阿勒泰地区"
+    },
+    {
+      "areaCode": "6590",
+      "areaPcode": "65",
+      "areaName": "省直辖行政单位"
+    },
+    {
+      "areaCode": "7101",
+      "areaPcode": "71",
+      "areaName": "台湾市辖"
+    },
+    {
+      "areaCode": "8101",
+      "areaPcode": "81",
+      "areaName": "香港特区"
+    },
+    {
+      "areaCode": "9101",
+      "areaPcode": "91",
+      "areaName": "澳门特区"
+    },
+    {
+      "areaCode": "110101",
+      "areaPcode": "1101",
+      "areaName": "东城区"
+    },
+    {
+      "areaCode": "110102",
+      "areaPcode": "1101",
+      "areaName": "西城区"
+    },
+    {
+      "areaCode": "110103",
+      "areaPcode": "1101",
+      "areaName": "崇文区"
+    },
+    {
+      "areaCode": "110104",
+      "areaPcode": "1101",
+      "areaName": "宣武区"
+    },
+    {
+      "areaCode": "110105",
+      "areaPcode": "1101",
+      "areaName": "朝阳区"
+    },
+    {
+      "areaCode": "110106",
+      "areaPcode": "1101",
+      "areaName": "丰台区"
+    },
+    {
+      "areaCode": "110107",
+      "areaPcode": "1101",
+      "areaName": "石景山区"
+    },
+    {
+      "areaCode": "110108",
+      "areaPcode": "1101",
+      "areaName": "海淀区"
+    },
+    {
+      "areaCode": "110109",
+      "areaPcode": "1101",
+      "areaName": "门头沟区"
+    },
+    {
+      "areaCode": "110111",
+      "areaPcode": "1101",
+      "areaName": "房山区"
+    },
+    {
+      "areaCode": "110112",
+      "areaPcode": "1101",
+      "areaName": "通州区"
+    },
+    {
+      "areaCode": "110113",
+      "areaPcode": "1101",
+      "areaName": "顺义区"
+    },
+    {
+      "areaCode": "110114",
+      "areaPcode": "1101",
+      "areaName": "昌平区"
+    },
+    {
+      "areaCode": "110224",
+      "areaPcode": "1102",
+      "areaName": "大兴县"
+    },
+    {
+      "areaCode": "110226",
+      "areaPcode": "1102",
+      "areaName": "平谷县"
+    },
+    {
+      "areaCode": "110227",
+      "areaPcode": "1102",
+      "areaName": "怀柔县"
+    },
+    {
+      "areaCode": "110228",
+      "areaPcode": "1102",
+      "areaName": "密云县"
+    },
+    {
+      "areaCode": "110229",
+      "areaPcode": "1102",
+      "areaName": "延庆县"
+    },
+    {
+      "areaCode": "120101",
+      "areaPcode": "1201",
+      "areaName": "和平区"
+    },
+    {
+      "areaCode": "120102",
+      "areaPcode": "1201",
+      "areaName": "河东区"
+    },
+    {
+      "areaCode": "120103",
+      "areaPcode": "1201",
+      "areaName": "河西区"
+    },
+    {
+      "areaCode": "120104",
+      "areaPcode": "1201",
+      "areaName": "南开区"
+    },
+    {
+      "areaCode": "120105",
+      "areaPcode": "1201",
+      "areaName": "河北区"
+    },
+    {
+      "areaCode": "120106",
+      "areaPcode": "1201",
+      "areaName": "红桥区"
+    },
+    {
+      "areaCode": "120107",
+      "areaPcode": "1201",
+      "areaName": "塘沽区"
+    },
+    {
+      "areaCode": "120108",
+      "areaPcode": "1201",
+      "areaName": "汉沽区"
+    },
+    {
+      "areaCode": "120109",
+      "areaPcode": "1201",
+      "areaName": "大港区"
+    },
+    {
+      "areaCode": "120110",
+      "areaPcode": "1201",
+      "areaName": "东丽区"
+    },
+    {
+      "areaCode": "120111",
+      "areaPcode": "1201",
+      "areaName": "西青区"
+    },
+    {
+      "areaCode": "120112",
+      "areaPcode": "1201",
+      "areaName": "津南区"
+    },
+    {
+      "areaCode": "120113",
+      "areaPcode": "1201",
+      "areaName": "北辰区"
+    },
+    {
+      "areaCode": "120114",
+      "areaPcode": "1201",
+      "areaName": "武清区"
+    },
+    {
+      "areaCode": "120221",
+      "areaPcode": "1202",
+      "areaName": "宁河县"
+    },
+    {
+      "areaCode": "120223",
+      "areaPcode": "1202",
+      "areaName": "静海县"
+    },
+    {
+      "areaCode": "120224",
+      "areaPcode": "1202",
+      "areaName": "宝坻县"
+    },
+    {
+      "areaCode": "120225",
+      "areaPcode": "1202",
+      "areaName": "蓟县"
+    },
+    {
+      "areaCode": "130101",
+      "areaPcode": "1301",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "130102",
+      "areaPcode": "1301",
+      "areaName": "长安区"
+    },
+    {
+      "areaCode": "130103",
+      "areaPcode": "1301",
+      "areaName": "桥东区"
+    },
+    {
+      "areaCode": "130104",
+      "areaPcode": "1301",
+      "areaName": "桥西区"
+    },
+    {
+      "areaCode": "130105",
+      "areaPcode": "1301",
+      "areaName": "新华区"
+    },
+    {
+      "areaCode": "130106",
+      "areaPcode": "1301",
+      "areaName": "郊区"
+    },
+    {
+      "areaCode": "130107",
+      "areaPcode": "1301",
+      "areaName": "井陉矿区"
+    },
+    {
+      "areaCode": "130121",
+      "areaPcode": "1301",
+      "areaName": "井陉县"
+    },
+    {
+      "areaCode": "130123",
+      "areaPcode": "1301",
+      "areaName": "正定县"
+    },
+    {
+      "areaCode": "130124",
+      "areaPcode": "1301",
+      "areaName": "栾城县"
+    },
+    {
+      "areaCode": "130125",
+      "areaPcode": "1301",
+      "areaName": "行唐县"
+    },
+    {
+      "areaCode": "130126",
+      "areaPcode": "1301",
+      "areaName": "灵寿县"
+    },
+    {
+      "areaCode": "130127",
+      "areaPcode": "1301",
+      "areaName": "高邑县"
+    },
+    {
+      "areaCode": "130128",
+      "areaPcode": "1301",
+      "areaName": "深泽县"
+    },
+    {
+      "areaCode": "130129",
+      "areaPcode": "1301",
+      "areaName": "赞皇县"
+    },
+    {
+      "areaCode": "130130",
+      "areaPcode": "1301",
+      "areaName": "无极县"
+    },
+    {
+      "areaCode": "130131",
+      "areaPcode": "1301",
+      "areaName": "平山县"
+    },
+    {
+      "areaCode": "130132",
+      "areaPcode": "1301",
+      "areaName": "元氏县"
+    },
+    {
+      "areaCode": "130133",
+      "areaPcode": "1301",
+      "areaName": "赵县"
+    },
+    {
+      "areaCode": "130181",
+      "areaPcode": "1301",
+      "areaName": "辛集市"
+    },
+    {
+      "areaCode": "130182",
+      "areaPcode": "1301",
+      "areaName": "藁城市"
+    },
+    {
+      "areaCode": "130183",
+      "areaPcode": "1301",
+      "areaName": "晋州市"
+    },
+    {
+      "areaCode": "130184",
+      "areaPcode": "1301",
+      "areaName": "新乐市"
+    },
+    {
+      "areaCode": "130185",
+      "areaPcode": "1301",
+      "areaName": "鹿泉市"
+    },
+    {
+      "areaCode": "130201",
+      "areaPcode": "1302",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "130202",
+      "areaPcode": "1302",
+      "areaName": "路南区"
+    },
+    {
+      "areaCode": "130203",
+      "areaPcode": "1302",
+      "areaName": "路北区"
+    },
+    {
+      "areaCode": "130204",
+      "areaPcode": "1302",
+      "areaName": "古冶区"
+    },
+    {
+      "areaCode": "130205",
+      "areaPcode": "1302",
+      "areaName": "开平区"
+    },
+    {
+      "areaCode": "130206",
+      "areaPcode": "1302",
+      "areaName": "新区"
+    },
+    {
+      "areaCode": "130221",
+      "areaPcode": "1302",
+      "areaName": "丰润县"
+    },
+    {
+      "areaCode": "130223",
+      "areaPcode": "1302",
+      "areaName": "滦县"
+    },
+    {
+      "areaCode": "130224",
+      "areaPcode": "1302",
+      "areaName": "滦南县"
+    },
+    {
+      "areaCode": "130225",
+      "areaPcode": "1302",
+      "areaName": "乐亭县"
+    },
+    {
+      "areaCode": "130227",
+      "areaPcode": "1302",
+      "areaName": "迁西县"
+    },
+    {
+      "areaCode": "130229",
+      "areaPcode": "1302",
+      "areaName": "玉田县"
+    },
+    {
+      "areaCode": "130230",
+      "areaPcode": "1302",
+      "areaName": "唐海县"
+    },
+    {
+      "areaCode": "130281",
+      "areaPcode": "1302",
+      "areaName": "遵化市"
+    },
+    {
+      "areaCode": "130282",
+      "areaPcode": "1302",
+      "areaName": "丰南市"
+    },
+    {
+      "areaCode": "130283",
+      "areaPcode": "1302",
+      "areaName": "迁安市"
+    },
+    {
+      "areaCode": "130301",
+      "areaPcode": "1303",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "130302",
+      "areaPcode": "1303",
+      "areaName": "海港区"
+    },
+    {
+      "areaCode": "130303",
+      "areaPcode": "1303",
+      "areaName": "山海关区"
+    },
+    {
+      "areaCode": "130304",
+      "areaPcode": "1303",
+      "areaName": "北戴河区"
+    },
+    {
+      "areaCode": "130321",
+      "areaPcode": "1303",
+      "areaName": "青龙满族自治县"
+    },
+    {
+      "areaCode": "130322",
+      "areaPcode": "1303",
+      "areaName": "昌黎县"
+    },
+    {
+      "areaCode": "130323",
+      "areaPcode": "1303",
+      "areaName": "抚宁县"
+    },
+    {
+      "areaCode": "130324",
+      "areaPcode": "1303",
+      "areaName": "卢龙县"
+    },
+    {
+      "areaCode": "130401",
+      "areaPcode": "1304",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "130402",
+      "areaPcode": "1304",
+      "areaName": "邯山区"
+    },
+    {
+      "areaCode": "130403",
+      "areaPcode": "1304",
+      "areaName": "丛台区"
+    },
+    {
+      "areaCode": "130404",
+      "areaPcode": "1304",
+      "areaName": "复兴区"
+    },
+    {
+      "areaCode": "130406",
+      "areaPcode": "1304",
+      "areaName": "峰峰矿区"
+    },
+    {
+      "areaCode": "130421",
+      "areaPcode": "1304",
+      "areaName": "邯郸县"
+    },
+    {
+      "areaCode": "130423",
+      "areaPcode": "1304",
+      "areaName": "临漳县"
+    },
+    {
+      "areaCode": "130424",
+      "areaPcode": "1304",
+      "areaName": "成安县"
+    },
+    {
+      "areaCode": "130425",
+      "areaPcode": "1304",
+      "areaName": "大名县"
+    },
+    {
+      "areaCode": "130426",
+      "areaPcode": "1304",
+      "areaName": "涉县"
+    },
+    {
+      "areaCode": "130427",
+      "areaPcode": "1304",
+      "areaName": "磁县"
+    },
+    {
+      "areaCode": "130428",
+      "areaPcode": "1304",
+      "areaName": "肥乡县"
+    },
+    {
+      "areaCode": "130429",
+      "areaPcode": "1304",
+      "areaName": "永年县"
+    },
+    {
+      "areaCode": "130430",
+      "areaPcode": "1304",
+      "areaName": "邱县"
+    },
+    {
+      "areaCode": "130431",
+      "areaPcode": "1304",
+      "areaName": "鸡泽县"
+    },
+    {
+      "areaCode": "130432",
+      "areaPcode": "1304",
+      "areaName": "广平县"
+    },
+    {
+      "areaCode": "130433",
+      "areaPcode": "1304",
+      "areaName": "馆陶县"
+    },
+    {
+      "areaCode": "130434",
+      "areaPcode": "1304",
+      "areaName": "魏县"
+    },
+    {
+      "areaCode": "130435",
+      "areaPcode": "1304",
+      "areaName": "曲周县"
+    },
+    {
+      "areaCode": "130481",
+      "areaPcode": "1304",
+      "areaName": "武安市"
+    },
+    {
+      "areaCode": "130501",
+      "areaPcode": "1305",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "130502",
+      "areaPcode": "1305",
+      "areaName": "桥东区"
+    },
+    {
+      "areaCode": "130503",
+      "areaPcode": "1305",
+      "areaName": "桥西区"
+    },
+    {
+      "areaCode": "130521",
+      "areaPcode": "1305",
+      "areaName": "邢台县"
+    },
+    {
+      "areaCode": "130522",
+      "areaPcode": "1305",
+      "areaName": "临城县"
+    },
+    {
+      "areaCode": "130523",
+      "areaPcode": "1305",
+      "areaName": "内丘县"
+    },
+    {
+      "areaCode": "130524",
+      "areaPcode": "1305",
+      "areaName": "柏乡县"
+    },
+    {
+      "areaCode": "130525",
+      "areaPcode": "1305",
+      "areaName": "隆尧县"
+    },
+    {
+      "areaCode": "130526",
+      "areaPcode": "1305",
+      "areaName": "任县"
+    },
+    {
+      "areaCode": "130527",
+      "areaPcode": "1305",
+      "areaName": "南和县"
+    },
+    {
+      "areaCode": "130528",
+      "areaPcode": "1305",
+      "areaName": "宁晋县"
+    },
+    {
+      "areaCode": "130529",
+      "areaPcode": "1305",
+      "areaName": "巨鹿县"
+    },
+    {
+      "areaCode": "130530",
+      "areaPcode": "1305",
+      "areaName": "新河县"
+    },
+    {
+      "areaCode": "130531",
+      "areaPcode": "1305",
+      "areaName": "广宗县"
+    },
+    {
+      "areaCode": "130532",
+      "areaPcode": "1305",
+      "areaName": "平乡县"
+    },
+    {
+      "areaCode": "130533",
+      "areaPcode": "1305",
+      "areaName": "威县"
+    },
+    {
+      "areaCode": "130534",
+      "areaPcode": "1305",
+      "areaName": "清河县"
+    },
+    {
+      "areaCode": "130535",
+      "areaPcode": "1305",
+      "areaName": "临西县"
+    },
+    {
+      "areaCode": "130581",
+      "areaPcode": "1305",
+      "areaName": "南宫市"
+    },
+    {
+      "areaCode": "130582",
+      "areaPcode": "1305",
+      "areaName": "沙河市"
+    },
+    {
+      "areaCode": "130601",
+      "areaPcode": "1306",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "130602",
+      "areaPcode": "1306",
+      "areaName": "新市区"
+    },
+    {
+      "areaCode": "130603",
+      "areaPcode": "1306",
+      "areaName": "北市区"
+    },
+    {
+      "areaCode": "130604",
+      "areaPcode": "1306",
+      "areaName": "南市区"
+    },
+    {
+      "areaCode": "130621",
+      "areaPcode": "1306",
+      "areaName": "满城县"
+    },
+    {
+      "areaCode": "130622",
+      "areaPcode": "1306",
+      "areaName": "清苑县"
+    },
+    {
+      "areaCode": "130623",
+      "areaPcode": "1306",
+      "areaName": "涞水县"
+    },
+    {
+      "areaCode": "130624",
+      "areaPcode": "1306",
+      "areaName": "阜平县"
+    },
+    {
+      "areaCode": "130625",
+      "areaPcode": "1306",
+      "areaName": "徐水县"
+    },
+    {
+      "areaCode": "130626",
+      "areaPcode": "1306",
+      "areaName": "定兴县"
+    },
+    {
+      "areaCode": "130627",
+      "areaPcode": "1306",
+      "areaName": "唐县"
+    },
+    {
+      "areaCode": "130628",
+      "areaPcode": "1306",
+      "areaName": "高阳县"
+    },
+    {
+      "areaCode": "130629",
+      "areaPcode": "1306",
+      "areaName": "容城县"
+    },
+    {
+      "areaCode": "130630",
+      "areaPcode": "1306",
+      "areaName": "涞源县"
+    },
+    {
+      "areaCode": "130631",
+      "areaPcode": "1306",
+      "areaName": "望都县"
+    },
+    {
+      "areaCode": "130632",
+      "areaPcode": "1306",
+      "areaName": "安新县"
+    },
+    {
+      "areaCode": "130633",
+      "areaPcode": "1306",
+      "areaName": "易县"
+    },
+    {
+      "areaCode": "130634",
+      "areaPcode": "1306",
+      "areaName": "曲阳县"
+    },
+    {
+      "areaCode": "130635",
+      "areaPcode": "1306",
+      "areaName": "蠡县"
+    },
+    {
+      "areaCode": "130636",
+      "areaPcode": "1306",
+      "areaName": "顺平县"
+    },
+    {
+      "areaCode": "130637",
+      "areaPcode": "1306",
+      "areaName": "博野县"
+    },
+    {
+      "areaCode": "130638",
+      "areaPcode": "1306",
+      "areaName": "雄县"
+    },
+    {
+      "areaCode": "130681",
+      "areaPcode": "1306",
+      "areaName": "涿州市"
+    },
+    {
+      "areaCode": "130682",
+      "areaPcode": "1306",
+      "areaName": "定州市"
+    },
+    {
+      "areaCode": "130683",
+      "areaPcode": "1306",
+      "areaName": "安国市"
+    },
+    {
+      "areaCode": "130684",
+      "areaPcode": "1306",
+      "areaName": "高碑店市"
+    },
+    {
+      "areaCode": "130701",
+      "areaPcode": "1307",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "130702",
+      "areaPcode": "1307",
+      "areaName": "桥东区"
+    },
+    {
+      "areaCode": "130703",
+      "areaPcode": "1307",
+      "areaName": "桥西区"
+    },
+    {
+      "areaCode": "130705",
+      "areaPcode": "1307",
+      "areaName": "宣化区"
+    },
+    {
+      "areaCode": "130706",
+      "areaPcode": "1307",
+      "areaName": "下花园区"
+    },
+    {
+      "areaCode": "130721",
+      "areaPcode": "1307",
+      "areaName": "宣化县"
+    },
+    {
+      "areaCode": "130722",
+      "areaPcode": "1307",
+      "areaName": "张北县"
+    },
+    {
+      "areaCode": "130723",
+      "areaPcode": "1307",
+      "areaName": "康保县"
+    },
+    {
+      "areaCode": "130724",
+      "areaPcode": "1307",
+      "areaName": "沽源县"
+    },
+    {
+      "areaCode": "130725",
+      "areaPcode": "1307",
+      "areaName": "尚义县"
+    },
+    {
+      "areaCode": "130726",
+      "areaPcode": "1307",
+      "areaName": "蔚县"
+    },
+    {
+      "areaCode": "130727",
+      "areaPcode": "1307",
+      "areaName": "阳原县"
+    },
+    {
+      "areaCode": "130728",
+      "areaPcode": "1307",
+      "areaName": "怀安县"
+    },
+    {
+      "areaCode": "130729",
+      "areaPcode": "1307",
+      "areaName": "万全县"
+    },
+    {
+      "areaCode": "130730",
+      "areaPcode": "1307",
+      "areaName": "怀来县"
+    },
+    {
+      "areaCode": "130731",
+      "areaPcode": "1307",
+      "areaName": "涿鹿县"
+    },
+    {
+      "areaCode": "130732",
+      "areaPcode": "1307",
+      "areaName": "赤城县"
+    },
+    {
+      "areaCode": "130733",
+      "areaPcode": "1307",
+      "areaName": "崇礼县"
+    },
+    {
+      "areaCode": "130801",
+      "areaPcode": "1308",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "130802",
+      "areaPcode": "1308",
+      "areaName": "双桥区"
+    },
+    {
+      "areaCode": "130803",
+      "areaPcode": "1308",
+      "areaName": "双滦区"
+    },
+    {
+      "areaCode": "130804",
+      "areaPcode": "1308",
+      "areaName": "鹰手营子矿区"
+    },
+    {
+      "areaCode": "130821",
+      "areaPcode": "1308",
+      "areaName": "承德县"
+    },
+    {
+      "areaCode": "130822",
+      "areaPcode": "1308",
+      "areaName": "兴隆县"
+    },
+    {
+      "areaCode": "130823",
+      "areaPcode": "1308",
+      "areaName": "平泉县"
+    },
+    {
+      "areaCode": "130824",
+      "areaPcode": "1308",
+      "areaName": "滦平县"
+    },
+    {
+      "areaCode": "130825",
+      "areaPcode": "1308",
+      "areaName": "隆化县"
+    },
+    {
+      "areaCode": "130826",
+      "areaPcode": "1308",
+      "areaName": "丰宁满族自治县"
+    },
+    {
+      "areaCode": "130827",
+      "areaPcode": "1308",
+      "areaName": "宽城满族自治县"
+    },
+    {
+      "areaCode": "130828",
+      "areaPcode": "1308",
+      "areaName": "围场满族蒙古族自治县"
+    },
+    {
+      "areaCode": "130901",
+      "areaPcode": "1309",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "130902",
+      "areaPcode": "1309",
+      "areaName": "新华区"
+    },
+    {
+      "areaCode": "130903",
+      "areaPcode": "1309",
+      "areaName": "运河区"
+    },
+    {
+      "areaCode": "130921",
+      "areaPcode": "1309",
+      "areaName": "沧县"
+    },
+    {
+      "areaCode": "130922",
+      "areaPcode": "1309",
+      "areaName": "青县"
+    },
+    {
+      "areaCode": "130923",
+      "areaPcode": "1309",
+      "areaName": "东光县"
+    },
+    {
+      "areaCode": "130924",
+      "areaPcode": "1309",
+      "areaName": "海兴县"
+    },
+    {
+      "areaCode": "130925",
+      "areaPcode": "1309",
+      "areaName": "盐山县"
+    },
+    {
+      "areaCode": "130926",
+      "areaPcode": "1309",
+      "areaName": "肃宁县"
+    },
+    {
+      "areaCode": "130927",
+      "areaPcode": "1309",
+      "areaName": "南皮县"
+    },
+    {
+      "areaCode": "130928",
+      "areaPcode": "1309",
+      "areaName": "吴桥县"
+    },
+    {
+      "areaCode": "130929",
+      "areaPcode": "1309",
+      "areaName": "献县"
+    },
+    {
+      "areaCode": "130930",
+      "areaPcode": "1309",
+      "areaName": "孟村回族自治县"
+    },
+    {
+      "areaCode": "130981",
+      "areaPcode": "1309",
+      "areaName": "泊头市"
+    },
+    {
+      "areaCode": "130982",
+      "areaPcode": "1309",
+      "areaName": "任丘市"
+    },
+    {
+      "areaCode": "130983",
+      "areaPcode": "1309",
+      "areaName": "黄骅市"
+    },
+    {
+      "areaCode": "130984",
+      "areaPcode": "1309",
+      "areaName": "河间市"
+    },
+    {
+      "areaCode": "131001",
+      "areaPcode": "1310",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "131002",
+      "areaPcode": "1310",
+      "areaName": "安次区"
+    },
+    {
+      "areaCode": "131003",
+      "areaPcode": "1310",
+      "areaName": "廊坊市广阳区"
+    },
+    {
+      "areaCode": "131022",
+      "areaPcode": "1310",
+      "areaName": "固安县"
+    },
+    {
+      "areaCode": "131023",
+      "areaPcode": "1310",
+      "areaName": "永清县"
+    },
+    {
+      "areaCode": "131024",
+      "areaPcode": "1310",
+      "areaName": "香河县"
+    },
+    {
+      "areaCode": "131025",
+      "areaPcode": "1310",
+      "areaName": "大城县"
+    },
+    {
+      "areaCode": "131026",
+      "areaPcode": "1310",
+      "areaName": "文安县"
+    },
+    {
+      "areaCode": "131028",
+      "areaPcode": "1310",
+      "areaName": "大厂回族自治县"
+    },
+    {
+      "areaCode": "131081",
+      "areaPcode": "1310",
+      "areaName": "霸州市"
+    },
+    {
+      "areaCode": "131082",
+      "areaPcode": "1310",
+      "areaName": "三河市"
+    },
+    {
+      "areaCode": "131101",
+      "areaPcode": "1311",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "131102",
+      "areaPcode": "1311",
+      "areaName": "桃城区"
+    },
+    {
+      "areaCode": "131121",
+      "areaPcode": "1311",
+      "areaName": "枣强县"
+    },
+    {
+      "areaCode": "131122",
+      "areaPcode": "1311",
+      "areaName": "武邑县"
+    },
+    {
+      "areaCode": "131123",
+      "areaPcode": "1311",
+      "areaName": "武强县"
+    },
+    {
+      "areaCode": "131124",
+      "areaPcode": "1311",
+      "areaName": "饶阳县"
+    },
+    {
+      "areaCode": "131125",
+      "areaPcode": "1311",
+      "areaName": "安平县"
+    },
+    {
+      "areaCode": "131126",
+      "areaPcode": "1311",
+      "areaName": "故城县"
+    },
+    {
+      "areaCode": "131127",
+      "areaPcode": "1311",
+      "areaName": "景县"
+    },
+    {
+      "areaCode": "131128",
+      "areaPcode": "1311",
+      "areaName": "阜城县"
+    },
+    {
+      "areaCode": "131181",
+      "areaPcode": "1311",
+      "areaName": "冀州市"
+    },
+    {
+      "areaCode": "131182",
+      "areaPcode": "1311",
+      "areaName": "深州市"
+    },
+    {
+      "areaCode": "140101",
+      "areaPcode": "1401",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "140105",
+      "areaPcode": "1401",
+      "areaName": "小店区"
+    },
+    {
+      "areaCode": "140106",
+      "areaPcode": "1401",
+      "areaName": "迎泽区"
+    },
+    {
+      "areaCode": "140107",
+      "areaPcode": "1401",
+      "areaName": "杏花岭区"
+    },
+    {
+      "areaCode": "140108",
+      "areaPcode": "1401",
+      "areaName": "尖草坪区"
+    },
+    {
+      "areaCode": "140109",
+      "areaPcode": "1401",
+      "areaName": "万柏林区"
+    },
+    {
+      "areaCode": "140110",
+      "areaPcode": "1401",
+      "areaName": "晋源区"
+    },
+    {
+      "areaCode": "140121",
+      "areaPcode": "1401",
+      "areaName": "清徐县"
+    },
+    {
+      "areaCode": "140122",
+      "areaPcode": "1401",
+      "areaName": "阳曲县"
+    },
+    {
+      "areaCode": "140123",
+      "areaPcode": "1401",
+      "areaName": "娄烦县"
+    },
+    {
+      "areaCode": "140181",
+      "areaPcode": "1401",
+      "areaName": "古交市"
+    },
+    {
+      "areaCode": "140201",
+      "areaPcode": "1402",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "140202",
+      "areaPcode": "1402",
+      "areaName": "城区"
+    },
+    {
+      "areaCode": "140203",
+      "areaPcode": "1402",
+      "areaName": "矿区"
+    },
+    {
+      "areaCode": "140211",
+      "areaPcode": "1402",
+      "areaName": "南郊区"
+    },
+    {
+      "areaCode": "140212",
+      "areaPcode": "1402",
+      "areaName": "新荣区"
+    },
+    {
+      "areaCode": "140221",
+      "areaPcode": "1402",
+      "areaName": "阳高县"
+    },
+    {
+      "areaCode": "140222",
+      "areaPcode": "1402",
+      "areaName": "天镇县"
+    },
+    {
+      "areaCode": "140223",
+      "areaPcode": "1402",
+      "areaName": "广灵县"
+    },
+    {
+      "areaCode": "140224",
+      "areaPcode": "1402",
+      "areaName": "灵丘县"
+    },
+    {
+      "areaCode": "140225",
+      "areaPcode": "1402",
+      "areaName": "浑源县"
+    },
+    {
+      "areaCode": "140226",
+      "areaPcode": "1402",
+      "areaName": "左云县"
+    },
+    {
+      "areaCode": "140227",
+      "areaPcode": "1402",
+      "areaName": "大同县"
+    },
+    {
+      "areaCode": "140781",
+      "areaPcode": "1407",
+      "areaName": "介休市"
+    },
+    {
+      "areaCode": "140801",
+      "areaPcode": "1408",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "140802",
+      "areaPcode": "1408",
+      "areaName": "盐湖区"
+    },
+    {
+      "areaCode": "140821",
+      "areaPcode": "1408",
+      "areaName": "临猗县"
+    },
+    {
+      "areaCode": "140822",
+      "areaPcode": "1408",
+      "areaName": "万荣县"
+    },
+    {
+      "areaCode": "140823",
+      "areaPcode": "1408",
+      "areaName": "闻喜县"
+    },
+    {
+      "areaCode": "140824",
+      "areaPcode": "1408",
+      "areaName": "稷山县"
+    },
+    {
+      "areaCode": "140825",
+      "areaPcode": "1408",
+      "areaName": "新绛县"
+    },
+    {
+      "areaCode": "140826",
+      "areaPcode": "1408",
+      "areaName": "绛县"
+    },
+    {
+      "areaCode": "140827",
+      "areaPcode": "1408",
+      "areaName": "垣曲县"
+    },
+    {
+      "areaCode": "140828",
+      "areaPcode": "1408",
+      "areaName": "夏县"
+    },
+    {
+      "areaCode": "140829",
+      "areaPcode": "1408",
+      "areaName": "平陆县"
+    },
+    {
+      "areaCode": "140830",
+      "areaPcode": "1408",
+      "areaName": "芮城县"
+    },
+    {
+      "areaCode": "140881",
+      "areaPcode": "1408",
+      "areaName": "永济市"
+    },
+    {
+      "areaCode": "140882",
+      "areaPcode": "1408",
+      "areaName": "河津市"
+    },
+    {
+      "areaCode": "140901",
+      "areaPcode": "1409",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "140902",
+      "areaPcode": "1409",
+      "areaName": "忻府区"
+    },
+    {
+      "areaCode": "140921",
+      "areaPcode": "1409",
+      "areaName": "定襄县"
+    },
+    {
+      "areaCode": "140922",
+      "areaPcode": "1409",
+      "areaName": "五台县"
+    },
+    {
+      "areaCode": "140923",
+      "areaPcode": "1409",
+      "areaName": "代县"
+    },
+    {
+      "areaCode": "140924",
+      "areaPcode": "1409",
+      "areaName": "繁峙县"
+    },
+    {
+      "areaCode": "140925",
+      "areaPcode": "1409",
+      "areaName": "宁武县"
+    },
+    {
+      "areaCode": "140926",
+      "areaPcode": "1409",
+      "areaName": "静乐县"
+    },
+    {
+      "areaCode": "140927",
+      "areaPcode": "1409",
+      "areaName": "神池县"
+    },
+    {
+      "areaCode": "140928",
+      "areaPcode": "1409",
+      "areaName": "五寨县"
+    },
+    {
+      "areaCode": "140929",
+      "areaPcode": "1409",
+      "areaName": "岢岚县"
+    },
+    {
+      "areaCode": "140930",
+      "areaPcode": "1409",
+      "areaName": "河曲县"
+    },
+    {
+      "areaCode": "140931",
+      "areaPcode": "1409",
+      "areaName": "保德县"
+    },
+    {
+      "areaCode": "140932",
+      "areaPcode": "1409",
+      "areaName": "偏关县"
+    },
+    {
+      "areaCode": "140981",
+      "areaPcode": "1409",
+      "areaName": "原平市"
+    },
+    {
+      "areaCode": "141001",
+      "areaPcode": "1410",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "141002",
+      "areaPcode": "1410",
+      "areaName": "尧都区"
+    },
+    {
+      "areaCode": "141021",
+      "areaPcode": "1410",
+      "areaName": "曲沃县"
+    },
+    {
+      "areaCode": "141022",
+      "areaPcode": "1410",
+      "areaName": "翼城县"
+    },
+    {
+      "areaCode": "141023",
+      "areaPcode": "1410",
+      "areaName": "襄汾县"
+    },
+    {
+      "areaCode": "141024",
+      "areaPcode": "1410",
+      "areaName": "洪洞县"
+    },
+    {
+      "areaCode": "141025",
+      "areaPcode": "1410",
+      "areaName": "古县"
+    },
+    {
+      "areaCode": "141026",
+      "areaPcode": "1410",
+      "areaName": "安泽县"
+    },
+    {
+      "areaCode": "141027",
+      "areaPcode": "1410",
+      "areaName": "浮山县"
+    },
+    {
+      "areaCode": "141028",
+      "areaPcode": "1410",
+      "areaName": "吉县"
+    },
+    {
+      "areaCode": "141029",
+      "areaPcode": "1410",
+      "areaName": "乡宁县"
+    },
+    {
+      "areaCode": "141030",
+      "areaPcode": "1410",
+      "areaName": "大宁县"
+    },
+    {
+      "areaCode": "141031",
+      "areaPcode": "1410",
+      "areaName": "隰县"
+    },
+    {
+      "areaCode": "141032",
+      "areaPcode": "1410",
+      "areaName": "永和县"
+    },
+    {
+      "areaCode": "141033",
+      "areaPcode": "1410",
+      "areaName": "蒲县"
+    },
+    {
+      "areaCode": "141034",
+      "areaPcode": "1410",
+      "areaName": "汾西县"
+    },
+    {
+      "areaCode": "141081",
+      "areaPcode": "1410",
+      "areaName": "侯马市"
+    },
+    {
+      "areaCode": "141082",
+      "areaPcode": "1410",
+      "areaName": "霍州市"
+    },
+    {
+      "areaCode": "142301",
+      "areaPcode": "1423",
+      "areaName": "孝义市"
+    },
+    {
+      "areaCode": "142302",
+      "areaPcode": "1423",
+      "areaName": "离石市"
+    },
+    {
+      "areaCode": "142303",
+      "areaPcode": "1423",
+      "areaName": "汾阳市"
+    },
+    {
+      "areaCode": "142322",
+      "areaPcode": "1423",
+      "areaName": "文水县"
+    },
+    {
+      "areaCode": "142323",
+      "areaPcode": "1423",
+      "areaName": "交城县"
+    },
+    {
+      "areaCode": "142325",
+      "areaPcode": "1423",
+      "areaName": "兴县"
+    },
+    {
+      "areaCode": "142326",
+      "areaPcode": "1423",
+      "areaName": "临县"
+    },
+    {
+      "areaCode": "142327",
+      "areaPcode": "1423",
+      "areaName": "柳林县"
+    },
+    {
+      "areaCode": "142328",
+      "areaPcode": "1423",
+      "areaName": "石楼县"
+    },
+    {
+      "areaCode": "142329",
+      "areaPcode": "1423",
+      "areaName": "岚县"
+    },
+    {
+      "areaCode": "142330",
+      "areaPcode": "1423",
+      "areaName": "方山县"
+    },
+    {
+      "areaCode": "142332",
+      "areaPcode": "1423",
+      "areaName": "中阳县"
+    },
+    {
+      "areaCode": "142333",
+      "areaPcode": "1423",
+      "areaName": "交口县"
+    },
+    {
+      "areaCode": "150101",
+      "areaPcode": "1501",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "150102",
+      "areaPcode": "1501",
+      "areaName": "新城区"
+    },
+    {
+      "areaCode": "150103",
+      "areaPcode": "1501",
+      "areaName": "回民区"
+    },
+    {
+      "areaCode": "150104",
+      "areaPcode": "1501",
+      "areaName": "玉泉区"
+    },
+    {
+      "areaCode": "150105",
+      "areaPcode": "1501",
+      "areaName": "赛罕区"
+    },
+    {
+      "areaCode": "150121",
+      "areaPcode": "1501",
+      "areaName": "土默特左旗"
+    },
+    {
+      "areaCode": "150122",
+      "areaPcode": "1501",
+      "areaName": "托克托县"
+    },
+    {
+      "areaCode": "150123",
+      "areaPcode": "1501",
+      "areaName": "和林格尔县"
+    },
+    {
+      "areaCode": "150124",
+      "areaPcode": "1501",
+      "areaName": "清水河县"
+    },
+    {
+      "areaCode": "150125",
+      "areaPcode": "1501",
+      "areaName": "武川县"
+    },
+    {
+      "areaCode": "150201",
+      "areaPcode": "1502",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "150202",
+      "areaPcode": "1502",
+      "areaName": "东河区"
+    },
+    {
+      "areaCode": "150203",
+      "areaPcode": "1502",
+      "areaName": "昆都伦区"
+    },
+    {
+      "areaCode": "150204",
+      "areaPcode": "1502",
+      "areaName": "青山区"
+    },
+    {
+      "areaCode": "150205",
+      "areaPcode": "1502",
+      "areaName": "石拐区"
+    },
+    {
+      "areaCode": "150206",
+      "areaPcode": "1502",
+      "areaName": "白云矿区"
+    },
+    {
+      "areaCode": "150207",
+      "areaPcode": "1502",
+      "areaName": "九原区"
+    },
+    {
+      "areaCode": "150221",
+      "areaPcode": "1502",
+      "areaName": "土默特右旗"
+    },
+    {
+      "areaCode": "150222",
+      "areaPcode": "1502",
+      "areaName": "固阳县"
+    },
+    {
+      "areaCode": "150223",
+      "areaPcode": "1502",
+      "areaName": "达尔罕茂明安联合旗"
+    },
+    {
+      "areaCode": "150301",
+      "areaPcode": "1503",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "150302",
+      "areaPcode": "1503",
+      "areaName": "海勃湾区"
+    },
+    {
+      "areaCode": "150303",
+      "areaPcode": "1503",
+      "areaName": "海南区"
+    },
+    {
+      "areaCode": "150304",
+      "areaPcode": "1503",
+      "areaName": "乌达区"
+    },
+    {
+      "areaCode": "150401",
+      "areaPcode": "1504",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "150402",
+      "areaPcode": "1504",
+      "areaName": "红山区"
+    },
+    {
+      "areaCode": "150403",
+      "areaPcode": "1504",
+      "areaName": "元宝山区"
+    },
+    {
+      "areaCode": "150404",
+      "areaPcode": "1504",
+      "areaName": "松山区"
+    },
+    {
+      "areaCode": "150421",
+      "areaPcode": "1504",
+      "areaName": "阿鲁科尔沁旗"
+    },
+    {
+      "areaCode": "150422",
+      "areaPcode": "1504",
+      "areaName": "巴林左旗"
+    },
+    {
+      "areaCode": "150423",
+      "areaPcode": "1504",
+      "areaName": "巴林右旗"
+    },
+    {
+      "areaCode": "150424",
+      "areaPcode": "1504",
+      "areaName": "林西县"
+    },
+    {
+      "areaCode": "150425",
+      "areaPcode": "1504",
+      "areaName": "克什克腾旗"
+    },
+    {
+      "areaCode": "150426",
+      "areaPcode": "1504",
+      "areaName": "翁牛特旗"
+    },
+    {
+      "areaCode": "150428",
+      "areaPcode": "1504",
+      "areaName": "喀喇沁旗"
+    },
+    {
+      "areaCode": "150429",
+      "areaPcode": "1504",
+      "areaName": "宁城县"
+    },
+    {
+      "areaCode": "150430",
+      "areaPcode": "1504",
+      "areaName": "敖汉旗"
+    },
+    {
+      "areaCode": "150501",
+      "areaPcode": "1505",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "150502",
+      "areaPcode": "1505",
+      "areaName": "科尔沁区"
+    },
+    {
+      "areaCode": "150521",
+      "areaPcode": "1505",
+      "areaName": "科尔沁左翼中旗"
+    },
+    {
+      "areaCode": "150522",
+      "areaPcode": "1505",
+      "areaName": "科尔沁左翼后旗"
+    },
+    {
+      "areaCode": "150523",
+      "areaPcode": "1505",
+      "areaName": "开鲁县"
+    },
+    {
+      "areaCode": "150524",
+      "areaPcode": "1505",
+      "areaName": "库伦旗"
+    },
+    {
+      "areaCode": "150525",
+      "areaPcode": "1505",
+      "areaName": "奈曼旗"
+    },
+    {
+      "areaCode": "150526",
+      "areaPcode": "1505",
+      "areaName": "扎鲁特旗"
+    },
+    {
+      "areaCode": "150581",
+      "areaPcode": "1505",
+      "areaName": "霍林郭勒市"
+    },
+    {
+      "areaCode": "152101",
+      "areaPcode": "1521",
+      "areaName": "海拉尔市"
+    },
+    {
+      "areaCode": "152102",
+      "areaPcode": "1521",
+      "areaName": "满洲里市"
+    },
+    {
+      "areaCode": "152103",
+      "areaPcode": "1521",
+      "areaName": "扎兰屯市"
+    },
+    {
+      "areaCode": "152104",
+      "areaPcode": "1521",
+      "areaName": "牙克石市"
+    },
+    {
+      "areaCode": "152105",
+      "areaPcode": "1521",
+      "areaName": "根河市"
+    },
+    {
+      "areaCode": "152106",
+      "areaPcode": "1521",
+      "areaName": "额尔古纳市"
+    },
+    {
+      "areaCode": "152122",
+      "areaPcode": "1521",
+      "areaName": "阿荣旗"
+    },
+    {
+      "areaCode": "152123",
+      "areaPcode": "1521",
+      "areaName": "莫力达瓦达斡尔族自治"
+    },
+    {
+      "areaCode": "152127",
+      "areaPcode": "1521",
+      "areaName": "鄂伦春自治旗"
+    },
+    {
+      "areaCode": "152128",
+      "areaPcode": "1521",
+      "areaName": "鄂温克族自治旗"
+    },
+    {
+      "areaCode": "152129",
+      "areaPcode": "1521",
+      "areaName": "新巴尔虎右旗"
+    },
+    {
+      "areaCode": "152130",
+      "areaPcode": "1521",
+      "areaName": "新巴尔虎左旗"
+    },
+    {
+      "areaCode": "152131",
+      "areaPcode": "1521",
+      "areaName": "陈巴尔虎旗"
+    },
+    {
+      "areaCode": "152201",
+      "areaPcode": "1522",
+      "areaName": "乌兰浩特市"
+    },
+    {
+      "areaCode": "152202",
+      "areaPcode": "1522",
+      "areaName": "阿尔山市"
+    },
+    {
+      "areaCode": "152221",
+      "areaPcode": "1522",
+      "areaName": "科尔沁右翼前旗"
+    },
+    {
+      "areaCode": "152222",
+      "areaPcode": "1522",
+      "areaName": "科尔沁右翼中旗"
+    },
+    {
+      "areaCode": "152223",
+      "areaPcode": "1522",
+      "areaName": "扎赉特旗"
+    },
+    {
+      "areaCode": "152224",
+      "areaPcode": "1522",
+      "areaName": "突泉县"
+    },
+    {
+      "areaCode": "152501",
+      "areaPcode": "1525",
+      "areaName": "二连浩特市"
+    },
+    {
+      "areaCode": "152502",
+      "areaPcode": "1525",
+      "areaName": "锡林浩特市"
+    },
+    {
+      "areaCode": "152522",
+      "areaPcode": "1525",
+      "areaName": "阿巴嘎旗"
+    },
+    {
+      "areaCode": "152523",
+      "areaPcode": "1525",
+      "areaName": "苏尼特左旗"
+    },
+    {
+      "areaCode": "152524",
+      "areaPcode": "1525",
+      "areaName": "苏尼特右旗"
+    },
+    {
+      "areaCode": "152525",
+      "areaPcode": "1525",
+      "areaName": "东乌珠穆沁旗"
+    },
+    {
+      "areaCode": "152526",
+      "areaPcode": "1525",
+      "areaName": "西乌珠穆沁旗"
+    },
+    {
+      "areaCode": "152527",
+      "areaPcode": "1525",
+      "areaName": "太仆寺旗"
+    },
+    {
+      "areaCode": "152528",
+      "areaPcode": "1525",
+      "areaName": "镶黄旗"
+    },
+    {
+      "areaCode": "152529",
+      "areaPcode": "1525",
+      "areaName": "正镶白旗"
+    },
+    {
+      "areaCode": "152530",
+      "areaPcode": "1525",
+      "areaName": "正蓝旗"
+    },
+    {
+      "areaCode": "152531",
+      "areaPcode": "1525",
+      "areaName": "多伦县"
+    },
+    {
+      "areaCode": "152601",
+      "areaPcode": "1526",
+      "areaName": "集宁市"
+    },
+    {
+      "areaCode": "152602",
+      "areaPcode": "1526",
+      "areaName": "丰镇市"
+    },
+    {
+      "areaCode": "152624",
+      "areaPcode": "1526",
+      "areaName": "卓资县"
+    },
+    {
+      "areaCode": "152625",
+      "areaPcode": "1526",
+      "areaName": "化德县"
+    },
+    {
+      "areaCode": "152626",
+      "areaPcode": "1526",
+      "areaName": "商都县"
+    },
+    {
+      "areaCode": "152627",
+      "areaPcode": "1526",
+      "areaName": "兴和县"
+    },
+    {
+      "areaCode": "152629",
+      "areaPcode": "1526",
+      "areaName": "凉城县"
+    },
+    {
+      "areaCode": "152630",
+      "areaPcode": "1526",
+      "areaName": "察哈尔右翼前旗"
+    },
+    {
+      "areaCode": "152631",
+      "areaPcode": "1526",
+      "areaName": "察哈尔右翼中旗"
+    },
+    {
+      "areaCode": "152632",
+      "areaPcode": "1526",
+      "areaName": "察哈尔右翼后旗"
+    },
+    {
+      "areaCode": "152634",
+      "areaPcode": "1526",
+      "areaName": "四子王旗"
+    },
+    {
+      "areaCode": "152701",
+      "areaPcode": "1527",
+      "areaName": "东胜市"
+    },
+    {
+      "areaCode": "152722",
+      "areaPcode": "1527",
+      "areaName": "达拉特旗"
+    },
+    {
+      "areaCode": "152723",
+      "areaPcode": "1527",
+      "areaName": "准格尔旗"
+    },
+    {
+      "areaCode": "152724",
+      "areaPcode": "1527",
+      "areaName": "鄂托克前旗"
+    },
+    {
+      "areaCode": "152725",
+      "areaPcode": "1527",
+      "areaName": "鄂托克旗"
+    },
+    {
+      "areaCode": "152726",
+      "areaPcode": "1527",
+      "areaName": "杭锦旗"
+    },
+    {
+      "areaCode": "152727",
+      "areaPcode": "1527",
+      "areaName": "乌审旗"
+    },
+    {
+      "areaCode": "152728",
+      "areaPcode": "1527",
+      "areaName": "伊金霍洛旗"
+    },
+    {
+      "areaCode": "152801",
+      "areaPcode": "1528",
+      "areaName": "临河市"
+    },
+    {
+      "areaCode": "152822",
+      "areaPcode": "1528",
+      "areaName": "五原县"
+    },
+    {
+      "areaCode": "152823",
+      "areaPcode": "1528",
+      "areaName": "磴口县"
+    },
+    {
+      "areaCode": "152824",
+      "areaPcode": "1528",
+      "areaName": "乌拉特前旗"
+    },
+    {
+      "areaCode": "152825",
+      "areaPcode": "1528",
+      "areaName": "乌拉特中旗"
+    },
+    {
+      "areaCode": "152826",
+      "areaPcode": "1528",
+      "areaName": "乌拉特后旗"
+    },
+    {
+      "areaCode": "152827",
+      "areaPcode": "1528",
+      "areaName": "杭锦后旗"
+    },
+    {
+      "areaCode": "152921",
+      "areaPcode": "1529",
+      "areaName": "阿拉善左旗"
+    },
+    {
+      "areaCode": "152922",
+      "areaPcode": "1529",
+      "areaName": "阿拉善右旗"
+    },
+    {
+      "areaCode": "152923",
+      "areaPcode": "1529",
+      "areaName": "额济纳旗"
+    },
+    {
+      "areaCode": "210101",
+      "areaPcode": "2101",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "210102",
+      "areaPcode": "2101",
+      "areaName": "和平区"
+    },
+    {
+      "areaCode": "210103",
+      "areaPcode": "2101",
+      "areaName": "沈河区"
+    },
+    {
+      "areaCode": "210104",
+      "areaPcode": "2101",
+      "areaName": "大东区"
+    },
+    {
+      "areaCode": "210105",
+      "areaPcode": "2101",
+      "areaName": "皇姑区"
+    },
+    {
+      "areaCode": "210106",
+      "areaPcode": "2101",
+      "areaName": "铁西区"
+    },
+    {
+      "areaCode": "210111",
+      "areaPcode": "2101",
+      "areaName": "苏家屯区"
+    },
+    {
+      "areaCode": "210112",
+      "areaPcode": "2101",
+      "areaName": "东陵区"
+    },
+    {
+      "areaCode": "210113",
+      "areaPcode": "2101",
+      "areaName": "新城子区"
+    },
+    {
+      "areaCode": "210114",
+      "areaPcode": "2101",
+      "areaName": "于洪区"
+    },
+    {
+      "areaCode": "210122",
+      "areaPcode": "2101",
+      "areaName": "辽中县"
+    },
+    {
+      "areaCode": "210123",
+      "areaPcode": "2101",
+      "areaName": "康平县"
+    },
+    {
+      "areaCode": "210124",
+      "areaPcode": "2101",
+      "areaName": "法库县"
+    },
+    {
+      "areaCode": "210181",
+      "areaPcode": "2101",
+      "areaName": "新民市"
+    },
+    {
+      "areaCode": "210201",
+      "areaPcode": "2102",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "210202",
+      "areaPcode": "2102",
+      "areaName": "中山区"
+    },
+    {
+      "areaCode": "210203",
+      "areaPcode": "2102",
+      "areaName": "西岗区"
+    },
+    {
+      "areaCode": "210204",
+      "areaPcode": "2102",
+      "areaName": "沙河口区"
+    },
+    {
+      "areaCode": "210211",
+      "areaPcode": "2102",
+      "areaName": "甘井子区"
+    },
+    {
+      "areaCode": "210212",
+      "areaPcode": "2102",
+      "areaName": "旅顺口区"
+    },
+    {
+      "areaCode": "210213",
+      "areaPcode": "2102",
+      "areaName": "金州区"
+    },
+    {
+      "areaCode": "210224",
+      "areaPcode": "2102",
+      "areaName": "长海县"
+    },
+    {
+      "areaCode": "210281",
+      "areaPcode": "2102",
+      "areaName": "瓦房店市"
+    },
+    {
+      "areaCode": "210282",
+      "areaPcode": "2102",
+      "areaName": "普兰店市"
+    },
+    {
+      "areaCode": "210283",
+      "areaPcode": "2102",
+      "areaName": "庄河市"
+    },
+    {
+      "areaCode": "210301",
+      "areaPcode": "2103",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "210302",
+      "areaPcode": "2103",
+      "areaName": "铁东区"
+    },
+    {
+      "areaCode": "210303",
+      "areaPcode": "2103",
+      "areaName": "铁西区"
+    },
+    {
+      "areaCode": "210304",
+      "areaPcode": "2103",
+      "areaName": "立山区"
+    },
+    {
+      "areaCode": "210311",
+      "areaPcode": "2103",
+      "areaName": "千山区"
+    },
+    {
+      "areaCode": "210321",
+      "areaPcode": "2103",
+      "areaName": "台安县"
+    },
+    {
+      "areaCode": "210323",
+      "areaPcode": "2103",
+      "areaName": "岫岩满族自治县"
+    },
+    {
+      "areaCode": "210381",
+      "areaPcode": "2103",
+      "areaName": "海城市"
+    },
+    {
+      "areaCode": "210401",
+      "areaPcode": "2104",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "210402",
+      "areaPcode": "2104",
+      "areaName": "新抚区"
+    },
+    {
+      "areaCode": "210403",
+      "areaPcode": "2104",
+      "areaName": "东洲区"
+    },
+    {
+      "areaCode": "210404",
+      "areaPcode": "2104",
+      "areaName": "望花区"
+    },
+    {
+      "areaCode": "210411",
+      "areaPcode": "2104",
+      "areaName": "顺城区"
+    },
+    {
+      "areaCode": "210421",
+      "areaPcode": "2104",
+      "areaName": "抚顺县"
+    },
+    {
+      "areaCode": "210422",
+      "areaPcode": "2104",
+      "areaName": "新宾满族自治县"
+    },
+    {
+      "areaCode": "210423",
+      "areaPcode": "2104",
+      "areaName": "清原满族自治县"
+    },
+    {
+      "areaCode": "210501",
+      "areaPcode": "2105",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "210502",
+      "areaPcode": "2105",
+      "areaName": "平山区"
+    },
+    {
+      "areaCode": "210503",
+      "areaPcode": "2105",
+      "areaName": "溪湖区"
+    },
+    {
+      "areaCode": "210504",
+      "areaPcode": "2105",
+      "areaName": "明山区"
+    },
+    {
+      "areaCode": "210505",
+      "areaPcode": "2105",
+      "areaName": "南芬区"
+    },
+    {
+      "areaCode": "210521",
+      "areaPcode": "2105",
+      "areaName": "本溪满族自治县"
+    },
+    {
+      "areaCode": "210522",
+      "areaPcode": "2105",
+      "areaName": "桓仁满族自治县"
+    },
+    {
+      "areaCode": "210601",
+      "areaPcode": "2106",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "210602",
+      "areaPcode": "2106",
+      "areaName": "元宝区"
+    },
+    {
+      "areaCode": "210603",
+      "areaPcode": "2106",
+      "areaName": "振兴区"
+    },
+    {
+      "areaCode": "210604",
+      "areaPcode": "2106",
+      "areaName": "振安区"
+    },
+    {
+      "areaCode": "210624",
+      "areaPcode": "2106",
+      "areaName": "宽甸满族自治县"
+    },
+    {
+      "areaCode": "210681",
+      "areaPcode": "2106",
+      "areaName": "东港市"
+    },
+    {
+      "areaCode": "210682",
+      "areaPcode": "2106",
+      "areaName": "凤城市"
+    },
+    {
+      "areaCode": "210701",
+      "areaPcode": "2107",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "210702",
+      "areaPcode": "2107",
+      "areaName": "古塔区"
+    },
+    {
+      "areaCode": "210703",
+      "areaPcode": "2107",
+      "areaName": "凌河区"
+    },
+    {
+      "areaCode": "210711",
+      "areaPcode": "2107",
+      "areaName": "太和区"
+    },
+    {
+      "areaCode": "210726",
+      "areaPcode": "2107",
+      "areaName": "黑山县"
+    },
+    {
+      "areaCode": "210727",
+      "areaPcode": "2107",
+      "areaName": "义县"
+    },
+    {
+      "areaCode": "210781",
+      "areaPcode": "2107",
+      "areaName": "凌海市"
+    },
+    {
+      "areaCode": "210782",
+      "areaPcode": "2107",
+      "areaName": "北宁市"
+    },
+    {
+      "areaCode": "210801",
+      "areaPcode": "2108",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "210802",
+      "areaPcode": "2108",
+      "areaName": "站前区"
+    },
+    {
+      "areaCode": "210803",
+      "areaPcode": "2108",
+      "areaName": "西市区"
+    },
+    {
+      "areaCode": "210804",
+      "areaPcode": "2108",
+      "areaName": "鲅鱼圈区"
+    },
+    {
+      "areaCode": "210811",
+      "areaPcode": "2108",
+      "areaName": "老边区"
+    },
+    {
+      "areaCode": "210881",
+      "areaPcode": "2108",
+      "areaName": "盖州市"
+    },
+    {
+      "areaCode": "210882",
+      "areaPcode": "2108",
+      "areaName": "大石桥市"
+    },
+    {
+      "areaCode": "210901",
+      "areaPcode": "2109",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "210902",
+      "areaPcode": "2109",
+      "areaName": "海州区"
+    },
+    {
+      "areaCode": "210903",
+      "areaPcode": "2109",
+      "areaName": "新邱区"
+    },
+    {
+      "areaCode": "210904",
+      "areaPcode": "2109",
+      "areaName": "太平区"
+    },
+    {
+      "areaCode": "210905",
+      "areaPcode": "2109",
+      "areaName": "清河门区"
+    },
+    {
+      "areaCode": "210911",
+      "areaPcode": "2109",
+      "areaName": "细河区"
+    },
+    {
+      "areaCode": "210921",
+      "areaPcode": "2109",
+      "areaName": "阜新蒙古族自治县"
+    },
+    {
+      "areaCode": "210922",
+      "areaPcode": "2109",
+      "areaName": "彰武县"
+    },
+    {
+      "areaCode": "211001",
+      "areaPcode": "2110",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "211002",
+      "areaPcode": "2110",
+      "areaName": "白塔区"
+    },
+    {
+      "areaCode": "211003",
+      "areaPcode": "2110",
+      "areaName": "文圣区"
+    },
+    {
+      "areaCode": "211004",
+      "areaPcode": "2110",
+      "areaName": "宏伟区"
+    },
+    {
+      "areaCode": "211005",
+      "areaPcode": "2110",
+      "areaName": "弓长岭区"
+    },
+    {
+      "areaCode": "211011",
+      "areaPcode": "2110",
+      "areaName": "太子河区"
+    },
+    {
+      "areaCode": "211021",
+      "areaPcode": "2110",
+      "areaName": "辽阳县"
+    },
+    {
+      "areaCode": "211081",
+      "areaPcode": "2110",
+      "areaName": "灯塔市"
+    },
+    {
+      "areaCode": "211101",
+      "areaPcode": "2111",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "211102",
+      "areaPcode": "2111",
+      "areaName": "双台子区"
+    },
+    {
+      "areaCode": "211103",
+      "areaPcode": "2111",
+      "areaName": "兴隆台区"
+    },
+    {
+      "areaCode": "211121",
+      "areaPcode": "2111",
+      "areaName": "大洼县"
+    },
+    {
+      "areaCode": "211122",
+      "areaPcode": "2111",
+      "areaName": "盘山县"
+    },
+    {
+      "areaCode": "211201",
+      "areaPcode": "2112",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "211202",
+      "areaPcode": "2112",
+      "areaName": "银州区"
+    },
+    {
+      "areaCode": "211204",
+      "areaPcode": "2112",
+      "areaName": "清河区"
+    },
+    {
+      "areaCode": "211221",
+      "areaPcode": "2112",
+      "areaName": "铁岭县"
+    },
+    {
+      "areaCode": "211223",
+      "areaPcode": "2112",
+      "areaName": "西丰县"
+    },
+    {
+      "areaCode": "211224",
+      "areaPcode": "2112",
+      "areaName": "昌图县"
+    },
+    {
+      "areaCode": "211281",
+      "areaPcode": "2112",
+      "areaName": "铁法市"
+    },
+    {
+      "areaCode": "211282",
+      "areaPcode": "2112",
+      "areaName": "开原市"
+    },
+    {
+      "areaCode": "211301",
+      "areaPcode": "2113",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "211302",
+      "areaPcode": "2113",
+      "areaName": "双塔区"
+    },
+    {
+      "areaCode": "211303",
+      "areaPcode": "2113",
+      "areaName": "龙城区"
+    },
+    {
+      "areaCode": "211321",
+      "areaPcode": "2113",
+      "areaName": "朝阳县"
+    },
+    {
+      "areaCode": "211322",
+      "areaPcode": "2113",
+      "areaName": "建平县"
+    },
+    {
+      "areaCode": "211324",
+      "areaPcode": "2113",
+      "areaName": "喀喇沁左翼蒙古族自治"
+    },
+    {
+      "areaCode": "211381",
+      "areaPcode": "2113",
+      "areaName": "北票市"
+    },
+    {
+      "areaCode": "211382",
+      "areaPcode": "2113",
+      "areaName": "凌源市"
+    },
+    {
+      "areaCode": "211401",
+      "areaPcode": "2114",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "211402",
+      "areaPcode": "2114",
+      "areaName": "连山区"
+    },
+    {
+      "areaCode": "211403",
+      "areaPcode": "2114",
+      "areaName": "龙港区"
+    },
+    {
+      "areaCode": "211404",
+      "areaPcode": "2114",
+      "areaName": "南票区"
+    },
+    {
+      "areaCode": "211421",
+      "areaPcode": "2114",
+      "areaName": "绥中县"
+    },
+    {
+      "areaCode": "211422",
+      "areaPcode": "2114",
+      "areaName": "建昌县"
+    },
+    {
+      "areaCode": "211481",
+      "areaPcode": "2114",
+      "areaName": "兴城市"
+    },
+    {
+      "areaCode": "220101",
+      "areaPcode": "2201",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "220102",
+      "areaPcode": "2201",
+      "areaName": "南关区"
+    },
+    {
+      "areaCode": "220103",
+      "areaPcode": "2201",
+      "areaName": "宽城区"
+    },
+    {
+      "areaCode": "220104",
+      "areaPcode": "2201",
+      "areaName": "朝阳区"
+    },
+    {
+      "areaCode": "220105",
+      "areaPcode": "2201",
+      "areaName": "二道区"
+    },
+    {
+      "areaCode": "220106",
+      "areaPcode": "2201",
+      "areaName": "绿园区"
+    },
+    {
+      "areaCode": "220112",
+      "areaPcode": "2201",
+      "areaName": "双阳区"
+    },
+    {
+      "areaCode": "220122",
+      "areaPcode": "2201",
+      "areaName": "农安县"
+    },
+    {
+      "areaCode": "220181",
+      "areaPcode": "2201",
+      "areaName": "九台市"
+    },
+    {
+      "areaCode": "220183",
+      "areaPcode": "2201",
+      "areaName": "德惠市"
+    },
+    {
+      "areaCode": "220201",
+      "areaPcode": "2202",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "220202",
+      "areaPcode": "2202",
+      "areaName": "昌邑区"
+    },
+    {
+      "areaCode": "220203",
+      "areaPcode": "2202",
+      "areaName": "龙潭区"
+    },
+    {
+      "areaCode": "220204",
+      "areaPcode": "2202",
+      "areaName": "船营区"
+    },
+    {
+      "areaCode": "220211",
+      "areaPcode": "2202",
+      "areaName": "丰满区"
+    },
+    {
+      "areaCode": "220221",
+      "areaPcode": "2202",
+      "areaName": "永吉县"
+    },
+    {
+      "areaCode": "220281",
+      "areaPcode": "2202",
+      "areaName": "蛟河市"
+    },
+    {
+      "areaCode": "220282",
+      "areaPcode": "2202",
+      "areaName": "桦甸市"
+    },
+    {
+      "areaCode": "220283",
+      "areaPcode": "2202",
+      "areaName": "舒兰市"
+    },
+    {
+      "areaCode": "220284",
+      "areaPcode": "2202",
+      "areaName": "磐石市"
+    },
+    {
+      "areaCode": "220301",
+      "areaPcode": "2203",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "220302",
+      "areaPcode": "2203",
+      "areaName": "铁西区"
+    },
+    {
+      "areaCode": "220303",
+      "areaPcode": "2203",
+      "areaName": "铁东区"
+    },
+    {
+      "areaCode": "220322",
+      "areaPcode": "2203",
+      "areaName": "梨树县"
+    },
+    {
+      "areaCode": "220323",
+      "areaPcode": "2203",
+      "areaName": "伊通满族自治县"
+    },
+    {
+      "areaCode": "220381",
+      "areaPcode": "2203",
+      "areaName": "公主岭市"
+    },
+    {
+      "areaCode": "220382",
+      "areaPcode": "2203",
+      "areaName": "双辽市"
+    },
+    {
+      "areaCode": "220401",
+      "areaPcode": "2204",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "220402",
+      "areaPcode": "2204",
+      "areaName": "龙山区"
+    },
+    {
+      "areaCode": "220403",
+      "areaPcode": "2204",
+      "areaName": "西安区"
+    },
+    {
+      "areaCode": "220421",
+      "areaPcode": "2204",
+      "areaName": "东丰县"
+    },
+    {
+      "areaCode": "220422",
+      "areaPcode": "2204",
+      "areaName": "东辽县"
+    },
+    {
+      "areaCode": "220501",
+      "areaPcode": "2205",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "220502",
+      "areaPcode": "2205",
+      "areaName": "东昌区"
+    },
+    {
+      "areaCode": "220503",
+      "areaPcode": "2205",
+      "areaName": "二道江区"
+    },
+    {
+      "areaCode": "220521",
+      "areaPcode": "2205",
+      "areaName": "通化县"
+    },
+    {
+      "areaCode": "220523",
+      "areaPcode": "2205",
+      "areaName": "辉南县"
+    },
+    {
+      "areaCode": "220524",
+      "areaPcode": "2205",
+      "areaName": "柳河县"
+    },
+    {
+      "areaCode": "220581",
+      "areaPcode": "2205",
+      "areaName": "梅河口市"
+    },
+    {
+      "areaCode": "220582",
+      "areaPcode": "2205",
+      "areaName": "集安市"
+    },
+    {
+      "areaCode": "220601",
+      "areaPcode": "2206",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "220602",
+      "areaPcode": "2206",
+      "areaName": "八道江区"
+    },
+    {
+      "areaCode": "220621",
+      "areaPcode": "2206",
+      "areaName": "抚松县"
+    },
+    {
+      "areaCode": "220622",
+      "areaPcode": "2206",
+      "areaName": "靖宇县"
+    },
+    {
+      "areaCode": "220623",
+      "areaPcode": "2206",
+      "areaName": "长白朝鲜族自治县"
+    },
+    {
+      "areaCode": "220625",
+      "areaPcode": "2206",
+      "areaName": "江源县"
+    },
+    {
+      "areaCode": "220681",
+      "areaPcode": "2206",
+      "areaName": "临江市"
+    },
+    {
+      "areaCode": "220701",
+      "areaPcode": "2207",
+      "areaName": "市辖区"
+    },
+    {
+      "areaCode": "220182",
+      "areaPcode": "2201",
+      "areaName": "榆树市"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+    "code": "00000",
+    "data": {
+        "list": [
+            {
+                "keyNo": "1254435514654",
+                "tradeName": "钢铁行业",
+                "tradeCode": "10011",
+                "bizsurveyModel": "1",
+                "dyntrackModel": "1",
+                "createUser": "运营专员-李娜",
+                "createTime": "2020-11-02 12:00:00"
+            },
+            {
+                "keyNo": "1254435514654",
+                "tradeName": "钢铁行业",
+                "tradeCode": "10011",
+                "bizsurveyModel": "1",
+                "dyntrackModel": "1",
+                "createUser": "运营专员-李娜",
+                "createTime": "2020-11-02 12:00:00"
+            }
+        ]
+    }
+}

@@ -1,0 +1,30 @@
+/*
+ * @Author: mingliang.zhu
+ * @Date: 2021-02-23 14:23:53
+ * @Last Modified by: mingliang.zhu
+ * @Last Modified time: 2021-02-23 17:17:01
+ * @Description: 授信通知管理API
+ */
+
+import axios from "@/utils/axios";
+
+//授信通知管理-列表
+export const RoleQueryList = (params) => {
+  return axios.post("/approve/creditNotice/list", params);
+};
+//授信通知管理-新增编辑
+export const addAndUpdate = (params) => {
+  return axios.post(`/approve/role/addAndUpdate`, params);
+};
+//授信通知管理-详情
+export const detail = (params) => {
+  return axios.post(`/approve/creditNotice/detail`, params);
+};
+//授信通知管理-启停用
+export const startOrStop = (params) => {
+  return axios.post(`/approve/creditNotice/startOrStop`, params);
+};
+//机构管理-列表
+export const allOrganization = (params) => {
+  return axios.post("/approve/organization/showOrgListByFlag", params);
+};
